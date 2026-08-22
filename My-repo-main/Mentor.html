@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ahmad Saleem Mentorship — Practical Learning Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="Mentor.css">
+</head>
+<body class="light-theme">
+  
+  <!-- TOP NAVIGATION BAR -->
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <div class="brand-logo" id="brandLogo" onclick="app.navigate('home')">
+        <div class="logo-icon">
+          <i data-lucide="graduation-cap"></i>
+        </div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </div>
+
+      <nav class="desktop-nav" id="desktopNav">
+        <button class="nav-link active" onclick="app.navigate('home')" id="navHomeBtn">Home</button>
+        <button class="nav-link" onclick="app.navigate('courses')" id="navCoursesBtn">Courses</button>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="/login">Student Login</a>
+        <a class="btn btn-primary" href="/register">Register</a>
+        <a class="btn btn-secondary" href="/admin/login">Admin</a>
+
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="app.toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="app.toggleMobileMenu()">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <button class="mobile-nav-item" onclick="app.navigate('home')">Home</button>
+      <button class="mobile-nav-item" onclick="app.navigate('courses')">Courses</button>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="main-container" id="mainContainer">
+
+    <!-- 1. HOME VIEW -->
+    <section id="viewHome" class="view-section active">
+      <!-- HERO -->
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="pill-badge">
+            <i data-lucide="sparkles"></i>
+            <span>Practical Hands-On Mentorship</span>
+          </div>
+          <div class="pill-badge">
+            <i data-lucide="award"></i>
+            <span>5+ Years of Experience</span>
+          </div>
+
+          <h1 class="hero-title">
+            Master Tech Skills with <br/>
+            <span class="highlight-text">Ahmad Saleem</span>
+          </h1>
+
+          <p class="hero-desc">
+            I teach practical skills through project‑based learning and real‑world assignments. Join my courses and build a portfolio that stands out.
+          </p>
+
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="app.navigate('courses')" id="heroExploreBtn">
+              <span>Explore Course Tracks</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="hero-features">
+            <div class="feature-item">
+              <i data-lucide="check-circle-2"></i>
+              <span>Practical Course Guidance</span>
+            </div>
+            <div class="feature-item">
+              <i data-lucide="check-circle-2"></i>
+              <span>Beginner-Friendly Learning</span>
+            </div>
+            <div class="feature-item">
+              <i data-lucide="check-circle-2"></i>
+              <span>Verified Credentials</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENTOR PROFILE CARD WITH SQUARE IMAGE -->
+        <div class="hero-right">
+          <div class="card mentor-card">
+            <div class="mentor-card-header">
+              <div class="status-indicator">
+                <span class="status-dot"></span>
+              </div>
+              <a class="whatsapp-contact" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer" aria-label="Contact Ahmad Saleem on WhatsApp">
+                <span>Contact us:</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.6 4.1 1.6 5.9L.2 24l6.5-1.7a11.8 11.8 0 0 0 5.4 1.3h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.3ZM12.2 21.6h-.1a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.8 1 1-3.7-.2-.4a9.7 9.7 0 0 1-1.5-5.2C2.2 6.4 6.7 2 12.1 2c2.6 0 5.1 1 6.9 2.9a9.7 9.7 0 0 1 2.9 6.9c0 5.4-4.4 9.8-9.7 9.8Zm5.4-7.3c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.2-.2.3-.7.9-.8 1.1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.4-3.8-3.2-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.8 4.3 1.8.8 2.4.9 3.3.8.5-.1 1.7-.7 1.9-1.3.2-.6.2-1.2.1-1.3-.1-.2-.3-.3-.6-.4Z"/></svg>
+               <span class="whatsapp-icon-only"></span>
+              </a>
+            </div>
+
+            <!-- Square Profile Image Container -->
+            <div class="mentor-img-wrapper" id="mentorImgWrapper">
+              <img id="mentorPhoto" src="images/profile.jpeg" alt="Mentor Ahmad Saleem" class="mentor-photo" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'" />
+            </div>
+
+            <div class="mentor-card-body">
+              <h3 class="mentor-name">Ahmad Saleem</h3>
+              <p class="mentor-role">Lead Mentor & Digital Skills Instructor</p>
+              <p class="mentor-bio">
+                Dedicated to helping students learn practical digital skills through clear explanations, useful tools, and real-world examples.
+              </p>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <div class="section-block how-it-works-card">
+        <div class="how-header">
+          <h2 class="section-title">How The Mentorship Works</h2>
+          <p class="section-subtitle">A clear three-step path from choosing a skill to building confidence with it.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-badge">1</div>
+            <h3 class="step-title">
+              <i data-lucide="play-circle"></i>
+              <span>Choose Your Skill</span>
+            </h3>
+            <p class="step-desc">
+              Browse the course tracks and choose the skill that matches your goals and interests.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge badge-indigo">2</div>
+            <h3 class="step-title">
+              <i data-lucide="clock"></i>
+              <span>Learn the Essentials</span>
+            </h3>
+            <p class="step-desc">
+              Follow the course focus points to understand the tools, concepts, and workflows that matter most.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge badge-emerald">3</div>
+            <h3 class="step-title">
+              <i data-lucide="award"></i>
+              <span>Apply Your Skills</span>
+            </h3>
+            <p class="step-desc">
+              Practice what you learn with useful projects and examples that connect skills to real work.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ SECTION -->
+      <div class="section-block faq-section">
+        <div class="section-header text-center">
+          <h2 class="section-title">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list" id="faqList">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. COURSES VIEW -->
+    <section id="viewCourses" class="view-section">
+      <div class="page-heading">
+        <div class="pill-badge">
+          <i data-lucide="book-open"></i>
+          <span>Curriculum</span>
+        </div>
+        <h1 class="page-title">Course Tracks</h1>
+        <p class="page-subtitle">Explore each course and discover the practical skills covered in the program.</p>
+      </div>
+
+      <div class="course-grid" id="allCoursesGrid">
+        <!-- Populated by JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-accent" aria-hidden="true"></div>
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i data-lucide="graduation-cap"></i>
+          </div>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </div>
+        <p class="footer-desc">
+          Helping students build practical digital skills through focused courses, useful tools, and real-world learning.
+        </p>
+        <div class="footer-badges">
+          <span class="badge badge-emerald">
+            <i data-lucide="shield-check"></i>
+            <span>Practical Learning</span>
+          </span>
+          <span class="badge badge-primary">
+            <i data-lucide="award"></i>
+            <span>Mentor Guidance</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span>
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="javascript:void(0)" onclick="app.navigate('home')"><span>Home</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="javascript:void(0)" onclick="app.navigate('courses')"><span>All Courses</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 Mentor Ahmad Saleem. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast"></div>
+
+  <!-- JAVASCRIPT CONTROLLER -->
+  <script src="Mentor.js"></script>
+</body>
+</html>

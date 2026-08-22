@@ -1,0 +1,6 @@
+{
+  "name": "Ahmad Saleem Mentorship Platform",
+  "description": "Educational mentorship web platform with optimized asynchronous SQLite database, ACID transactions, intelligent indexing, and non-blocking background workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Learning Dashboard | Ahmad Saleem Mentorship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .dash-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
+    }
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .user-greeting h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0.2rem 0;
+    }
+    .user-greeting p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .enrollment-alert {
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .course-dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .course-dash-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .course-dash-card.active-course {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-subtle);
+    }
+    .question-count-badge {
+      width: 3.2rem;
+      height: 3.2rem;
+      flex: 0 0 3.2rem;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      background: #e8f7ef;
+      border: 2px solid #8ed2ad;
+      color: #147a50;
+      line-height: 1;
+    }
+    .question-count-badge strong {
+      font-size: 1.05rem;
+    }
+    .question-count-badge span {
+      margin-top: 0.2rem;
+      font-size: 0.55rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .progress-bar-bg {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      overflow: hidden;
+      margin: 1rem 0 0.5rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    /* Assignment & Questions Area */
+    .questions-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+    .question-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s;
+    }
+    .question-item.completed-q {
+      border-color: var(--emerald-border);
+      background: var(--emerald-subtle);
+    }
+    .question-item.locked-q {
+      border-color: var(--amber-border);
+      background: var(--amber-subtle);
+    }
+    .question-item.unanswered-highlight {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 3px var(--rose-subtle);
+    }
+    .q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .q-num {
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .q-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+    .q-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .video-req-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .video-req-box.timer-active {
+      border-color: var(--amber);
+      background: var(--amber-subtle);
+    }
+    .video-req-box.timer-unlocked {
+      border-color: var(--emerald);
+      background: var(--emerald-subtle);
+    }
+    .video-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius-sm);
+      background: #dc2626;
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+    }
+    .video-btn:hover {
+      background: #b91c1c;
+      color: white;
+      text-decoration: none;
+    }
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+    }
+    .timer-badge.badge-waiting {
+      background: var(--amber-subtle);
+      color: var(--amber);
+      border: 1px solid var(--amber-border);
+    }
+    .timer-badge.badge-running {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+    .timer-badge.badge-done {
+      background: var(--emerald-subtle);
+      color: var(--emerald);
+      border: 1px solid var(--emerald-border);
+    }
+    .answer-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .answer-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .answer-textarea:disabled {
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+    .submission-upload-box {
+      border: 2px dashed var(--primary-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      background: var(--primary-subtle);
+      margin-top: 2rem;
+    }
+    .assignment-file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .assignment-file-picker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .assignment-file-picker:hover,
+    .assignment-file-input:focus-visible + .assignment-file-picker {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-subtle);
+    }
+    .assignment-file-picker-button {
+      padding: 0.35rem 0.7rem;
+      border-radius: var(--radius-sm);
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .assignment-file-name {
+      overflow: hidden;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .all-answered-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    /* Course Thumbnail Banner */
+    .course-thumbnail-banner {
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+    }
+    .course-thumbnail-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .course-thumbnail-banner:hover img {
+      transform: scale(1.03);
+    }
+    .course-thumbnail-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.12) 100%);
+      display: flex;
+      align-items: flex-end;
+      padding: 1.25rem 1.5rem;
+      gap: 0.75rem;
+    }
+    .course-thumbnail-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+    /* Locked question overlay */
+    .question-lock-overlay {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: linear-gradient(135deg, var(--amber-subtle) 0%, var(--bg-elevated) 100%);
+      border: 2px dashed var(--amber-border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.25rem;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--amber);
+    }
+    .question-lock-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--amber-subtle);
+      border: 1px solid var(--amber-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-text" href="/student/profile"><i data-lucide="user"></i> My Profile</a>
+        <button class="btn btn-secondary btn-sm" onclick="logout()"><i data-lucide="log-in"></i> Logout</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-container">
+    <div class="dash-header">
+      <div class="user-greeting">
+        <span class="pill-badge"><i data-lucide="award"></i> Student Workspace</span>
+        <h1 id="welcomeHeading">Welcome, Student</h1>
+        <p>Select your course track, complete hands-on questions, and submit your final work for review.</p>
+      </div>
+      <div>
+        <a href="/student/profile" class="btn btn-outline"><i data-lucide="award"></i> View Course Certificate & Progress</a>
+      </div>
+    </div>
+
+    <!-- Active Courses Grid -->
+    <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1rem;">Course Tracks</h2>
+    <div class="course-dash-grid" id="courseDashGrid">
+      <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading courses...</div>
+    </div>
+
+    <!-- Active Enrolled Course Workspace -->
+    <div id="courseWorkspace" style="display: none;">
+      <div class="questions-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <span class="pill-badge" id="currentCourseBadge">Active Track</span>
+            <h2 id="currentCourseTitle" style="font-size: 1.6rem; font-weight: 800; margin-top: 0.35rem;"></h2>
+            <p id="currentCourseDesc" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+          </div>
+          <div>
+            <a id="practicalClassLink" href="/student/practical-classes" class="btn btn-primary btn-sm"><i data-lucide="play-circle"></i> Open Video Playlist</a>
+          </div>
+        </div>
+
+        <!-- Course Thumbnail Banner -->
+        <div class="course-thumbnail-banner" id="courseThumbnailBanner">
+          <img id="courseThumbnailImg"   alt="Course Thumbnail" />
+          <div class="course-thumbnail-overlay">
+            <span class="course-thumbnail-pill">📚 Active Course Track</span>
+            <span class="course-thumbnail-pill" id="courseThumbnailTitle" style="font-size:0.95rem; padding:0.45rem 1.1rem;"></span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Curriculum Tasks & Questions</h3>
+        <div id="questionsList">
+          <!-- Loaded asynchronously -->
+        </div>
+
+        <!-- Assignment Submission Section -->
+        <div class="submission-upload-box">
+          <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem;">Submit Final Practical Assignment</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 600px; margin: 0 auto 1.25rem;">
+            Review all mandatory submission checkpoints below. The submit button activates once the 5-minute timer finishes, all questions are answered, and your work file is attached.
+          </p>
+
+          <!-- Submission Checkpoints -->
+          <div class="assessment-checklist">
+            <div class="checklist-row item-pending" id="checkRowQuestions">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <i data-lucide="check-square" id="checkIconQuestions"></i>
+                <span>1. Course Quiz & Assessment Questions</span>
+              </div>
+              <span class="badge badge-amber" id="checkBadgeQuestions">0 / 0 Answered</span>
+            </div>
+
+          </div>
+
+          <div id="submissionStatus" style="display:none; margin:0 auto 1.25rem; max-width:500px; padding:0.85rem 1rem; border-radius:var(--radius-md); text-align:left; border:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <strong>Submission status</strong>
+              <span id="submissionStatusBadge" class="badge"></span>
+            </div>
+            <div id="submissionStatusDate" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.35rem;"></div>
+            <div id="submissionReviewNote" style="display:none; margin-top:0.5rem; font-size:0.84rem; white-space:pre-wrap;"></div>
+          </div>
+
+          <form id="submissionForm" style="max-width: 500px; margin: 0 auto; text-align: left;">
+            <div id="submissionAlert" style="display: none; padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;"></div>
+
+            <button type="submit" id="submitAssignmentBtn" class="btn btn-primary btn-block btn-lg" disabled>
+              <i data-lucide="lock"></i>
+              <span id="submitBtnText">Answer all questions to unlock submission</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    let currentStudent = null;
+    let dashboardData = null;
+    let activeCourseId = null;
+    let currentCourseQuestions = [];
+    let answersState = {};
+    const answersByCourse = {};
+    const responseFilesState = {};
+    let assignmentFileState = null;
+    let activeTimers = {};
+    let studentSubmissions = [];
+
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds));
+      const m = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+    }
+
+    function clearAllTimers() {
+      Object.keys(activeTimers).forEach(key => {
+        clearInterval(activeTimers[key]);
+      });
+      activeTimers = {};
+    }
+
+
+    function getAssignmentFileInput() {
+      return document.querySelector('input[data-response-type="file_upload"]');
+    }
+
+    function handleGlobalFileChange(input) {
+      const hasFile = input && input.files && input.files.length > 0;
+      if (hasFile) {
+        currentCourseQuestions.forEach(q => {
+          if (q.response_type === 'file_upload') {
+            answersState[q.id] = `Uploaded file: ${input.files[0].name}`;
+          }
+        });
+      } else {
+        currentCourseQuestions.forEach(q => {
+          if (q.response_type === 'file_upload') {
+            delete answersState[q.id];
+          }
+        });
+      }
+      updateSubmissionButtonState();
+    }
+
+    function handleQuestionFileUpload(questionId, input) {
+      const file = input.files[0];
+      const question = currentCourseQuestions.find(item => item.id === questionId);
+      const previewDiv = document.getElementById(`preview-${questionId}`);
+      if (!file) {
+        delete answersState[questionId];
+        delete responseFilesState[questionId];
+        if (question && question.response_type === 'file_upload') assignmentFileState = null;
+        if (previewDiv) previewDiv.innerHTML = '';
+        updateSubmissionButtonState();
+        return;
+      }
+
+      if (question && question.response_type === 'file_upload') {
+        assignmentFileState = file;
+        answersState[questionId] = `Uploaded file: ${file.name}`;
+        if (previewDiv) {
+          previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${file.name}</div>`;
+        }
+        updateSubmissionButtonState();
+        return;
+      }
+
+      if (previewDiv) {
+        previewDiv.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Processing file upload...</span>`;
+      }
+
+      responseFilesState[questionId] = file;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        answersState[questionId] = e.target.result;
+        if (previewDiv) {
+          if (file.type.startsWith('image/')) {
+            previewDiv.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block; margin-top:0.5rem;" />`;
+          } else if (file.type.startsWith('video/')) {
+            previewDiv.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block; margin-top:0.5rem;"></video>`;
+          } else {
+            previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${file.name}</div>`;
+          }
+        }
+        updateSubmissionButtonState();
+      };
+      reader.onerror = function() {
+        if (previewDiv) {
+          previewDiv.innerHTML = `<span style="font-size:0.8rem; color:var(--rose);">Error reading file.</span>`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/session');
+        const data = await res.json();
+        if (!data || !data.user || data.user.role !== 'student') {
+          window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+          return;
+        }
+        currentStudent = data.user;
+        document.getElementById('welcomeHeading').textContent = `Welcome, ${currentStudent.fullName || currentStudent.email || 'Student'}`;
+        await loadDashboard();
+      } catch (e) {
+        console.error('Session check error:', e);
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/student/dashboard');
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = '/login';
+            return;
+          }
+          throw new Error('Could not load course dashboard');
+        }
+        const data = await res.json();
+        dashboardData = {
+          courses: Array.isArray(data.courses) ? data.courses : (Array.isArray(data) ? data : []),
+          enrolledCourseIds: Array.isArray(data.enrolledCourseIds) ? data.enrolledCourseIds : []
+        };
+        const submissionsRes = await fetch('/api/student/submissions');
+        if (submissionsRes.ok) {
+          const submissionsData = await submissionsRes.json();
+          studentSubmissions = Array.isArray(submissionsData.submissions) ? submissionsData.submissions : [];
+        }
+        renderCourseCards();
+
+        if (dashboardData.enrolledCourseIds && dashboardData.enrolledCourseIds.length > 0) {
+          const enrolledCourseWithQuestions = dashboardData.courses.find(course =>
+            dashboardData.enrolledCourseIds.includes(course.id) && Number(course.question_count) > 0
+          );
+          selectCourse(enrolledCourseWithQuestions ? enrolledCourseWithQuestions.id : dashboardData.enrolledCourseIds[0]);
+        } else if (dashboardData.courses && dashboardData.courses.length > 0) {
+          selectCourse(dashboardData.courses[0].id);
+        }
+      } catch (err) {
+        console.error('Error loading dashboard:', err);
+        const container = document.getElementById('courseDashGrid');
+        if (container) {
+          container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">Failed to load courses. Please refresh.</p>';
+        }
+      }
+    }
+
+    function getCourseThumbnail(title) {
+      const t = String(title || '').toLowerCase();
+      if (t.includes('youtube')) return '/images/yt.png';
+      if (t.includes('canva') || t.includes('graphic')) return '/images/canva.png';
+      if (t.includes('wordpress') || t.includes('web')) return '/images/wp.png';
+      if (t.includes('ai') || t.includes('artificial')) return '/images/Ai.png';
+      return '/images/profile.jpeg';
+    }
+
+    function getCourseBannerThumbnail(title) {
+      const t = String(title || '').toLowerCase();
+      if (t.includes('youtube')) return '/images/thumb-yt.jpeg';
+      if (t.includes('canva') || t.includes('graphic')) return '/images/thumb-graphics.jpeg';
+      if (t.includes('wordpress') || t.includes('web')) return '/images/thumb-webdev.jpeg';
+      if (t.includes('ai') || t.includes('artificial')) return '/images/thumb-ai.jpeg';
+      return '/images/profile.jpeg';
+    }
+
+    function renderCourseCards() {
+      const container = document.getElementById('courseDashGrid');
+      if (!dashboardData.courses.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);">No courses published yet.</p>';
+        return;
+      }
+
+      container.innerHTML = dashboardData.courses.map(c => `
+        <div class="course-dash-card ${c.id === activeCourseId ? 'active-course' : ''}" id="card-${c.id}">
+          <div>
+            <div style="width:100%; height:140px; border-radius:12px; overflow:hidden; margin-bottom:1rem; border:1px solid var(--border-color); background:var(--bg-elevated);">
+              <img src="${getCourseThumbnail(c.title)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; display:block;" />
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+              <span class="badge ${c.completed ? 'badge-emerald' : (c.enrolled ? 'badge-primary' : 'badge-amber')}">
+                ${c.completed ? 'Completed' : (c.enrolled ? 'Enrolled' : 'Available')}
+              </span>
+              <span class="question-count-badge" aria-label="${c.question_count} questions in this course" title="${c.question_count} questions in this course">
+                <strong>${c.question_count}</strong>
+                <span>Questions</span>
+              </span>
+            </div>
+            <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:0.35rem;">${c.title}</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4; margin-bottom:1rem;">${c.description}</p>
+          </div>
+
+          <div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${c.progress_percentage}%"></div>
+            </div>
+            <div class="progress-info">
+              <span>Progress</span>
+              <span>${c.completed_questions}/${c.question_count} (${c.progress_percentage}%)</span>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+              ${c.enrolled
+                ? `<button class="btn ${c.id === activeCourseId ? 'btn-primary' : 'btn-secondary'} btn-sm btn-block" onclick="selectCourse(${c.id})">
+                    ${c.id === activeCourseId ? 'Currently Viewing' : 'Open Course'}
+                   </button>`
+                : `<button class="btn btn-outline btn-sm btn-block" onclick="enrollCourse(${c.id})">
+                    Enroll & Start
+                   </button>`
+              }
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function enrollCourse(courseId) {
+      try {
+        const res = await fetch(`/api/student/courses/${courseId}/enroll`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Enrollment failed.');
+        await loadDashboard();
+        selectCourse(courseId);
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function selectCourse(courseId) {
+      if (activeCourseId !== null) {
+        answersByCourse[activeCourseId] = answersState;
+      }
+      activeCourseId = courseId;
+      answersState = answersByCourse[courseId] || {};
+      clearAllTimers();
+      renderCourseCards();
+
+      const workspace = document.getElementById('courseWorkspace');
+      const questionsList = document.getElementById('questionsList');
+      workspace.style.display = 'block';
+      renderSubmissionStatus(courseId);
+      questionsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Loading questions...</div>';
+
+      try {
+        const res = await fetch(`/api/student/courses/${courseId}/questions`);
+        const data = await res.json();
+        if (!res.ok) {
+          questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">${data.error || 'Please enroll in this course first.'}</div>`;
+          return;
+        }
+
+        const course = data.course;
+        currentCourseQuestions = data.questions || [];
+        document.getElementById('currentCourseTitle').textContent = course.title;
+        document.getElementById('currentCourseDesc').textContent = course.description;
+        document.getElementById('practicalClassLink').href = `/practical-classes.html?course=${encodeURIComponent(course.title)}`;
+
+        // Update course thumbnail banner
+        const thumb = getCourseBannerThumbnail(course.title);
+        const thumbImg = document.getElementById('courseThumbnailImg');
+        const thumbTitle = document.getElementById('courseThumbnailTitle');
+        if (thumbImg) thumbImg.src = thumb;
+        if (thumbTitle) thumbTitle.textContent = course.title;
+
+        if (!currentCourseQuestions.length) {
+          questionsList.innerHTML = '<div style="padding: 1.5rem; color: var(--text-muted); text-align:center;">No questions added for this course track yet.</div>';
+          updateSubmissionButtonState();
+          return;
+        }
+
+        renderQuestions(currentCourseQuestions);
+        updateSubmissionButtonState();
+      } catch (err) {
+        questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">Error loading questions: ${err.message}</div>`;
+      }
+    }
+
+    function renderSubmissionStatus(courseId) {
+      const panel = document.getElementById('submissionStatus');
+      const badge = document.getElementById('submissionStatusBadge');
+      const date = document.getElementById('submissionStatusDate');
+      const note = document.getElementById('submissionReviewNote');
+      const submission = studentSubmissions.find(item => Number(item.course_id) === Number(courseId));
+      if (!panel || !badge || !date || !note) return;
+
+      if (!submission) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      const status = String(submission.status || 'pending').toLowerCase();
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      panel.style.display = 'block';
+      panel.style.background = status === 'approved' ? 'var(--emerald-subtle)' : (status === 'rejected' ? 'var(--rose-subtle)' : 'var(--amber-subtle)');
+      badge.className = `badge ${status === 'approved' ? 'badge-emerald' : (status === 'rejected' ? 'badge-rose' : 'badge-amber')}`;
+      badge.textContent = statusLabel;
+      date.textContent = `Submitted ${new Date(submission.submitted_at).toLocaleString()}${submission.reviewed_at ? ` | Reviewed ${new Date(submission.reviewed_at).toLocaleString()}` : ''}`;
+      note.style.display = submission.review_note ? 'block' : 'none';
+      note.textContent = submission.review_note ? `Mentor feedback: ${submission.review_note}` : '';
+    }
+
+    function renderQuestions(questions) {
+      const questionsList = document.getElementById('questionsList');
+      questionsList.innerHTML = questions.map((q, idx) => {
+        const hasVideo = Boolean(q.has_video);
+        const canAnswer = Boolean(q.can_answer);
+        const isLocked = !Boolean(q.sequentially_unlocked);
+        const remaining = Number(q.video_timer_remaining_seconds || 0);
+        const isCompleted = Boolean(q.completed);
+        const prevQ = idx > 0 ? questions[idx - 1] : null;
+        const prevQNum = prevQ ? (prevQ.question_number || idx) : null;
+
+        // When locked, render a minimal locked card
+        if (isLocked) {
+          return `
+            <div class="question-item locked-q" id="q-box-${q.id}">
+              <div class="q-header">
+                <span class="q-num">Question #${q.question_number || (idx + 1)}</span>
+                <span class="badge badge-amber" id="q-status-${q.id}">🔒 Locked</span>
+              </div>
+              <div class="q-text">${q.question_text}</div>
+              ${q.description ? `<div class="q-desc">${q.description}</div>` : ''}
+              <div class="question-lock-overlay">
+                <div class="question-lock-icon">🔒</div>
+                <div>
+                  <strong style="display:block; margin-bottom:0.2rem;">Question Locked</strong>
+                  <span style="font-size:0.85rem; font-weight:500; color:var(--text-muted);">Complete Question #${prevQNum} (watch video, answer, and mark complete) to unlock this question.</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="question-item ${isCompleted ? 'completed-q' : ''}" id="q-box-${q.id}">
+            <div class="q-header">
+              <span class="q-num">Question #${q.question_number || (idx + 1)}</span>
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                ${hasVideo ? `<span id="q-video-badge-${q.id}" class="timer-badge ${canAnswer ? 'badge-done' : (q.video_started ? 'badge-running' : 'badge-waiting')}">${canAnswer ? '✅ Video Lecture Done' : (q.video_started ? `⏳ Timer: ${formatTime(remaining)}` : '⚠️ 5-Min Video Required')}</span>` : ''}
+                <span class="badge ${isCompleted ? 'badge-emerald' : 'badge-amber'}" id="q-status-${q.id}">
+                  ${isCompleted ? 'Completed' : 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            <div class="q-text">${q.question_text}</div>
+            ${q.description ? `<div class="q-desc">${q.description}</div>` : ''}
+
+            ${hasVideo ? `
+              <div class="video-req-box ${canAnswer ? 'timer-unlocked' : (q.video_started ? 'timer-active' : '')}" id="video-box-${q.id}">
+                <div>
+                  <strong style="font-size:0.9rem; display:block;">Mandatory 5-Minute Video Lecture</strong>
+                  <span id="video-instruction-${q.id}" style="font-size:0.82rem; color:var(--text-muted);">
+                    ${canAnswer
+                      ? '✅ 5-minute study time fulfilled. You may now submit your written answer.'
+                      : (q.video_started
+                          ? `⏳ Video lesson in progress. Answer field and completion button will automatically unlock in <span id="timer-text-${q.id}" style="font-weight:800; color:var(--amber);">${formatTime(remaining)}</span>.`
+                          : 'Students must watch the attached video for at least 5 minutes before the answer field unlocks.')
+                    }
+                  </span>
+                </div>
+                <button type="button" class="video-btn" id="video-action-btn-${q.id}" onclick="startVideoTimer(${q.id}, '${q.youtube_url}', ${Boolean(q.video_started)})">
+                  <i data-lucide="play-circle"></i>
+                  <span>${canAnswer ? 'Re-watch Video Lesson' : (q.video_started ? 'Continue Watching Video' : 'Watch Reference Lecture')}</span>
+                </button>
+              </div>
+            ` : ''}
+
+            ${(() => {
+              let labelText = 'Your Answer / Solution Notes:';
+              if (q.response_type === 'image_upload') labelText = 'Upload Image Response:';
+              else if (q.response_type === 'video_upload') labelText = 'Upload Video Response:';
+              else if (q.response_type === 'file_upload') labelText = 'File Upload Assignment:';
+
+              let inputHtml = '';
+              let previewHtml = '';
+              const currentAnswer = answersState[q.id] || '';
+
+              if (q.response_type === 'image_upload') {
+                if (currentAnswer && currentAnswer.startsWith('data:image/')) {
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><img src="${currentAnswer}" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block;" /></div>`;
+                } else {
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"></div>`;
+                }
+                inputHtml = `
+                  <input type="file" id="file-input-${q.id}" accept="image/*" class="form-control" ${!canAnswer ? 'disabled' : ''} onchange="handleQuestionFileUpload(${q.id}, this)" />
+                  ${previewHtml}
+                `;
+              } else if (q.response_type === 'video_upload') {
+                if (currentAnswer && currentAnswer.startsWith('data:video/')) {
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><video src="${currentAnswer}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block;"></video></div>`;
+                } else {
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"></div>`;
+                }
+                inputHtml = `
+                  <input type="file" id="file-input-${q.id}" accept="video/*" class="form-control" ${!canAnswer ? 'disabled' : ''} onchange="handleQuestionFileUpload(${q.id}, this)" />
+                  ${previewHtml}
+                `;
+              } else if (q.response_type === 'file_upload') {
+                inputHtml = `
+                  <input type="file" id="file-input-${q.id}" data-response-type="file_upload" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.pptx" class="form-control" ${!canAnswer ? 'disabled' : ''} onchange="handleQuestionFileUpload(${q.id}, this)" />
+                  <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Accepted: PDF, DOCX, ZIP, PNG, JPG, PPTX (Max 10MB)</div>
+                  <div id="preview-${q.id}" style="margin-top:0.5rem;"></div>
+                `;
+              } else {
+                inputHtml = `
+                  <textarea
+                    class="answer-textarea"
+                    id="ans-${q.id}"
+                    placeholder="${canAnswer ? 'Type your complete answer or implementation steps here...' : '🔒 Locked: Please watch the 5-minute video lesson first to unlock this answer field.'}"
+                    ${!canAnswer ? 'disabled' : ''}
+                    oninput="handleAnswerInput(${q.id}, this.value)"
+                  >${currentAnswer}</textarea>
+                `;
+              }
+
+              return `
+                <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">
+                  ${labelText} <span style="color:var(--rose);">*</span>
+                </label>
+                ${inputHtml}
+              `;
+            })()}
+
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              id="btn-complete-${q.id}"
+              ${!canAnswer ? 'disabled' : ''}
+              onclick="saveQuestionComplete(${q.id})"
+              style="margin-top: 0.75rem;"
+            >
+              <i data-lucide="check-circle-2"></i>
+              <span>${canAnswer ? 'Mark Question as Complete' : '🔒 Complete 5-Min Video First'}</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      if (window.app && app.renderIcons) app.renderIcons();
+
+      // Launch real-time timers for questions actively running countdown
+      questions.forEach(q => {
+        if (q.has_video && !q.can_answer && q.video_started && q.video_timer_remaining_seconds > 0 && q.sequentially_unlocked) {
+          runCountdown(q.id, q.video_timer_remaining_seconds);
+        }
+      });
+    }
+
+    async function startVideoTimer(questionId, videoUrl, videoStarted = false) {
+      if (!videoStarted) {
+        alert("You must watch the video for 5 minutes and must like the video.");
+      }
+      if (videoUrl) {
+        window.open(videoUrl, '_blank');
+      }
+
+      try {
+        const res = await fetch(`/api/student/questions/${questionId}/start-video`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not start video timer');
+
+        const timer = data.timer;
+        if (timer.unlocked) {
+          unlockQuestionUI(questionId);
+        } else {
+          runCountdown(questionId, timer.remainingSeconds);
+        }
+      } catch (err) {
+        console.error('Error starting video timer:', err);
+      }
+    }
+
+    function runCountdown(questionId, seconds) {
+      if (activeTimers[questionId]) {
+        clearInterval(activeTimers[questionId]);
+      }
+
+      let remaining = Math.max(0, Math.ceil(seconds));
+      const badge = document.getElementById(`q-video-badge-${questionId}`);
+      const timerSpan = document.getElementById(`timer-text-${questionId}`);
+      const instruction = document.getElementById(`video-instruction-${questionId}`);
+      const videoBox = document.getElementById(`video-box-${questionId}`);
+
+      if (badge) {
+        badge.className = 'timer-badge badge-running';
+        badge.textContent = `⏳ Timer: ${formatTime(remaining)}`;
+      }
+      if (videoBox) {
+        videoBox.className = 'video-req-box timer-active';
+      }
+
+      activeTimers[questionId] = setInterval(() => {
+        remaining -= 1;
+        if (badge) {
+          badge.textContent = `⏳ Timer: ${formatTime(remaining)}`;
+        }
+        if (timerSpan) {
+          timerSpan.textContent = formatTime(remaining);
+        }
+
+        if (remaining <= 0) {
+          clearInterval(activeTimers[questionId]);
+          delete activeTimers[questionId];
+          unlockQuestionUI(questionId);
+        }
+      }, 1000);
+    }
+
+    function unlockQuestionUI(questionId) {
+      const qIdx = currentCourseQuestions.findIndex(item => item.id === questionId);
+      const q = qIdx >= 0 ? currentCourseQuestions[qIdx] : null;
+      if (q) {
+        q.can_answer = true;
+        q.video_requirement_completed = true;
+      }
+
+      const qBox = document.getElementById(`q-box-${questionId}`);
+      if (qBox) {
+        qBox.classList.remove('locked-q');
+      }
+
+      const badge = document.getElementById(`q-video-badge-${questionId}`);
+      if (badge) {
+        badge.className = 'timer-badge badge-done';
+        badge.textContent = '✅ Video Lecture Done';
+      }
+
+      const videoBox = document.getElementById(`video-box-${questionId}`);
+      if (videoBox) {
+        videoBox.className = 'video-req-box timer-unlocked';
+      }
+
+      const instruction = document.getElementById(`video-instruction-${questionId}`);
+      if (instruction) {
+        instruction.textContent = '✅ 5-minute study time fulfilled. You may now submit your written answer.';
+      }
+
+      const textarea = document.getElementById(`ans-${questionId}`);
+      if (textarea) {
+        textarea.disabled = false;
+        textarea.placeholder = 'Type your complete answer or implementation steps here...';
+      }
+
+      const fileInput = document.getElementById(`file-input-${questionId}`);
+      if (fileInput) {
+        fileInput.disabled = false;
+      }
+
+      const btnComplete = document.getElementById(`btn-complete-${questionId}`);
+      if (btnComplete) {
+        btnComplete.disabled = false;
+        btnComplete.innerHTML = '<i data-lucide="check-circle-2"></i> <span>Mark Question as Complete</span>';
+      }
+
+      const videoBtn = document.getElementById(`video-action-btn-${questionId}`);
+      if (videoBtn) {
+        videoBtn.innerHTML = '<i data-lucide="play-circle"></i> <span>Re-watch Video Lesson</span>';
+      }
+
+      if (window.app && app.renderIcons) app.renderIcons();
+      updateSubmissionButtonState();
+    }
+
+    function handleAnswerInput(questionId, value) {
+      answersState[questionId] = value;
+      const qBox = document.getElementById(`q-box-${questionId}`);
+      if (qBox && value.trim().length > 0) {
+        qBox.classList.remove('unanswered-highlight');
+      }
+      updateSubmissionButtonState();
+    }
+
+    function updateSubmissionButtonState() {
+      const totalQuestions = currentCourseQuestions.length;
+      if (totalQuestions === 0) return;
+
+      // Only count non-locked questions (sequentially unlocked ones)
+      let answeredCount = 0;
+      currentCourseQuestions.forEach(q => {
+        if (!q.sequentially_unlocked) return; // skip locked questions
+        const text = answersState[q.id] !== undefined ? String(answersState[q.id]).trim() : '';
+        if (text.length > 0) {
+          answeredCount++;
+        }
+      });
+
+      const unlockedTotal = currentCourseQuestions.filter(q => q.sequentially_unlocked).length;
+      const hasFileUpload = currentCourseQuestions.some(q => q.response_type === 'file_upload');
+      const fileInput = getAssignmentFileInput();
+      const hasFile = !hasFileUpload || (fileInput && fileInput.files && fileInput.files.length > 0);
+      const allQuestionsAnswered = (answeredCount === totalQuestions);
+
+      // Check all per-question video requirements
+      const allVideosCompleted = currentCourseQuestions.every(q => !q.has_video || q.can_answer || !q.sequentially_unlocked);
+
+      // Update Checklist Item 1: Questions Answered
+      const rowQuestions = document.getElementById('checkRowQuestions');
+      const badgeQuestions = document.getElementById('checkBadgeQuestions');
+      if (rowQuestions && badgeQuestions) {
+        if (allQuestionsAnswered && allVideosCompleted) {
+          rowQuestions.className = 'checklist-row item-ready';
+          badgeQuestions.className = 'badge badge-emerald';
+          badgeQuestions.textContent = `✅ All Answered (${answeredCount}/${totalQuestions})`;
+        } else {
+          rowQuestions.className = 'checklist-row item-pending';
+          badgeQuestions.className = 'badge badge-amber';
+          badgeQuestions.textContent = `⚠️ ${answeredCount} / ${totalQuestions} Answered`;
+        }
+      }
+
+      const submitBtn = document.getElementById('submitAssignmentBtn');
+      if (!submitBtn) return;
+
+      if (!allQuestionsAnswered || !allVideosCompleted) {
+        submitBtn.disabled = true;
+        submitBtn.className = 'btn btn-secondary btn-block btn-lg';
+        submitBtn.innerHTML = `<i data-lucide="lock"></i> <span>Answer all ${totalQuestions} questions to unlock submit (${answeredCount}/${totalQuestions})</span>`;
+      } else if (hasFileUpload && !hasFile) {
+        submitBtn.disabled = true;
+        submitBtn.className = 'btn btn-secondary btn-block btn-lg';
+        submitBtn.innerHTML = '<i data-lucide="file-up"></i> <span>Please select your assignment work file</span>';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary btn-block btn-lg';
+        submitBtn.innerHTML = '<i data-lucide="upload"></i> <span>Submit Final Practical Assignment for Mentor Review</span>';
+      }
+
+      if (window.app && app.renderIcons) app.renderIcons();
+    }
+
+    async function saveQuestionComplete(questionId) {
+      const q = currentCourseQuestions.find(item => item.id === questionId);
+      const isFileUpload = q && q.response_type === 'file_upload';
+      
+      if (isFileUpload) {
+        const fileInput = getAssignmentFileInput();
+        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+        if (!hasFile) {
+          alert('Please attach your assignment file in the File Upload question first.');
+          return;
+        }
+        answersState[questionId] = `Uploaded file: ${fileInput.files[0].name}`;
+      } else {
+        const ansVal = (answersState[questionId] || '').trim();
+        if (!ansVal) {
+          alert('Please write an answer or select/upload the required file before marking this question as complete.');
+          const textarea = document.getElementById(`ans-${questionId}`);
+          if (textarea) textarea.focus();
+          return;
+        }
+      }
+
+      try {
+        const res = await fetch(`/api/student/questions/${questionId}/complete`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        const box = document.getElementById(`q-box-${questionId}`);
+        const statusBadge = document.getElementById(`q-status-${questionId}`);
+        if (box) box.classList.add('completed-q');
+        if (statusBadge) {
+          statusBadge.className = 'badge badge-emerald';
+          statusBadge.textContent = 'Completed';
+        }
+        await loadDashboard();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    document.getElementById('submissionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = getAssignmentFileInput();
+      const alertBox = document.getElementById('submissionAlert');
+      const submitBtn = document.getElementById('submitAssignmentBtn');
+
+      if (!activeCourseId) {
+        alert('Please select a course track first.');
+        return;
+      }
+
+      // 1. Check all questions
+      let firstMissingQuestion = null;
+      currentCourseQuestions.forEach(q => {
+        if (!q.sequentially_unlocked) return; // skip locked questions
+        const val = answersState[q.id] !== undefined ? String(answersState[q.id]).trim() : '';
+        const qBox = document.getElementById(`q-box-${q.id}`);
+        if (!val) {
+          if (qBox) qBox.classList.add('unanswered-highlight');
+          if (!firstMissingQuestion) firstMissingQuestion = q;
+        } else {
+          if (qBox) qBox.classList.remove('unanswered-highlight');
+        }
+      });
+
+      if (firstMissingQuestion) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--rose-subtle)';
+        alertBox.style.color = 'var(--rose)';
+        alertBox.textContent = `All questions must be answered before you can submit. Please provide an answer for Question #${firstMissingQuestion.question_number}.`;
+        const missingEl = document.getElementById(`q-box-${firstMissingQuestion.id}`);
+        if (missingEl) missingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      // 2. Check 5-minute video requirements (skip locked questions)
+      for (const q of currentCourseQuestions) {
+        if (!q.sequentially_unlocked) continue;
+        if (q.has_video && !q.can_answer) {
+          alertBox.style.display = 'block';
+          alertBox.style.background = 'var(--rose-subtle)';
+          alertBox.style.color = 'var(--rose)';
+          alertBox.textContent = `Question #${q.question_number} requires completing the 5-minute video lesson before submitting.`;
+          return;
+        }
+      }
+
+      const hasFileUpload = currentCourseQuestions.some(q => q.response_type === 'file_upload');
+      if (hasFileUpload && (!fileInput || !fileInput.files.length)) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--rose-subtle)';
+        alertBox.style.color = 'var(--rose)';
+        alertBox.textContent = 'Please choose an assignment file to upload.';
+        return;
+      }
+
+      const formData = new FormData();
+      const assignmentFile = assignmentFileState || (fileInput && fileInput.files.length ? fileInput.files[0] : null);
+      if (assignmentFile) {
+        formData.append('assignmentFile', assignmentFile);
+      }
+      Object.entries(responseFilesState).forEach(([questionId, file]) => {
+        if (file) formData.append(`responseFile_${questionId}`, file);
+      });
+      const submissionAnswers = Object.fromEntries(Object.entries(answersState).map(([questionId, answer]) => {
+        const value = String(answer ?? '');
+        return [questionId, value.trimStart().startsWith('data:') ? '[Uploaded response]' : value.slice(0, 10000)];
+      }));
+      formData.append('answers', JSON.stringify(submissionAnswers));
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Uploading and submitting...</span>';
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/student/courses/${activeCourseId}/submit`, {
+          method: 'POST',
+          body: formData
+        });
+        const responseText = await res.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          throw new Error(res.status === 401 ? 'Your session has expired. Please log in again.' : 'The server returned an unexpected response. Please try again.');
+        }
+        if (!res.ok) throw new Error(data.error || 'Submission failed.');
+
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--emerald-subtle)';
+        alertBox.style.color = 'var(--emerald)';
+        alertBox.textContent = 'Assignment submitted successfully! Mentor Ahmad Saleem will review your submission shortly.';
+        if (fileInput) fileInput.value = '';
+        assignmentFileState = null;
+        Object.keys(responseFilesState).forEach(questionId => delete responseFilesState[questionId]);
+        await loadDashboard();
+      } catch (err) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--rose-subtle)';
+        alertBox.style.color = 'var(--rose)';
+        alertBox.textContent = err.message;
+      } finally {
+        updateSubmissionButtonState();
+      }
+    });
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    checkSession();
+  </script>
+</body>
+</html>

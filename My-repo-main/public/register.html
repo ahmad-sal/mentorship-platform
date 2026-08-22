@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Registration | Ahmad Saleem Mentorship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .auth-wrap {
+      max-width: 520px;
+      margin: 30px auto 50px;
+      padding: 0 1rem;
+    }
+    .auth-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .auth-header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0.5rem 0 0.25rem;
+    }
+    .auth-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: var(--text-main);
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-subtle);
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 500px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+    .auth-footer {
+      margin-top: 1.75rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .alert-error {
+      background: var(--rose-subtle);
+      border: 1px solid var(--rose-border);
+      color: var(--rose);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-text" href="/">Back to Home</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-header">
+        <span class="pill-badge"><i data-lucide="user-plus"></i> Join Mentorship</span>
+        <h1>Create Student Account</h1>
+        <p>Register to enroll in courses, follow assignments, and track progress</p>
+        <div id="capacityPill" style="margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; font-weight: 700; color: #b45309; background: #fef3c7; padding: 0.4rem 1rem; border-radius: 999px; border: 1px solid #fde68a;">
+          <i data-lucide="award"></i> <span id="capacityText">Your name should be correct because it will print on the certificate</span>
+        </div>
+      </div>
+
+      <div id="errorAlert" class="alert-error"></div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" class="form-control" placeholder="Muhammad Ahmad" required />
+          <div class="form-hint" style="color: var(--amber); font-weight: 600;">⚠️ Your name should be correct because it will print on the certificate</div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="cnic">CNIC Number</label>
+            <input type="text" id="cnic" class="form-control" placeholder="12345-6789012-3" required maxlength="15" />
+            <div class="form-hint">Format: XXXXX-XXXXXXX-X</div>
+          </div>
+          <div class="form-group">
+            <label for="whatsappNumber">WhatsApp Number</label>
+            <input type="tel" id="whatsappNumber" class="form-control" placeholder="03001234567" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="student@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" required autocomplete="new-password" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn" style="margin-top: 0.5rem;">
+          <span>Complete Registration</span>
+          <i data-lucide="arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="/login">Log in here</a></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    async function checkCapacity() {
+      try {
+        const res = await fetch('/api/capacity');
+        const data = await res.json();
+        const capPill = document.getElementById('capacityPill');
+        const btn = document.getElementById('submitBtn');
+        const errBox = document.getElementById('errorAlert');
+
+        if (data && data.isFull) {
+          if (capPill) {
+            capPill.style.background = 'var(--rose-subtle)';
+            capPill.style.borderColor = 'var(--rose-border)';
+            capPill.style.color = 'var(--rose)';
+          }
+          if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>Capacity Reached (800 / 800)</span>';
+          }
+          if (errBox) {
+            errBox.textContent = 'Platform enrollment has reached its maximum limit of 800 registered students. New registrations are currently paused.';
+            errBox.style.display = 'block';
+          }
+        }
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (e) {
+        console.error('Error fetching capacity:', e);
+      }
+    }
+    checkCapacity();
+
+    // Auto-format CNIC
+    const cnicInput = document.getElementById('cnic');
+    cnicInput.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/\D/g, '');
+      if (val.length > 13) val = val.slice(0, 13);
+      if (val.length > 12) {
+        val = val.slice(0, 5) + '-' + val.slice(5, 12) + '-' + val.slice(12);
+      } else if (val.length > 5) {
+        val = val.slice(0, 5) + '-' + val.slice(5);
+      }
+      e.target.value = val;
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('errorAlert');
+      const btn = document.getElementById('submitBtn');
+      errBox.style.display = 'none';
+
+      const fullName = document.getElementById('fullName').value.trim();
+      const cnic = document.getElementById('cnic').value.trim();
+      const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (password !== confirmPassword) {
+        errBox.textContent = 'Passwords do not match.';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Registering...</span>';
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, cnic, whatsappNumber, email, password, confirmPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed.');
+
+        window.location.href = '/student/dashboard';
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Complete Registration</span>' + getIcon('arrow-right');
+      }
+    });
+  </script>
+</body>
+</html>

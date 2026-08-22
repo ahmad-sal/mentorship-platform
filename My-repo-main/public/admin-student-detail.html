@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Details | Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .dash-wrap {
+      max-width: 900px;
+      margin: 2rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+    .profile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .info-box {
+      background: var(--bg-elevated);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+    .progress-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .progress-table th, .progress-table td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .progress-table th {
+      background: var(--bg-elevated);
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-secondary btn-sm" href="/admin/dashboard">&larr; Admin Dashboard</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-wrap">
+    <div class="profile-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <span class="pill-badge" style="background:var(--amber-subtle); color:var(--amber); border-color:var(--amber-border);"><i data-lucide="user"></i> Student Dossier</span>
+          <h1 id="stName" style="font-size: 1.85rem; font-weight: 800; margin: 0.5rem 0 0.2rem;">Student Profile</h1>
+          <p id="stEmail" style="color: var(--text-muted); font-size: 0.95rem;"></p>
+        </div>
+        <button class="btn btn-sm" id="btnDeleteStudent" onclick="deleteThisStudent()" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:var(--radius-md); cursor:pointer;">
+          <i data-lucide="trash-2"></i> Remove Student
+        </button>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">CNIC</div>
+          <div id="stCnic" style="font-size:1rem; font-weight:700;">—</div>
+        </div>
+        <div class="info-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">WhatsApp</div>
+          <div id="stWhatsapp" style="font-size:1rem; font-weight:700;">—</div>
+        </div>
+        <div class="info-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Enrolled Date</div>
+          <div id="stJoined" style="font-size:1rem; font-weight:700;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:1rem;">Individual Course Progress</h2>
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>Course Track</th>
+            <th>Questions Solved</th>
+            <th>Progress</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="stProgressBody">
+          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading progress details...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    async function loadStudent() {
+      const pathParts = window.location.pathname.split('/');
+      const studentId = pathParts[pathParts.length - 1];
+      try {
+        const res = await fetch(`/api/admin/students/${studentId}`);
+        if (!res.ok) throw new Error('Student not found.');
+        const data = await res.json();
+        const s = data.student;
+        document.getElementById('stName').textContent = s.full_name || 'Student';
+        document.getElementById('stEmail').textContent = s.email;
+        document.getElementById('stCnic').textContent = s.cnic || '—';
+        document.getElementById('stWhatsapp').textContent = s.whatsapp_number || '—';
+        document.getElementById('stJoined').textContent = new Date(s.created_at).toLocaleDateString();
+
+        const tbody = document.getElementById('stProgressBody');
+        tbody.innerHTML = (data.progress || []).map(p => `
+          <tr>
+            <td><strong>${p.title}</strong></td>
+            <td>${p.completedQuestionCount} / ${p.questionCount}</td>
+            <td>${p.progressPercentage}%</td>
+            <td><span class="badge ${p.completed ? 'badge-emerald' : 'badge-amber'}">${p.completed ? 'Completed' : 'In Progress'}</span></td>
+          </tr>
+        `).join('');
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function deleteThisStudent() {
+      const pathParts = window.location.pathname.split('/');
+      const studentId = pathParts[pathParts.length - 1];
+      const studentName = document.getElementById('stName').textContent || 'this student';
+      if (!confirm(`Are you sure you want to permanently remove ${studentName}? This will delete all their enrollments and submissions.`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/students/${studentId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to remove student');
+        alert('Student successfully removed.');
+        window.location.href = '/admin/dashboard';
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    loadStudent();
+  </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Profile & Credentials | Ahmad Saleem Mentorship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .profile-wrap {
+      max-width: 900px;
+      margin: 2rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+    .profile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .avatar-large {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 16px rgba(37,99,235,0.25);
+    }
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+    .info-item {
+      background: var(--bg-elevated);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .info-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .progress-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .progress-table th, .progress-table td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .progress-table th {
+      background: var(--bg-elevated);
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-secondary btn-sm" href="/student/dashboard">&larr; Learning Workspace</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="profile-wrap">
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="avatar-large" id="avatarLetter">S</div>
+        <div>
+          <span class="pill-badge"><i data-lucide="user"></i> Verified Student</span>
+          <h1 id="profFullName" style="font-size: 1.85rem; font-weight: 800; margin: 0.35rem 0 0.15rem;">Student Name</h1>
+          <p id="profEmail" style="color: var(--text-muted); font-size: 0.95rem;">student@example.com</p>
+        </div>
+      </div>
+
+      <div class="profile-info-grid">
+        <div class="info-item">
+          <div class="info-label">CNIC</div>
+          <div class="info-val" id="profCnic">—</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">WhatsApp Contact</div>
+          <div class="info-val" id="profWhatsapp">—</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Enrolled Since</div>
+          <div class="info-val" id="profJoined">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Courses & Certificates -->
+    <div class="profile-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 800;">Course Completion Progress</h2>
+        <span class="badge badge-primary">Real-Time Sync</span>
+      </div>
+
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>Course Track</th>
+            <th>Tasks Completed</th>
+            <th>Progress</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="progressTableBody">
+          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading progress...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/student/profile');
+        if (!res.ok) {
+          window.location.href = '/login';
+          return;
+        }
+        const data = await res.json();
+        const s = data.student;
+        document.getElementById('profFullName').textContent = s.full_name || 'Student';
+        document.getElementById('profEmail').textContent = s.email;
+        document.getElementById('profCnic').textContent = s.cnic || '—';
+        document.getElementById('profWhatsapp').textContent = s.whatsapp_number || '—';
+        document.getElementById('profJoined').textContent = new Date(s.created_at).toLocaleDateString();
+        document.getElementById('avatarLetter').textContent = (s.full_name || s.email || 'S')[0].toUpperCase();
+
+        const tbody = document.getElementById('progressTableBody');
+        if (!data.progress || !data.progress.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No progress records yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.progress.map(p => `
+          <tr>
+            <td><strong>${p.title}</strong></td>
+            <td>${p.completedQuestionCount} / ${p.questionCount}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="flex:1; height:6px; background:var(--bg-subtle); border-radius:999px; overflow:hidden;">
+                  <div style="height:100%; width:${p.progressPercentage}%; background:var(--primary);"></div>
+                </div>
+                <span style="font-size:0.75rem; font-weight:700;">${p.progressPercentage}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge ${p.completed ? 'badge-emerald' : 'badge-amber'}">
+                ${p.completed ? 'Completed' : (p.completedQuestionCount > 0 ? 'In Progress' : 'Not Started')}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadProfile();
+  </script>
+</body>
+</html>

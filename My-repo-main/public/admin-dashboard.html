@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Ahmad Saleem Mentorship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .admin-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-num {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--primary);
+      margin: 0.25rem 0;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--primary-subtle);
+      color: var(--primary);
+    }
+    .table-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .data-table th, .data-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.875rem;
+    }
+    .data-table th {
+      background: var(--bg-elevated);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .data-table tr:hover td {
+      background: var(--bg-elevated);
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      width: 100%;
+      max-width: 550px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem Mentorship</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-text" href="/admin/progress"><i data-lucide="award"></i> Student Progress</a>
+        <button class="btn btn-secondary btn-sm" onclick="logout()"><i data-lucide="log-in"></i> Logout</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <div>
+        <span class="pill-badge" style="background:var(--amber-subtle); color:var(--amber); border-color:var(--amber-border);"><i data-lucide="shield"></i> Administrative Center</span>
+        <h1 style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;">Mentor Administration</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Manage courses, review student assignment submissions, and track platform progress.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="openAddCourseModal()"><i data-lucide="plus"></i> Add New Course</button>
+      </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Registered Students</div>
+        <div class="stat-num" id="statStudents">—</div>
+        <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-top:0.25rem;">Max Capacity: 800 Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Courses</div>
+        <div class="stat-num" id="statCourses">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Assignments / Questions</div>
+        <div class="stat-num" id="statAssignments">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Graduated / Completions</div>
+        <div class="stat-num" id="statCompletions">—</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tabSubmissions" onclick="switchTab('submissions')"><i data-lucide="upload"></i> Submissions Queue</button>
+      <button class="tab-btn" id="tabCourses" onclick="switchTab('courses')"><i data-lucide="book-open"></i> Course Management</button>
+      <button class="tab-btn" id="tabStudents" onclick="switchTab('students')"><i data-lucide="user"></i> Registered Students</button>
+    </div>
+
+    <!-- TAB 1: Submissions Review Queue -->
+    <section id="sectionSubmissions">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Attachment</th>
+              <th>Submitted At</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="submissionsTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading submissions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: Courses Management -->
+    <section id="sectionCourses" style="display: none;">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Questions</th>
+              <th>Completions</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="coursesTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading courses...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: Registered Students List -->
+    <section id="sectionStudents" style="display: none;">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>CNIC</th>
+              <th>WhatsApp</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading students...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: Add Course -->
+  <div class="modal-overlay" id="addCourseModal">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 style="font-size:1.35rem; font-weight:800;">Add New Course Track</h3>
+        <button class="btn btn-text" onclick="closeAddCourseModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="addCourseForm">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-size:0.875rem; font-weight:700; margin-bottom:0.35rem;">Course Title</label>
+          <input type="text" id="newCourseTitle" required class="form-control" placeholder="e.g. NextGen Machine Learning" />
+        </div>
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block; font-size:0.875rem; font-weight:700; margin-bottom:0.35rem;">Description</label>
+          <textarea id="newCourseDesc" required class="form-control" rows="3" placeholder="Brief outline of practical objectives..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create Course Track</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Question Manager -->
+  <div class="modal-overlay" id="questionModal">
+    <div class="modal-card" style="max-width: 700px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+          <h3 id="qModalTitle" style="font-size:1.35rem; font-weight:800;">Course Questions</h3>
+          <p id="qModalSubtitle" style="color:var(--text-muted); font-size:0.85rem;"></p>
+        </div>
+        <button class="btn btn-text" onclick="closeQuestionModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div style="background:var(--bg-elevated); padding:1rem; border-radius:var(--radius-md); margin-bottom:1.5rem; border:1px solid var(--border-color);">
+        <h4 id="qFormTitle" style="font-size:0.95rem; font-weight:700; margin-bottom:0.75rem;">Add New Question / Task</h4>
+        <form id="addQuestionForm">
+          <input type="hidden" id="qCourseId" />
+          <input type="hidden" id="editQId" value="" />
+          <div style="margin-bottom:0.75rem;">
+            <input type="text" id="newQText" placeholder="Question statement / prompt" required class="form-control" />
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <input type="text" id="newQDesc" placeholder="Help text / details (optional)" class="form-control" />
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <input type="url" id="newQYoutube" placeholder="YouTube Video Lesson URL (optional)" class="form-control" />
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">Answer Type</label>
+            <select id="newQType" class="form-control">
+              <option value="short_answer">Text</option>
+              <option value="image_upload">Image Upload</option>
+              <option value="video_upload">Video Upload</option>
+              <option value="file_upload">File Upload</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="submit" id="addQSubmitBtn" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> Add Question</button>
+            <button type="button" id="cancelQEditBtn" class="btn btn-secondary btn-sm" style="display:none;" onclick="cancelQuestionEdit()"><i data-lucide="x"></i> Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="qListContainer">
+        <!-- Loaded asynchronously -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Review Submission -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 style="font-size:1.35rem; font-weight:800;">Review Assignment</h3>
+        <button class="btn btn-text" onclick="closeReviewModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div id="reviewDetails" style="margin-bottom:1.5rem; font-size:0.9rem; line-height:1.5;"></div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-size:0.875rem; font-weight:700; margin-bottom:0.35rem;">Review Feedback / Notes</label>
+        <textarea id="reviewNoteInput" class="form-control" rows="3" placeholder="Great job on completing the workflow! Approved."></textarea>
+      </div>
+      <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="submitReviewAction('rejected')">Reject / Request Fixes</button>
+        <button class="btn btn-primary" onclick="submitReviewAction('approved')"><i data-lucide="check-circle-2"></i> Approve & Issue Completion</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    let activeSubmissionId = null;
+    let currentQuestionsCourseId = null;
+
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('sectionSubmissions').style.display = tab === 'submissions' ? 'block' : 'none';
+      document.getElementById('sectionCourses').style.display = tab === 'courses' ? 'block' : 'none';
+      document.getElementById('sectionStudents').style.display = tab === 'students' ? 'block' : 'none';
+      const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    async function loadAdminData() {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        if (!res.ok) {
+          window.location.href = '/admin/login';
+          return;
+        }
+        const data = await res.json();
+        document.getElementById('statStudents').innerHTML = `${data.totalStudents} <span style="font-size:1.1rem; color:var(--text-muted); font-weight:600;">/ 800</span>`;
+        document.getElementById('statCourses').textContent = data.totalCourses;
+        document.getElementById('statAssignments').textContent = data.totalAssignments;
+        document.getElementById('statCompletions').textContent = data.totalCompletions;
+
+        renderSubmissions();
+        renderCourses();
+        renderStudents(data.students);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function renderSubmissions() {
+      try {
+        const res = await fetch('/api/admin/submissions');
+        const data = await res.json();
+        const tbody = document.getElementById('submissionsTableBody');
+        if (!data.submissions.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No student assignment submissions yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.submissions.map(s => `
+          <tr>
+            <td><strong>${s.full_name}</strong><br/><span style="font-size:0.75rem; color:var(--text-muted);">${s.email}</span></td>
+            <td>${s.title}</td>
+            <td><a href="/api/admin/submissions/${s.id}/file" class="btn btn-outline btn-sm" target="_blank"><i data-lucide="upload"></i> ${s.file_name}</a></td>
+            <td>${new Date(s.submitted_at).toLocaleString()}</td>
+            <td><span class="badge ${s.status === 'approved' ? 'badge-emerald' : (s.status === 'pending' ? 'badge-amber' : 'badge-primary')}">${s.status}</span></td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="openReviewModal(${s.id})">Review Submission</button>
+            </td>
+          </tr>
+        `).join('');
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function renderCourses() {
+      try {
+        const res = await fetch('/api/admin/courses');
+        const data = await res.json();
+        const tbody = document.getElementById('coursesTableBody');
+        tbody.innerHTML = data.courses.map(c => `
+          <tr>
+            <td><strong>${c.title}</strong></td>
+            <td><span style="font-size:0.85rem; color:var(--text-muted);">${c.description}</span></td>
+            <td>${c.assignmentCount} Questions</td>
+            <td>${c.completionCount} Completed</td>
+            <td><span class="badge badge-emerald">${c.status}</span></td>
+            <td>
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button class="btn btn-secondary btn-sm" onclick="openQuestionsModal(${c.id}, '${c.title.replace(/'/g, "\\'")}')"><i data-lucide="help-circle"></i> Questions</button>
+                <button class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="deleteCourseTrack(${c.id}, '${c.title.replace(/'/g, "\\'")}')" title="Remove Course">
+                  <i data-lucide="trash-2"></i> Remove
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderStudents(students) {
+      const tbody = document.getElementById('studentsTableBody');
+      if (!students || !students.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">No students registered yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = students.map(s => `
+        <tr>
+          <td><strong>${s.full_name || 'Student'}</strong></td>
+          <td>${s.email}</td>
+          <td>${s.cnic || '—'}</td>
+          <td>${s.whatsapp_number || '—'}</td>
+          <td>${new Date(s.created_at).toLocaleDateString()}</td>
+          <td>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <a href="/admin/students/${s.id}" class="btn btn-outline btn-sm">View Details</a>
+              <button class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="deleteStudentRecord(${s.id}, '${(s.full_name || 'Student').replace(/'/g, "\\'")}')" title="Remove Student">
+                <i data-lucide="trash-2"></i> Remove
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      if (window.app && app.renderIcons) app.renderIcons();
+    }
+
+    async function deleteStudentRecord(id, studentName) {
+      const name = studentName || 'this student';
+      if (!confirm(`Are you sure you want to permanently remove ${name}? All progress and submissions will be deleted.`)) return;
+      try {
+        const res = await fetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to remove student');
+        await loadAdminData();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function deleteCourseTrack(id, courseTitle) {
+      const title = courseTitle || 'this course';
+      if (!confirm(`Are you sure you want to permanently remove "${title}"? All associated questions, enrollments, and progress for this course will be deleted.`)) return;
+      try {
+        const res = await fetch(`/api/admin/courses/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to delete course');
+        await loadAdminData();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function openAddCourseModal() {
+      document.getElementById('addCourseModal').classList.add('open');
+    }
+    function closeAddCourseModal() {
+      document.getElementById('addCourseModal').classList.remove('open');
+    }
+
+    document.getElementById('addCourseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('newCourseTitle').value.trim();
+      const description = document.getElementById('newCourseDesc').value.trim();
+      try {
+        const res = await fetch('/api/admin/courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, status: 'published' })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        closeAddCourseModal();
+        document.getElementById('newCourseTitle').value = '';
+        document.getElementById('newCourseDesc').value = '';
+        await loadAdminData();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    async function openQuestionsModal(courseId, courseTitle) {
+      currentQuestionsCourseId = courseId;
+      document.getElementById('qCourseId').value = courseId;
+      document.getElementById('qModalTitle').textContent = courseTitle;
+      document.getElementById('qModalSubtitle').textContent = 'Manage tasks, prompts, and video links for this course.';
+      document.getElementById('questionModal').classList.add('open');
+      await loadQuestionsList(courseId);
+    }
+    function closeQuestionModal() {
+      document.getElementById('questionModal').classList.remove('open');
+    }
+
+    async function loadQuestionsList(courseId) {
+      const container = document.getElementById('qListContainer');
+      container.innerHTML = '<div style="padding:1rem; text-align:center;">Loading questions...</div>';
+      try {
+        const res = await fetch(`/api/admin/courses/${courseId}/questions`);
+        const data = await res.json();
+        if (!data.questions || !data.questions.length) {
+          container.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No questions in this course yet.</p>';
+          return;
+        }
+        container.innerHTML = data.questions.map((q, idx) => {
+          const typeLabel = {
+            short_answer: 'Text',
+            image_upload: 'Image',
+            video_upload: 'Video',
+            file_upload: 'File'
+          }[q.response_type || 'short_answer'] || 'Text';
+
+          return `
+            <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <strong style="font-size:0.9rem;">#${q.question_number || (idx+1)}: ${q.question_text}</strong>
+                <span class="badge" style="font-size:0.75rem; text-transform:none; margin-left:0.5rem; background:var(--bg-elevated); color:var(--text); border:1px solid var(--border-color);">${typeLabel}</span>
+                ${q.description ? `<p style="font-size:0.8rem; color:var(--text-muted); margin:0.25rem 0;">${q.description}</p>` : ''}
+                ${q.youtube_url ? `<a href="${q.youtube_url}" target="_blank" style="font-size:0.8rem; color:var(--primary); font-weight:700;">Video Link &rarr;</a>` : ''}
+              </div>
+              <div style="display:flex; gap:0.4rem; align-items:center;">
+                <button class="btn btn-secondary btn-sm" onclick="editQuestionItem(${q.id}, '${q.question_text.replace(/'/g, "\\'")}', '${(q.description || '').replace(/'/g, "\\'")}', '${(q.youtube_url || '').replace(/'/g, "\\'")}', '${q.response_type || 'short_answer'}')"><i data-lucide="edit"></i> Edit</button>
+                <button class="btn btn-outline btn-sm" style="color:var(--rose); border-color:var(--rose);" onclick="deleteQuestionItem(${q.id})"><i data-lucide="trash-2"></i> Delete</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (e) {
+        container.innerHTML = `<p style="color:var(--rose);">${e.message}</p>`;
+      }
+    }
+
+    document.getElementById('addQuestionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const courseId = currentQuestionsCourseId;
+      const editId = document.getElementById('editQId').value;
+      const questionText = document.getElementById('newQText').value.trim();
+      const description = document.getElementById('newQDesc').value.trim();
+      const youtubeUrl = document.getElementById('newQYoutube').value.trim();
+      const responseType = document.getElementById('newQType').value;
+
+      try {
+        let res;
+        if (editId) {
+          res = await fetch(`/api/admin/questions/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questionText, description, youtubeUrl, responseType })
+          });
+        } else {
+          res = await fetch(`/api/admin/courses/${courseId}/questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questionText, description, youtubeUrl, responseType })
+          });
+        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        cancelQuestionEdit();
+        await loadQuestionsList(courseId);
+        await loadAdminData();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    function editQuestionItem(id, text, desc, youtube, type) {
+      document.getElementById('editQId').value = id;
+      document.getElementById('newQText').value = text;
+      document.getElementById('newQDesc').value = desc;
+      document.getElementById('newQYoutube').value = youtube;
+      document.getElementById('newQType').value = type;
+      
+      document.getElementById('qFormTitle').textContent = 'Edit Question / Task';
+      document.getElementById('addQSubmitBtn').innerHTML = '<i data-lucide="check"></i> Save Question';
+      document.getElementById('cancelQEditBtn').style.display = 'inline-block';
+      if (window.app && app.renderIcons) app.renderIcons();
+    }
+
+    function cancelQuestionEdit() {
+      document.getElementById('editQId').value = '';
+      document.getElementById('newQText').value = '';
+      document.getElementById('newQDesc').value = '';
+      document.getElementById('newQYoutube').value = '';
+      document.getElementById('newQType').value = 'short_answer';
+      
+      document.getElementById('qFormTitle').textContent = 'Add New Question / Task';
+      document.getElementById('addQSubmitBtn').innerHTML = '<i data-lucide="plus"></i> Add Question';
+      document.getElementById('cancelQEditBtn').style.display = 'none';
+      if (window.app && app.renderIcons) app.renderIcons();
+    }
+
+    async function deleteQuestionItem(questionId) {
+      if (!confirm('Delete this question?')) return;
+      try {
+        const res = await fetch(`/api/admin/questions/${questionId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        await loadQuestionsList(currentQuestionsCourseId);
+        await loadAdminData();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function openReviewModal(submissionId) {
+      activeSubmissionId = submissionId;
+      const details = document.getElementById('reviewDetails');
+      details.innerHTML = 'Loading submission details...';
+      document.getElementById('reviewModal').classList.add('open');
+
+      try {
+        const subRes = await fetch(`/api/admin/submissions/${submissionId}`);
+        const subData = await subRes.json();
+        const s = subData.submission;
+
+        // Fetch questions to map IDs to actual text
+        const qRes = await fetch(`/api/admin/courses/${s.course_id}/questions`);
+        const qData = await qRes.json();
+        const questionsMap = {};
+        if (qData.questions) {
+          qData.questions.forEach(q => {
+            questionsMap[q.id] = q;
+          });
+        }
+
+        let answersHtml = Object.entries(s.answers || {}).map(([qid, ans]) => {
+          const question = questionsMap[qid];
+          const qText = question ? question.question_text : `Question ID #${qid}`;
+          const qNum = question ? `Question #${question.question_number}` : `Question ID #${qid}`;
+
+          let displayHtml = '';
+          if (typeof ans === 'string' && ans.startsWith('data:image/')) {
+            displayHtml = `<img src="${ans}" style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;" />`;
+          } else if (typeof ans === 'string' && ans.startsWith('data:video/')) {
+            displayHtml = `<video src="${ans}" controls style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;"></video>`;
+          } else if (typeof ans === 'string' && ans.startsWith('data:') && ans.includes(';base64,')) {
+            displayHtml = `<a href="${ans}" download="question-${qid}-file" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><i data-lucide="download"></i> Download File Attachment</a>`;
+          } else if (s.response_files && s.response_files[qid]) {
+            const responseUrl = `/api/admin/submissions/${s.id}/response/${qid}`;
+            displayHtml = question && question.response_type === 'image_upload'
+              ? `<img src="${responseUrl}" alt="Student image response" style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;" />`
+              : `<a href="${responseUrl}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><i data-lucide="download"></i> View Uploaded Response</a>`;
+          } else {
+            displayHtml = `<p style="margin:0.25rem 0; white-space:pre-wrap;">${ans}</p>`;
+          }
+
+          return `
+            <div style="margin-bottom:0.75rem; background:var(--bg-elevated); padding:0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+              <strong style="font-size:0.875rem; color:var(--text-muted);">${qNum}: ${qText}</strong>
+              <div style="margin-top:0.35rem;">${displayHtml}</div>
+            </div>
+          `;
+        }).join('');
+
+        details.innerHTML = `
+          <p><strong>Student:</strong> ${s.full_name} (${s.email})</p>
+          <p><strong>Course:</strong> ${s.title}</p>
+          <p><strong>File:</strong> ${s.file_name ? `<a href="/api/admin/submissions/${s.id}/file" target="_blank" style="color:var(--primary); font-weight:700;">Download Attachment (${s.file_name})</a>` : 'No file attachment required'}</p>
+          <h4 style="margin:1rem 0 0.5rem; font-size:0.95rem;">Student Answers:</h4>
+          ${answersHtml || '<p style="color:var(--text-muted);">No individual question answers provided.</p>'}
+        `;
+        document.getElementById('reviewNoteInput').value = s.review_note || '';
+      } catch (e) {
+        details.innerHTML = `<p style="color:var(--rose);">${e.message}</p>`;
+      }
+    }
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.remove('open');
+    }
+
+    async function submitReviewAction(status) {
+      if (!activeSubmissionId) return;
+      const reviewNote = document.getElementById('reviewNoteInput').value.trim();
+      try {
+        const res = await fetch(`/api/admin/submissions/${activeSubmissionId}/review`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, reviewNote })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        closeReviewModal();
+        await loadAdminData();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    }
+
+    loadAdminData();
+  </script>
+</body>
+</html>

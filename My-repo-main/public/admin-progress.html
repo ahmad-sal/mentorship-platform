@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Progress Overview | Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Mentor.css">
+  <style>
+    .dash-wrap {
+      max-width: 1200px;
+      margin: 2rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+    .table-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .progress-table th, .progress-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.875rem;
+    }
+    .progress-table th {
+      background: var(--bg-elevated);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="brand-logo" href="/">
+        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-secondary btn-sm" href="/admin/dashboard">&larr; Admin Dashboard</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon"></span>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-wrap">
+    <div style="margin-bottom: 2rem;">
+      <span class="pill-badge" style="background:var(--amber-subtle); color:var(--amber); border-color:var(--amber-border);"><i data-lucide="shield"></i> Student Progress Matrix</span>
+      <h1 style="font-size: 2rem; font-weight: 800; margin: 0.35rem 0 0.15rem;">Cohort Completion & Progress</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Monitor real-time progress across all courses and student accounts.</p>
+    </div>
+
+    <div class="table-card">
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Email</th>
+            <th>WhatsApp</th>
+            <th>Completed Courses</th>
+            <th>Registration Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="cohortTableBody">
+          <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading student matrix...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/Mentor.js"></script>
+  <script>
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    async function loadProgress() {
+      try {
+        const res = await fetch('/api/admin/progress');
+        if (!res.ok) {
+          window.location.href = '/admin/login';
+          return;
+        }
+        const data = await res.json();
+        const tbody = document.getElementById('cohortTableBody');
+        if (!data.students.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No student records found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.students.map(s => {
+          let completedIds = [];
+          try { completedIds = JSON.parse(s.completed_course_ids || '[]'); } catch(e) {}
+          return `
+            <tr>
+              <td><strong>${s.full_name || 'Student'}</strong></td>
+              <td>${s.email}</td>
+              <td>${s.whatsapp_number || '—'}</td>
+              <td>
+                <span class="badge ${completedIds.length > 0 ? 'badge-emerald' : 'badge-amber'}">
+                  ${completedIds.length} Completed
+                </span>
+              </td>
+              <td>${new Date(s.created_at).toLocaleDateString()}</td>
+              <td>
+                <a href="/admin/students/${s.id}" class="btn btn-outline btn-sm">Full Report</a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadProgress();
+  </script>
+</body>
+</html>

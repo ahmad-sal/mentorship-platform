@@ -1,10 +1,5 @@
-const path = require('path');
-const fs = require('fs');
-const { createClient } = require('@libsql/client');
-const bcrypt = require('bcryptjs');
-
-const dbPath = path.join(__dirname, 'kiddoo.db');
-const submissionDataDir = path.join(__dirname, 'uploads');
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'kiddoo.db');
+const submissionDataDir = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads');
 fs.mkdirSync(submissionDataDir, { recursive: true });
 const client = createClient({
   url: `file:${dbPath}`
@@ -449,10 +444,29 @@ async function getStudentRecords() {
   const res = await client.execute(`
     SELECT u.id, u.full_name, u.cnic, u.whatsapp_number, u.email, u.created_at,
       COALESCE((
-        SELECT json_group_array(cp.course_id)
+        SELECT json_group_array(DISTINCT cp.course_id)
         FROM course_progress cp
         WHERE cp.student_id = u.id AND cp.completed = 1
-      ), '[]') AS completed_course_ids
+      ), '[]') AS completed_course_ids,
+      COALESCE((
+        SELECT json_group_array(DISTINCT c.title)
+        FROM student_enrollments se
+        JOIN courses c ON c.id = se.course_id
+        WHERE se.student_id = u.id
+        ORDER BY c.display_order ASC, c.id ASC
+      ), '[]') AS enrolled_course_titles,
+      COALESCE((
+        SELECT json_group_array(DISTINCT se.course_id)
+        FROM student_enrollments se
+        WHERE se.student_id = u.id
+      ), '[]') AS enrolled_course_ids,
+      COALESCE((
+        SELECT json_group_array(DISTINCT c.title)
+        FROM course_progress cp
+        JOIN courses c ON c.id = cp.course_id
+        WHERE cp.student_id = u.id AND cp.completed = 1
+        ORDER BY c.display_order ASC, c.id ASC
+      ), '[]') AS completed_course_titles
     FROM users u
     WHERE u.role = 'student'
     ORDER BY u.created_at DESC
@@ -468,8 +482,19 @@ async function getStudentProfileData(studentId) {
   const user = userRes.rows[0];
   if (!user) return null;
 
+  // Fetch all enrolled courses
+  const enrolledRes = await client.execute({
+    sql: `SELECT DISTINCT c.id, c.title
+          FROM student_enrollments se
+          JOIN courses c ON c.id = se.course_id
+          WHERE se.student_id = ?
+          ORDER BY c.display_order ASC, c.id ASC`,
+    args: [studentId]
+  });
+
+  // Fetch all completed courses (from course_progress with completed=1 OR approved submissions)
   const completedRes = await client.execute({
-    sql: `SELECT c.id, c.title, cp.completed_at
+    sql: `SELECT DISTINCT c.id, c.title, cp.completed_at
           FROM course_progress cp
           JOIN courses c ON c.id = cp.course_id
           WHERE cp.student_id = ? AND cp.completed = 1
@@ -479,6 +504,7 @@ async function getStudentProfileData(studentId) {
 
   return {
     ...user,
+    enrolledCourses: enrolledRes.rows,
     completedCourses: completedRes.rows
   };
 }

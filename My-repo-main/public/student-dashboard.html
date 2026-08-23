@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -442,7 +442,7 @@
 
         <!-- Course Thumbnail Banner -->
         <div class="course-thumbnail-banner" id="courseThumbnailBanner">
-          <img id="courseThumbnailImg"   alt="Course Thumbnail" />
+          <img id="courseThumbnailImg" alt="Course Thumbnail" />
           <div class="course-thumbnail-overlay">
             <span class="course-thumbnail-pill">📚 Active Course Track</span>
             <span class="course-thumbnail-pill" id="courseThumbnailTitle" style="font-size:0.95rem; padding:0.45rem 1.1rem;"></span>
@@ -470,7 +470,6 @@
               </div>
               <span class="badge badge-amber" id="checkBadgeQuestions">0 / 0 Answered</span>
             </div>
-
           </div>
 
           <div id="submissionStatus" style="display:none; margin:0 auto 1.25rem; max-width:500px; padding:0.85rem 1rem; border-radius:var(--radius-md); text-align:left; border:1px solid var(--border-color);">
@@ -504,9 +503,11 @@
     let answersState = {};
     const answersByCourse = {};
     const responseFilesState = {};
+    const courseAssignmentFiles = {};
     let assignmentFileState = null;
     let activeTimers = {};
     let studentSubmissions = [];
+    const submissionNoticeByCourse = {};
 
     function syncThemeUI() {
       const saved = localStorage.getItem('themePreference') || 'light';
@@ -515,7 +516,7 @@
       const label = document.getElementById('themeLabel');
       const icon = document.getElementById('themeIcon');
       if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
-      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+      if (icon && typeof getIcon === 'function') icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
     }
     function toggleTheme() {
       const isDark = document.body.classList.contains('dark-theme');
@@ -538,23 +539,51 @@
       activeTimers = {};
     }
 
-
     function getAssignmentFileInput() {
       return document.querySelector('input[data-response-type="file_upload"]');
+    }
+
+    function getAssignmentFile() {
+      const fileInput = getAssignmentFileInput();
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        return fileInput.files[0];
+      }
+      if (activeCourseId && courseAssignmentFiles[activeCourseId]) {
+        return courseAssignmentFiles[activeCourseId];
+      }
+      return assignmentFileState || null;
+    }
+
+    function isFileUploadSatisfied() {
+      const fileUploadQuestions = currentCourseQuestions.filter(q => q.response_type === 'file_upload');
+      if (fileUploadQuestions.length === 0) return true;
+
+      return fileUploadQuestions.every(q => {
+        const hasObjFile = Boolean(getAssignmentFile()) || Boolean(responseFilesState[q.id]) || (activeCourseId && Boolean(courseAssignmentFiles[activeCourseId]));
+        const isAnswered = Boolean(answersState[q.id] && String(answersState[q.id]).trim().length > 0);
+        const isCompleted = Boolean(q.completed);
+        return hasObjFile || isAnswered || isCompleted;
+      });
     }
 
     function handleGlobalFileChange(input) {
       const hasFile = input && input.files && input.files.length > 0;
       if (hasFile) {
+        if (activeCourseId) courseAssignmentFiles[activeCourseId] = input.files[0];
+        assignmentFileState = input.files[0];
         currentCourseQuestions.forEach(q => {
           if (q.response_type === 'file_upload') {
             answersState[q.id] = `Uploaded file: ${input.files[0].name}`;
+            responseFilesState[q.id] = input.files[0];
           }
         });
       } else {
+        if (activeCourseId) delete courseAssignmentFiles[activeCourseId];
+        assignmentFileState = null;
         currentCourseQuestions.forEach(q => {
           if (q.response_type === 'file_upload') {
             delete answersState[q.id];
+            delete responseFilesState[q.id];
           }
         });
       }
@@ -562,20 +591,28 @@
     }
 
     function handleQuestionFileUpload(questionId, input) {
-      const file = input.files[0];
+      const file = input.files && input.files[0] ? input.files[0] : null;
       const question = currentCourseQuestions.find(item => item.id === questionId);
       const previewDiv = document.getElementById(`preview-${questionId}`);
+
       if (!file) {
         delete answersState[questionId];
         delete responseFilesState[questionId];
-        if (question && question.response_type === 'file_upload') assignmentFileState = null;
+        if (question && question.response_type === 'file_upload') {
+          if (activeCourseId) delete courseAssignmentFiles[activeCourseId];
+          assignmentFileState = null;
+        }
         if (previewDiv) previewDiv.innerHTML = '';
         updateSubmissionButtonState();
         return;
       }
 
+      // Store in memory for the session and course
+      responseFilesState[questionId] = file;
+
       if (question && question.response_type === 'file_upload') {
         assignmentFileState = file;
+        if (activeCourseId) courseAssignmentFiles[activeCourseId] = file;
         answersState[questionId] = `Uploaded file: ${file.name}`;
         if (previewDiv) {
           previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${file.name}</div>`;
@@ -587,8 +624,6 @@
       if (previewDiv) {
         previewDiv.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Processing file upload...</span>`;
       }
-
-      responseFilesState[questionId] = file;
 
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -629,8 +664,9 @@
       }
     }
 
-    async function loadDashboard() {
+    async function loadDashboard(desiredCourseId = null) {
       try {
+        const previouslySelectedCourseId = desiredCourseId !== null ? desiredCourseId : activeCourseId;
         const res = await fetch('/api/student/dashboard');
         if (!res.ok) {
           if (res.status === 401) {
@@ -651,13 +687,34 @@
         }
         renderCourseCards();
 
-        if (dashboardData.enrolledCourseIds && dashboardData.enrolledCourseIds.length > 0) {
-          const enrolledCourseWithQuestions = dashboardData.courses.find(course =>
-            dashboardData.enrolledCourseIds.includes(course.id) && Number(course.question_count) > 0
+        // Determine which course track to keep or select
+        let targetCourseId = null;
+
+        // 1. If user was already on a course, stay on that exact course
+        if (previouslySelectedCourseId !== null && previouslySelectedCourseId !== undefined) {
+          const existing = dashboardData.courses.find(c => Number(c.id) === Number(previouslySelectedCourseId));
+          if (existing) {
+            targetCourseId = existing.id;
+          }
+        }
+
+        // 2. If no previously selected course, pick first enrolled course with questions or first available
+        if (targetCourseId === null) {
+          const enrolledList = dashboardData.enrolledCourseIds ? dashboardData.enrolledCourseIds.map(Number) : [];
+          const enrolledCourse = dashboardData.courses.find(c =>
+            (c.enrolled || enrolledList.includes(Number(c.id))) && Number(c.question_count) > 0
           );
-          selectCourse(enrolledCourseWithQuestions ? enrolledCourseWithQuestions.id : dashboardData.enrolledCourseIds[0]);
-        } else if (dashboardData.courses && dashboardData.courses.length > 0) {
-          selectCourse(dashboardData.courses[0].id);
+          if (enrolledCourse) {
+            targetCourseId = enrolledCourse.id;
+          } else if (dashboardData.enrolledCourseIds && dashboardData.enrolledCourseIds.length > 0) {
+            targetCourseId = dashboardData.enrolledCourseIds[0];
+          } else if (dashboardData.courses && dashboardData.courses.length > 0) {
+            targetCourseId = dashboardData.courses[0].id;
+          }
+        }
+
+        if (targetCourseId !== null && targetCourseId !== undefined) {
+          await selectCourse(Number(targetCourseId));
         }
       } catch (err) {
         console.error('Error loading dashboard:', err);
@@ -688,13 +745,13 @@
 
     function renderCourseCards() {
       const container = document.getElementById('courseDashGrid');
-      if (!dashboardData.courses.length) {
+      if (!dashboardData || !dashboardData.courses || !dashboardData.courses.length) {
         container.innerHTML = '<p style="color:var(--text-muted);">No courses published yet.</p>';
         return;
       }
 
       container.innerHTML = dashboardData.courses.map(c => `
-        <div class="course-dash-card ${c.id === activeCourseId ? 'active-course' : ''}" id="card-${c.id}">
+        <div class="course-dash-card ${Number(c.id) === Number(activeCourseId) ? 'active-course' : ''}" id="card-${c.id}">
           <div>
             <div style="width:100%; height:140px; border-radius:12px; overflow:hidden; margin-bottom:1rem; border:1px solid var(--border-color); background:var(--bg-elevated);">
               <img src="${getCourseThumbnail(c.title)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; display:block;" />
@@ -714,17 +771,17 @@
 
           <div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${c.progress_percentage}%"></div>
+              <div class="progress-bar-fill" style="width: ${c.progress_percentage || 0}%"></div>
             </div>
             <div class="progress-info">
               <span>Progress</span>
-              <span>${c.completed_questions}/${c.question_count} (${c.progress_percentage}%)</span>
+              <span>${c.completed_questions || 0}/${c.question_count || 0} (${c.progress_percentage || 0}%)</span>
             </div>
 
             <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
               ${c.enrolled
-                ? `<button class="btn ${c.id === activeCourseId ? 'btn-primary' : 'btn-secondary'} btn-sm btn-block" onclick="selectCourse(${c.id})">
-                    ${c.id === activeCourseId ? 'Currently Viewing' : 'Open Course'}
+                ? `<button class="btn ${Number(c.id) === Number(activeCourseId) ? 'btn-primary' : 'btn-secondary'} btn-sm btn-block" onclick="selectCourse(${c.id})">
+                    ${Number(c.id) === Number(activeCourseId) ? 'Currently Viewing' : 'Open Course'}
                    </button>`
                 : `<button class="btn btn-outline btn-sm btn-block" onclick="enrollCourse(${c.id})">
                     Enroll & Start
@@ -737,34 +794,51 @@
     }
 
     async function enrollCourse(courseId) {
+      const cleanId = typeof courseId === 'object' && courseId !== null ? courseId.id : Number(courseId);
       try {
-        const res = await fetch(`/api/student/courses/${courseId}/enroll`, { method: 'POST' });
+        const res = await fetch(`/api/student/courses/${cleanId}/enroll`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Enrollment failed.');
-        await loadDashboard();
-        selectCourse(courseId);
+        await loadDashboard(cleanId);
       } catch (e) {
         alert(e.message);
       }
     }
 
     async function selectCourse(courseId) {
+      const cleanCourseId = typeof courseId === 'object' && courseId !== null ? courseId.id : Number(courseId);
+
       if (activeCourseId !== null) {
         answersByCourse[activeCourseId] = answersState;
       }
-      activeCourseId = courseId;
-      answersState = answersByCourse[courseId] || {};
+      activeCourseId = cleanCourseId;
+
+      // Issue 2 Fix: Strictly display submission notice only for the course that was actually submitted
+      const submissionAlert = document.getElementById('submissionAlert');
+      if (submissionAlert) {
+        if (submissionNoticeByCourse[cleanCourseId]) {
+          submissionAlert.style.display = 'block';
+          submissionAlert.style.background = 'var(--emerald-subtle)';
+          submissionAlert.style.color = 'var(--emerald)';
+          submissionAlert.textContent = submissionNoticeByCourse[cleanCourseId];
+        } else {
+          submissionAlert.style.display = 'none';
+          submissionAlert.textContent = '';
+        }
+      }
+
+      answersState = answersByCourse[cleanCourseId] || {};
       clearAllTimers();
       renderCourseCards();
 
       const workspace = document.getElementById('courseWorkspace');
       const questionsList = document.getElementById('questionsList');
       workspace.style.display = 'block';
-      renderSubmissionStatus(courseId);
+      renderSubmissionStatus(cleanCourseId);
       questionsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Loading questions...</div>';
 
       try {
-        const res = await fetch(`/api/student/courses/${courseId}/questions`);
+        const res = await fetch(`/api/student/courses/${cleanCourseId}/questions`);
         const data = await res.json();
         if (!res.ok) {
           questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">${data.error || 'Please enroll in this course first.'}</div>`;
@@ -802,7 +876,13 @@
       const badge = document.getElementById('submissionStatusBadge');
       const date = document.getElementById('submissionStatusDate');
       const note = document.getElementById('submissionReviewNote');
-      const submission = studentSubmissions.find(item => Number(item.course_id) === Number(courseId));
+      const cleanCourseId = Number(courseId);
+
+      const submission = studentSubmissions.find(item => {
+        const cId = item.course_id !== undefined ? item.course_id : (item.courseId !== undefined ? item.courseId : item.id);
+        return Number(cId) === cleanCourseId;
+      });
+
       if (!panel || !badge || !date || !note) return;
 
       if (!submission) {
@@ -919,10 +999,18 @@
                   ${previewHtml}
                 `;
               } else if (q.response_type === 'file_upload') {
+                // Issue 3 Fix: Display retained file upload status if completed or already recorded
+                let fileStatusDisplay = '';
+                if (currentAnswer) {
+                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${currentAnswer}</div>`;
+                } else if (isCompleted) {
+                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--emerald); margin-top:0.5rem;">✅ Document file uploaded & recorded for submission.</div>`;
+                }
+                previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;">${fileStatusDisplay}</div>`;
                 inputHtml = `
                   <input type="file" id="file-input-${q.id}" data-response-type="file_upload" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.pptx" class="form-control" ${!canAnswer ? 'disabled' : ''} onchange="handleQuestionFileUpload(${q.id}, this)" />
                   <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Accepted: PDF, DOCX, ZIP, PNG, JPG, PPTX (Max 10MB)</div>
-                  <div id="preview-${q.id}" style="margin-top:0.5rem;"></div>
+                  ${previewHtml}
                 `;
               } else {
                 inputHtml = `
@@ -1097,20 +1185,19 @@
       const totalQuestions = currentCourseQuestions.length;
       if (totalQuestions === 0) return;
 
-      // Only count non-locked questions (sequentially unlocked ones)
+      // Only count non-locked questions
       let answeredCount = 0;
       currentCourseQuestions.forEach(q => {
-        if (!q.sequentially_unlocked) return; // skip locked questions
+        if (!q.sequentially_unlocked) return;
         const text = answersState[q.id] !== undefined ? String(answersState[q.id]).trim() : '';
-        if (text.length > 0) {
+        const isFileUploadSatisfiedForQ = (q.response_type === 'file_upload' && (Boolean(q.completed) || Boolean(getAssignmentFile()) || Boolean(courseAssignmentFiles[activeCourseId])));
+        if (text.length > 0 || q.completed || isFileUploadSatisfiedForQ) {
           answeredCount++;
         }
       });
 
-      const unlockedTotal = currentCourseQuestions.filter(q => q.sequentially_unlocked).length;
       const hasFileUpload = currentCourseQuestions.some(q => q.response_type === 'file_upload');
-      const fileInput = getAssignmentFileInput();
-      const hasFile = !hasFileUpload || (fileInput && fileInput.files && fileInput.files.length > 0);
+      const hasFile = isFileUploadSatisfied();
       const allQuestionsAnswered = (answeredCount === totalQuestions);
 
       // Check all per-question video requirements
@@ -1154,18 +1241,23 @@
     async function saveQuestionComplete(questionId) {
       const q = currentCourseQuestions.find(item => item.id === questionId);
       const isFileUpload = q && q.response_type === 'file_upload';
-      
+      const currentCourseIdToPreserve = activeCourseId;
+
       if (isFileUpload) {
-        const fileInput = getAssignmentFileInput();
-        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
-        if (!hasFile) {
+        const assignmentFile = getAssignmentFile();
+        const existingAns = answersState[questionId];
+        if (!assignmentFile && !existingAns && !q.completed) {
           alert('Please attach your assignment file in the File Upload question first.');
           return;
         }
-        answersState[questionId] = `Uploaded file: ${fileInput.files[0].name}`;
+        if (assignmentFile) {
+          assignmentFileState = assignmentFile;
+          if (activeCourseId) courseAssignmentFiles[activeCourseId] = assignmentFile;
+          answersState[questionId] = `Uploaded file: ${assignmentFile.name}`;
+        }
       } else {
         const ansVal = (answersState[questionId] || '').trim();
-        if (!ansVal) {
+        if (!ansVal && !q.completed) {
           alert('Please write an answer or select/upload the required file before marking this question as complete.');
           const textarea = document.getElementById(`ans-${questionId}`);
           if (textarea) textarea.focus();
@@ -1184,7 +1276,10 @@
           statusBadge.className = 'badge badge-emerald';
           statusBadge.textContent = 'Completed';
         }
-        await loadDashboard();
+        if (q) q.completed = true;
+
+        // Issue 1 Fix: Explicitly reload dashboard preserving the current course ID
+        await loadDashboard(currentCourseIdToPreserve);
       } catch (e) {
         alert(e.message);
       }
@@ -1206,8 +1301,9 @@
       currentCourseQuestions.forEach(q => {
         if (!q.sequentially_unlocked) return; // skip locked questions
         const val = answersState[q.id] !== undefined ? String(answersState[q.id]).trim() : '';
+        const isFileUploadSatisfiedForQ = (q.response_type === 'file_upload' && (Boolean(q.completed) || Boolean(getAssignmentFile()) || Boolean(courseAssignmentFiles[activeCourseId])));
         const qBox = document.getElementById(`q-box-${q.id}`);
-        if (!val) {
+        if (!val && !q.completed && !isFileUploadSatisfiedForQ) {
           if (qBox) qBox.classList.add('unanswered-highlight');
           if (!firstMissingQuestion) firstMissingQuestion = q;
         } else {
@@ -1237,8 +1333,12 @@
         }
       }
 
+      // Issue 3 Fix: Check file upload with retained completion state support
       const hasFileUpload = currentCourseQuestions.some(q => q.response_type === 'file_upload');
-      if (hasFileUpload && (!fileInput || !fileInput.files.length)) {
+      const assignmentFile = getAssignmentFile();
+      const fileUploadSatisfied = isFileUploadSatisfied();
+
+      if (hasFileUpload && !fileUploadSatisfied) {
         alertBox.style.display = 'block';
         alertBox.style.background = 'var(--rose-subtle)';
         alertBox.style.color = 'var(--rose)';
@@ -1247,25 +1347,35 @@
       }
 
       const formData = new FormData();
-      const assignmentFile = assignmentFileState || (fileInput && fileInput.files.length ? fileInput.files[0] : null);
       if (assignmentFile) {
         formData.append('assignmentFile', assignmentFile);
       }
       Object.entries(responseFilesState).forEach(([questionId, file]) => {
         if (file) formData.append(`responseFile_${questionId}`, file);
       });
+
       const submissionAnswers = Object.fromEntries(Object.entries(answersState).map(([questionId, answer]) => {
         const value = String(answer ?? '');
         return [questionId, value.trimStart().startsWith('data:') ? '[Uploaded response]' : value.slice(0, 10000)];
       }));
+
+      // Ensure completed questions are marked in submission payload even if cleared from DOM
+      currentCourseQuestions.forEach(q => {
+        if (q.completed && !submissionAnswers[q.id]) {
+          submissionAnswers[q.id] = q.response_type === 'file_upload' ? 'Uploaded file (completed)' : 'Completed';
+        }
+      });
+
       formData.append('answers', JSON.stringify(submissionAnswers));
 
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span>Uploading and submitting...</span>';
       alertBox.style.display = 'none';
 
+      const submittedCourseId = activeCourseId;
+
       try {
-        const res = await fetch(`/api/student/courses/${activeCourseId}/submit`, {
+        const res = await fetch(`/api/student/courses/${submittedCourseId}/submit`, {
           method: 'POST',
           body: formData
         });
@@ -1278,14 +1388,20 @@
         }
         if (!res.ok) throw new Error(data.error || 'Submission failed.');
 
+        // Issue 2 Fix: Store submission notification specifically for this submitted course
+        submissionNoticeByCourse[submittedCourseId] = 'Assignment submitted successfully! Mentor Ahmad Saleem will review your submission shortly.';
+
         alertBox.style.display = 'block';
         alertBox.style.background = 'var(--emerald-subtle)';
         alertBox.style.color = 'var(--emerald)';
-        alertBox.textContent = 'Assignment submitted successfully! Mentor Ahmad Saleem will review your submission shortly.';
+        alertBox.textContent = submissionNoticeByCourse[submittedCourseId];
+
         if (fileInput) fileInput.value = '';
         assignmentFileState = null;
+        if (courseAssignmentFiles[submittedCourseId]) delete courseAssignmentFiles[submittedCourseId];
         Object.keys(responseFilesState).forEach(questionId => delete responseFilesState[questionId]);
-        await loadDashboard();
+
+        await loadDashboard(submittedCourseId);
       } catch (err) {
         alertBox.style.display = 'block';
         alertBox.style.background = 'var(--rose-subtle)';

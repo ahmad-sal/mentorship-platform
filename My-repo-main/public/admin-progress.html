@@ -39,6 +39,68 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+    .matrix-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+    .print-matrix-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 0;
+      border-radius: var(--radius-md);
+      padding: 0.7rem 1rem;
+      background: linear-gradient(135deg, #0f766e, #0d9488);
+      color: #fff;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(13, 148, 136, 0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .print-matrix-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(13, 148, 136, 0.3);
+    }
+    .print-report {
+      display: none;
+    }
+    @media print {
+      body {
+        background: #fff !important;
+        color: #111827 !important;
+      }
+      body > *:not(.print-report) {
+        display: none !important;
+      }
+      .print-report {
+        display: block;
+        padding: 1.5rem;
+      }
+      .print-report h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.6rem;
+      }
+      .print-report p {
+        margin: 0 0 1.25rem;
+        color: #4b5563;
+      }
+      .print-report table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .print-report th, .print-report td {
+        padding: 0.7rem 0.8rem;
+        border: 1px solid #d1d5db;
+        text-align: left;
+      }
+      .print-report th {
+        background: #f0fdfa;
+        color: #115e59;
+      }
+    }
   </style>
 </head>
 <body class="light-theme">
@@ -65,6 +127,13 @@
       <p style="color: var(--text-muted); font-size: 0.95rem;">Monitor real-time progress across all courses and student accounts.</p>
     </div>
 
+    <div class="matrix-toolbar">
+      <button type="button" class="print-matrix-btn" onclick="printStudentMatrix()">
+        <i data-lucide="printer"></i>
+        <span>Print Student Matrix</span>
+      </button>
+    </div>
+
     <div class="table-card">
       <table class="progress-table">
         <thead>
@@ -72,17 +141,20 @@
             <th>Student Name</th>
             <th>Email</th>
             <th>WhatsApp</th>
+            <th>Enrolled Course</th>
             <th>Completed Courses</th>
             <th>Registration Date</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody id="cohortTableBody">
-          <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading student matrix...</td></tr>
+          <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Loading student matrix...</td></tr>
         </tbody>
       </table>
     </div>
   </main>
+
+  <section class="print-report" id="printReport" aria-hidden="true"></section>
 
   <script src="/Mentor.js"></script>
   <script>
@@ -112,35 +184,118 @@
         const data = await res.json();
         const tbody = document.getElementById('cohortTableBody');
         if (!data.students.length) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No student records found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No student records found.</td></tr>';
           return;
         }
 
-        tbody.innerHTML = data.students.map(s => {
-          let completedIds = [];
-          try { completedIds = JSON.parse(s.completed_course_ids || '[]'); } catch(e) {}
+        const studentsWithCourseData = await Promise.all(data.students.map(async s => {
+          let enrolledCourses = [];
+          let completedCourses = [];
+          let enrolledCourseIds = [];
+          try { enrolledCourses = typeof s.enrolled_course_titles === 'string' ? JSON.parse(s.enrolled_course_titles || '[]') : (s.enrolled_course_titles || []); } catch(e) {}
+          try { completedCourses = typeof s.completed_course_titles === 'string' ? JSON.parse(s.completed_course_titles || '[]') : (s.completed_course_titles || []); } catch(e) {}
+          try { enrolledCourseIds = typeof s.enrolled_course_ids === 'string' ? JSON.parse(s.enrolled_course_ids || '[]') : (s.enrolled_course_ids || []); } catch(e) {}
+
+          if (!enrolledCourses.length && Array.isArray(s.enrolledCourses)) {
+            enrolledCourses = s.enrolledCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean);
+          }
+          if (!completedCourses.length && Array.isArray(s.completedCourses)) {
+            completedCourses = s.completedCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean);
+          }
+
+          try {
+            const profileRes = await fetch(`/api/admin/students/${s.id}`);
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              const profile = profileData.student || {};
+              const profileEnrolled = Array.isArray(profile.enrolledCourses)
+                ? profile.enrolledCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean)
+                : [];
+              const profileCompleted = Array.isArray(profile.completedCourses)
+                ? profile.completedCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean)
+                : [];
+              if (profileEnrolled.length) enrolledCourses = profileEnrolled;
+              if (profileCompleted.length) completedCourses = profileCompleted;
+            }
+          } catch (e) {
+            console.warn(`Could not load course names for student ${s.id}:`, e);
+          }
+
+          if (!Array.isArray(enrolledCourses) || !enrolledCourses.length) {
+            enrolledCourses = enrolledCourseIds.map(courseId => {
+              const course = (data.courses || []).find(item => Number(item.id) === Number(courseId));
+              return course ? course.title : '';
+            }).filter(Boolean);
+          }
+
+          const enrolledText = Array.isArray(enrolledCourses) && enrolledCourses.length ? enrolledCourses.join(', ') : '—';
+          const completedText = Array.isArray(completedCourses) && completedCourses.length ? completedCourses.join(', ') : '—';
+
           return `
             <tr>
               <td><strong>${s.full_name || 'Student'}</strong></td>
               <td>${s.email}</td>
               <td>${s.whatsapp_number || '—'}</td>
-              <td>
-                <span class="badge ${completedIds.length > 0 ? 'badge-emerald' : 'badge-amber'}">
-                  ${completedIds.length} Completed
-                </span>
-              </td>
+              <td>${enrolledText}</td>
+              <td>${completedText}</td>
               <td>${new Date(s.created_at).toLocaleDateString()}</td>
               <td>
                 <a href="/admin/students/${s.id}" class="btn btn-outline btn-sm">Full Report</a>
               </td>
             </tr>
           `;
-        }).join('');
+        }));
+
+        tbody.innerHTML = studentsWithCourseData.join('');
 
         if (window.app && app.renderIcons) app.renderIcons();
       } catch (err) {
         console.error(err);
       }
+    }
+
+    function printStudentMatrix() {
+      const report = document.getElementById('printReport');
+      const students = Array.from(document.querySelectorAll('#cohortTableBody tr'))
+        .filter(row => row.querySelectorAll('td').length >= 7)
+        .map(row => {
+          const cells = row.querySelectorAll('td');
+          return {
+            name: cells[0].textContent.trim(),
+            whatsapp: cells[2].textContent.trim(),
+            enrolledCourse: cells[3].textContent.trim(),
+            enrolledDate: cells[5].textContent.trim()
+          };
+        });
+
+      if (!students.length) {
+        alert('There are no student records to print.');
+        return;
+      }
+
+      report.innerHTML = `
+        <h1>Student Enrollment Matrix</h1>
+        <p>Printed on ${new Date().toLocaleDateString()} | Ahmad Saleem Mentorship</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>WhatsApp Number</th>
+              <th>Enrolled Course Name</th>
+              <th>Enrolled Date</th>
+            </tr>
+          </thead>
+          <tbody>${students.map(student => `
+            <tr>
+              <td><strong>${student.name}</strong></td>
+              <td>${student.whatsapp}</td>
+              <td>${student.enrolledCourse}</td>
+              <td>${student.enrolledDate}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      `;
+      window.print();
     }
     loadProgress();
   </script>

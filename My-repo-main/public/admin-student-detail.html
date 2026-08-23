@@ -34,6 +34,14 @@
       border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
     }
+    .course-info-box {
+      grid-column: span 2;
+    }
+    @media (max-width: 520px) {
+      .course-info-box {
+        grid-column: span 1;
+      }
+    }
     .progress-table {
       width: 100%;
       border-collapse: collapse;
@@ -49,6 +57,72 @@
       background: var(--bg-elevated);
       font-weight: 700;
       color: var(--text-muted);
+    }
+    .report-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+    .print-report-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 0;
+      border-radius: var(--radius-md);
+      padding: 0.7rem 1rem;
+      background: linear-gradient(135deg, #0f766e, #0d9488);
+      color: #fff;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(13, 148, 136, 0.2);
+    }
+    .print-only-report {
+      display: none;
+    }
+    @media print {
+      body {
+        background: #fff !important;
+        color: #111827 !important;
+      }
+      body > *:not(.print-only-report) {
+        display: none !important;
+      }
+      .print-only-report {
+        display: block;
+        padding: 2rem;
+        font-family: Arial, sans-serif;
+      }
+      .print-only-report h1 {
+        margin: 0 0 1rem;
+        font-size: 1.8rem;
+        color: #0f766e;
+        border-bottom: 2px solid #0f766e;
+        padding-bottom: 0.5rem;
+      }
+      .print-only-report .report-row {
+        margin: 0.75rem 0;
+        font-size: 1.1rem;
+        line-height: 1.5;
+      }
+      .print-only-report .report-label {
+        font-weight: 700;
+        color: #374151;
+        display: inline-block;
+        min-width: 220px;
+      }
+      .print-only-report .report-value {
+        color: #111827;
+        font-weight: 600;
+      }
+      .print-only-report .course-highlight {
+        background: #f0fdfa;
+        padding: 0.75rem 1rem;
+        border-left: 4px solid #0d9488;
+        border-radius: 4px;
+        margin: 0.75rem 0;
+      }
     }
   </style>
 </head>
@@ -70,6 +144,13 @@
   </header>
 
   <main class="dash-wrap">
+    <div class="report-toolbar">
+      <button type="button" class="print-report-btn" onclick="printStudentReport()">
+        <i data-lucide="printer"></i>
+        <span>Print Full Report</span>
+      </button>
+    </div>
+
     <div class="profile-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
         <div>
@@ -95,6 +176,14 @@
           <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Enrolled Date</div>
           <div id="stJoined" style="font-size:1rem; font-weight:700;">—</div>
         </div>
+        <div class="info-box course-info-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Enrolled Course(s)</div>
+          <div id="stEnrolledCourses" style="font-size:1rem; font-weight:700; color:var(--primary);">—</div>
+        </div>
+        <div class="info-box course-info-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Completed Course(s)</div>
+          <div id="stCompletedCourses" style="font-size:1rem; font-weight:700; color:var(--emerald);">—</div>
+        </div>
       </div>
     </div>
 
@@ -115,6 +204,8 @@
       </table>
     </div>
   </main>
+
+  <section class="print-only-report" id="printOnlyReport" aria-hidden="true"></section>
 
   <script src="/Mentor.js"></script>
   <script>
@@ -142,25 +233,87 @@
         if (!res.ok) throw new Error('Student not found.');
         const data = await res.json();
         const s = data.student;
+        const progressList = Array.isArray(data.progress) ? data.progress : [];
+
+        // 1. Extract Enrolled Course Names (from student object, with fallback to all courses in progress list)
+        let enrolledCourses = [];
+        if (Array.isArray(s.enrolledCourses) && s.enrolledCourses.length > 0) {
+          enrolledCourses = s.enrolledCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
+        } else if (progressList.length > 0) {
+          // If no explicit enrollments record, every course tracked for the student counts
+          enrolledCourses = progressList.map(p => p.title).filter(Boolean);
+        }
+        window.currentStudentEnrolledCourses = enrolledCourses;
+
+        // 2. Extract Completed Course Names (from student completedCourses + progress records with completed: true)
+        let completedCourses = [];
+        if (Array.isArray(s.completedCourses) && s.completedCourses.length > 0) {
+          completedCourses = s.completedCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
+        }
+        // Also check if any course in progress list is marked complete (100% or completed: true)
+        progressList.forEach(p => {
+          if ((p.completed || Number(p.progressPercentage) >= 100) && p.title && !completedCourses.includes(p.title)) {
+            completedCourses.push(p.title);
+          }
+        });
+        window.currentStudentCompletedCourses = completedCourses;
+
         document.getElementById('stName').textContent = s.full_name || 'Student';
-        document.getElementById('stEmail').textContent = s.email;
+        document.getElementById('stEmail').textContent = s.email || '—';
         document.getElementById('stCnic').textContent = s.cnic || '—';
         document.getElementById('stWhatsapp').textContent = s.whatsapp_number || '—';
-        document.getElementById('stJoined').textContent = new Date(s.created_at).toLocaleDateString();
+        document.getElementById('stJoined').textContent = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
+        document.getElementById('stEnrolledCourses').textContent = enrolledCourses.length ? enrolledCourses.join(', ') : 'None';
+        document.getElementById('stCompletedCourses').textContent = completedCourses.length ? completedCourses.join(', ') : 'None';
 
         const tbody = document.getElementById('stProgressBody');
-        tbody.innerHTML = (data.progress || []).map(p => `
-          <tr>
-            <td><strong>${p.title}</strong></td>
-            <td>${p.completedQuestionCount} / ${p.questionCount}</td>
-            <td>${p.progressPercentage}%</td>
-            <td><span class="badge ${p.completed ? 'badge-emerald' : 'badge-amber'}">${p.completed ? 'Completed' : 'In Progress'}</span></td>
-          </tr>
-        `).join('');
+        if (progressList.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No course progress recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = progressList.map(p => `
+            <tr>
+              <td><strong>${p.title}</strong></td>
+              <td>${p.completedQuestionCount || 0} / ${p.questionCount || 0}</td>
+              <td>${p.progressPercentage || 0}%</td>
+              <td><span class="badge ${p.completed ? 'badge-emerald' : 'badge-amber'}">${p.completed ? 'Completed' : 'In Progress'}</span></td>
+            </tr>
+          `).join('');
+        }
         if (window.app && app.renderIcons) app.renderIcons();
       } catch (e) {
         alert(e.message);
       }
+    }
+
+    function printStudentReport() {
+      const report = document.getElementById('printOnlyReport');
+      const studentName = document.getElementById('stName').textContent.trim();
+      const whatsapp = document.getElementById('stWhatsapp').textContent.trim();
+      const enrolledDate = document.getElementById('stJoined').textContent.trim();
+      const email = document.getElementById('stEmail').textContent.trim();
+      const cnic = document.getElementById('stCnic').textContent.trim();
+      const enrolledText = document.getElementById('stEnrolledCourses').textContent.trim();
+      const completedText = document.getElementById('stCompletedCourses').textContent.trim();
+
+      report.innerHTML = `
+        <h1>Student Progress Dossier & Report</h1>
+        <p style="color:#6b7280; margin-bottom:1.5rem;">Printed on: ${new Date().toLocaleDateString()} | Ahmad Saleem Mentorship</p>
+
+        <div class="report-row"><span class="report-label">Student Name:</span> <span class="report-value">${studentName}</span></div>
+        <div class="report-row"><span class="report-label">Email:</span> <span class="report-value">${email}</span></div>
+        <div class="report-row"><span class="report-label">WhatsApp Number:</span> <span class="report-value">${whatsapp}</span></div>
+        <div class="report-row"><span class="report-label">Enrolled Date:</span> <span class="report-value">${enrolledDate}</span></div>
+        <div class="report-row"><span class="report-label">CNIC:</span> <span class="report-value">${cnic}</span></div>
+
+        <div class="course-highlight" style="margin-top:1.25rem;">
+          <div class="report-row"><span class="report-label">Enrolled Course Name:</span> <span class="report-value" style="color:#0f766e; font-size:1.15rem;">${enrolledText}</span></div>
+        </div>
+
+        <div class="course-highlight" style="background:#ecfdf5; border-left-color:#10b981;">
+          <div class="report-row"><span class="report-label">Completed Course Name(s):</span> <span class="report-value" style="color:#047857; font-size:1.15rem;">${completedText}</span></div>
+        </div>
+      `;
+      window.print();
     }
 
     async function deleteThisStudent() {

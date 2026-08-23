@@ -1,4 +1,5 @@
 const express = require('express');
+require('dotenv').config();
 const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
@@ -42,7 +43,7 @@ const {
 
 const app = express();
 const PORT = 3000;
-const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 const assignmentUpload = multer({
   storage: multer.diskStorage({

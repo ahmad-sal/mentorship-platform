@@ -5,9 +5,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const {
-  initDatabase,
   findUserByEmail,
-  verifyPassword,
+  // verifyPassword is no longer used – we will use supabase.auth.signInWithPassword directly
   createUser,
   getPlatformCapacity,
   getAllCourses,
@@ -40,7 +39,7 @@ const {
   getStudentProfileData,
   getStudentProgressSummary
 } = require('./database.cjs');
-
+const supabase = require('./supabase.cjs');
 const app = express();
 const PORT = 3000;
 const uploadDir = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads');
@@ -68,12 +67,7 @@ app.use(session({
   }
 }));
 
-// Initialize database asynchronously
-initDatabase().then(() => {
-  console.log('Database initialized with optimized indexing, transactions, and WAL mode.');
-}).catch((err) => {
-  console.error('Database initialization error:', err);
-});
+
 
 function requireStudent(req, res, next) {
   if (!req.session.user || req.session.user.role !== 'student') {
@@ -188,7 +182,6 @@ app.get('/student/submit-assignment', protectStudentPage('/student/dashboard'), 
   res.redirect('/student/dashboard');
 });
 
-// Auth API Endpoints
 app.post('/api/register', async (req, res) => {
   const { fullName, cnic, whatsappNumber, email, password, confirmPassword } = req.body || {};
 
@@ -209,6 +202,7 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
+    // Use the createUser function from database.cjs (which now uses Supabase Auth)
     const user = await createUser({
       fullName,
       cnic,
@@ -217,7 +211,14 @@ app.post('/api/register', async (req, res) => {
       password
     });
 
-    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
+    // After successful registration, log the user in by storing their info in session
+    req.session.user = {
+      id: user.id,
+      role: user.role,
+      fullName: user.full_name,
+      email: user.email
+    };
+
     return res.status(201).json({ message: 'Registration successful.', user: req.session.user });
   } catch (error) {
     return res.status(400).json({ error: error.message || 'Registration failed.' });
@@ -232,19 +233,39 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
+    // 1. Sign in with Supabase Auth
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password: password
+    });
+
+    if (signInError) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    // 2. Fetch the user's profile from the public.users table
     const user = await findUserByEmail(email);
-    if (!user || user.role !== 'student') {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+    if (!user) {
+      // Should not happen if sign-in succeeded, but just in case
+      return res.status(401).json({ error: 'User profile not found.' });
     }
 
-    const isValid = await verifyPassword(password, user.password_hash);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+    // 3. Check role (only students can log in via this endpoint)
+    if (user.role !== 'student') {
+      return res.status(401).json({ error: 'This account is not a student account.' });
     }
 
-    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
+    // 4. Store user info in session (compatible with existing middleware)
+    req.session.user = {
+      id: user.id,
+      role: user.role,
+      fullName: user.full_name,
+      email: user.email
+    };
+
     return res.json({ message: 'Login successful.', user: req.session.user });
   } catch (err) {
+    console.error('Login error:', err);
     return res.status(500).json({ error: 'Login service encountered an error.' });
   }
 });
@@ -257,19 +278,38 @@ app.post('/api/admin/login', async (req, res) => {
   }
 
   try {
+    // 1. Sign in with Supabase Auth
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password: password
+    });
+
+    if (signInError) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    // 2. Fetch the user's profile from the public.users table
     const user = await findUserByEmail(email);
-    if (!user || user.role !== 'admin') {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+    if (!user) {
+      return res.status(401).json({ error: 'User profile not found.' });
     }
 
-    const isValid = await verifyPassword(password, user.password_hash);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+    // 3. Check role – only admins can log in here
+    if (user.role !== 'admin') {
+      return res.status(401).json({ error: 'This account is not an admin account.' });
     }
 
-    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
+    // 4. Store user info in session
+    req.session.user = {
+      id: user.id,
+      role: user.role,
+      fullName: user.full_name,
+      email: user.email
+    };
+
     return res.json({ message: 'Admin login successful.', user: req.session.user });
   } catch (err) {
+    console.error('Admin login error:', err);
     return res.status(500).json({ error: 'Authentication error.' });
   }
 });

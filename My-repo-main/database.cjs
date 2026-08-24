@@ -1,219 +1,128 @@
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'kiddoo.db');
-const submissionDataDir = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads');
-fs.mkdirSync(submissionDataDir, { recursive: true });
-const client = createClient({
-  url: `file:${dbPath}`
-});
+const supabase = require('./supabase.cjs'); // Make sure this matches your filename (supabase.js or supabase.cjs)
+const bcrypt = require('bcryptjs');
 
-const DEFAULT_COURSES = [
-  'Advanced Artificial Intelligence',
-  'Graphic Designing',
-  'YouTube Automation',
-  'Web Development'
-];
+// --------------------------------------------------------------
+// 1. AUTHENTICATION FUNCTIONS (using Supabase Auth)
+// --------------------------------------------------------------
 
 /**
- * Helper to prevent event loop blocking during iterative heavy calculations
+ * Find a user by email – checks public.users table.
  */
-function yieldToEventLoop() {
-  return new Promise((resolve) => setImmediate(resolve));
+async function findUserByEmail(email) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error finding user:', error);
+    return null;
+  }
+  return data;
 }
 
 /**
- * Initialize Database tables, composite indexes, and baseline seeds
+ * Create a new user (student) using Supabase Auth + insert into public.users.
+ * FIXED: Now sets the session on the server client so RLS allows the insert.
  */
-async function initDatabase() {
-  // 1. Pragmas for high concurrency WAL mode & foreign keys
-  await client.execute('PRAGMA journal_mode = WAL;');
-  await client.execute('PRAGMA foreign_keys = ON;');
-  await client.execute('PRAGMA synchronous = NORMAL;');
-  await client.execute('PRAGMA busy_timeout = 5000;');
+async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
+  const trimmedEmail = String(email).trim().toLowerCase();
 
-  // 2. Base Table Schemas
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      role TEXT NOT NULL CHECK(role IN ('admin','student')) DEFAULT 'student',
-      full_name TEXT,
-      cnic TEXT,
-      whatsapp_number TEXT,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+  // 1. Check if user already exists in public.users
+  const { data: existing, error: checkError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', trimmedEmail)
+    .maybeSingle();
 
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS courses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      thumbnail_url TEXT DEFAULT '',
-      status TEXT NOT NULL CHECK(status IN ('published','draft')) DEFAULT 'published',
-      display_order INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
-
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS questions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      course_id INTEGER NOT NULL,
-      question_number INTEGER NOT NULL,
-      question_text TEXT NOT NULL,
-      description TEXT DEFAULT '',
-      youtube_url TEXT DEFAULT '',
-      response_type TEXT NOT NULL DEFAULT 'short_answer',
-      display_order INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-  `);
-
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS course_progress (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id INTEGER NOT NULL,
-      course_id INTEGER NOT NULL,
-      completed INTEGER NOT NULL DEFAULT 0,
-      completed_at TEXT,
-      UNIQUE(student_id, course_id),
-      FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-  `);
-
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS student_enrollments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id INTEGER NOT NULL,
-      course_id INTEGER NOT NULL,
-      enrolled_at TEXT NOT NULL DEFAULT (datetime('now')),
-      UNIQUE(student_id, course_id),
-      FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-  `);
-
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS question_progress (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id INTEGER NOT NULL,
-      question_id INTEGER NOT NULL,
-      video_started_at TEXT,
-      video_requirement_completed INTEGER NOT NULL DEFAULT 0,
-      completed INTEGER NOT NULL DEFAULT 0,
-      completed_at TEXT,
-      UNIQUE(student_id, question_id),
-      FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
-    );
-  `);
-
-  try {
-    await client.execute('ALTER TABLE question_progress ADD COLUMN video_started_at TEXT;');
-  } catch (ignored) {
-    // Column already exists
+  if (existing) {
+    throw new Error('An account with this email already exists.');
   }
 
-  try {
-    await client.execute('ALTER TABLE student_enrollments ADD COLUMN assignment_started_at TEXT;');
-  } catch (ignored) {
-    // Column already exists
+  // 2. Check capacity (max 800 students)
+  const capacity = await getPlatformCapacity();
+  if (capacity.isFull) {
+    throw new Error('Enrollment is currently closed: Maximum capacity of 800 students has been reached.');
   }
 
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS assignment_submissions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id INTEGER NOT NULL,
-      course_id INTEGER NOT NULL,
-      answers_json TEXT NOT NULL,
-      file_name TEXT NOT NULL,
-      file_type TEXT DEFAULT '',
-      file_data BLOB NOT NULL,
-      file_path TEXT DEFAULT '',
-      answers_path TEXT DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
-      review_note TEXT DEFAULT '',
-      submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
-      reviewed_at TEXT,
-      FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-  `);
-
-  try {
-    await client.execute('ALTER TABLE assignment_submissions ADD COLUMN file_path TEXT DEFAULT \'\';');
-  } catch (ignored) {
-    // Column already exists
-  }
-
-  try {
-    await client.execute('ALTER TABLE assignment_submissions ADD COLUMN answers_path TEXT DEFAULT \'\';');
-  } catch (ignored) {
-    // Column already exists
-  }
-
-  // 3. Strategic Performance Indexes for Instant Query Resolution & Filter Speed
-  await client.batch([
-    `CREATE INDEX IF NOT EXISTS idx_users_email_role ON users(email, role);`,
-    `CREATE INDEX IF NOT EXISTS idx_courses_status_order ON courses(status, display_order ASC, id ASC);`,
-    `CREATE INDEX IF NOT EXISTS idx_questions_course_order ON questions(course_id, display_order ASC, question_number ASC);`,
-    `CREATE INDEX IF NOT EXISTS idx_course_progress_lookup ON course_progress(student_id, course_id, completed);`,
-    `CREATE INDEX IF NOT EXISTS idx_student_enrollments_lookup ON student_enrollments(student_id, course_id);`,
-    `CREATE INDEX IF NOT EXISTS idx_question_progress_lookup ON question_progress(student_id, question_id, completed);`,
-    `CREATE INDEX IF NOT EXISTS idx_assignment_submissions_admin ON assignment_submissions(status, submitted_at DESC);`,
-    `CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student ON assignment_submissions(student_id, course_id, submitted_at DESC);`
-  ], 'write');
-
-  await seedDefaultCourses();
-  await seedAdmin();
-}
-
-async function ensureCourse(title) {
-  const existing = await client.execute({
-    sql: 'SELECT id FROM courses WHERE title = ?',
-    args: [title]
+  // 3. Sign up with Supabase Auth
+  const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    email: trimmedEmail,
+    password: password,
+    options: {
+      data: {
+        full_name: fullName.trim(),
+        role: 'student'
+      }
+    }
   });
-  if (existing.rows.length === 0) {
-    await client.execute({
-      sql: `INSERT INTO courses (title, description, status, display_order)
-            VALUES (?, ?, 'published', ?)`,
-      args: [title, `Comprehensive mentorship and curriculum for ${title}.`, Date.now()]
-    });
+
+  if (signUpError) {
+    throw new Error(signUpError.message);
   }
+
+  if (!authData.user) {
+    throw new Error('Registration failed – no user returned.');
+  }
+
+  // ***** FIX STARTS HERE *****
+  // Set the server client's session to the newly registered user.
+  // This ensures the next query (insert profile) passes RLS.
+  if (authData.session) {
+    await supabase.auth.setSession({
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token
+    });
+  } else {
+    console.warn('Warning: No session returned from signUp. RLS might block the profile insert.');
+  }
+  // ***** FIX ENDS HERE *****
+
+  const userId = authData.user.id;
+
+  // 4. Insert user profile into public.users (now RLS will allow this)
+  const { data: profileData, error: profileError } = await supabase
+    .from('users')
+    .insert([
+      {
+        id: userId,
+        full_name: fullName.trim(),
+        cnic: cnic.trim(),
+        whatsapp_number: whatsappNumber.trim(),
+        email: trimmedEmail,
+        role: 'student'
+      }
+    ])
+    .select()
+    .single();
+
+  if (profileError) {
+    console.error('Profile insertion failed:', profileError);
+    throw new Error('Registration failed – unable to create profile.');
+  }
+
+  return profileData;
 }
 
-async function seedDefaultCourses() {
-  for (const title of DEFAULT_COURSES) {
-    await ensureCourse(title);
-  }
-}
-
-async function seedAdmin() {
-  const email = 'ahmadsaleem298gb@gmail.com';
-  const password = 'Ahm@d444';
-  const row = await client.execute({
-    sql: 'SELECT id FROM users WHERE email = ?',
-    args: [email]
-  });
-  if (row.rows.length === 0) {
-    const hash = await bcrypt.hash(password, 10);
-    await client.execute({
-      sql: `INSERT INTO users (role, full_name, email, password_hash)
-            VALUES ('admin', 'Ahmad Saleem', ?, ?)`,
-      args: [email, hash]
-    });
-  }
-}
+// --------------------------------------------------------------
+// 2. PLATFORM CAPACITY
+// --------------------------------------------------------------
 
 const MAX_STUDENT_CAPACITY = 800;
 
 async function getPlatformCapacity() {
-  const countRes = await client.execute("SELECT COUNT(*) AS student_count FROM users WHERE role = 'student'");
-  const currentStudents = Number(countRes.rows[0]?.student_count || 0);
+  const { count, error } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'student');
+
+  if (error) {
+    console.error('Error counting students:', error);
+    return { currentStudents: 0, maxCapacity: MAX_STUDENT_CAPACITY, remainingSeats: 0, isFull: true };
+  }
+
+  const currentStudents = count || 0;
   return {
     currentStudents,
     maxCapacity: MAX_STUDENT_CAPACITY,
@@ -222,68 +131,42 @@ async function getPlatformCapacity() {
   };
 }
 
-async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
-  const trimmedEmail = String(email).trim().toLowerCase();
-  const existing = await client.execute({
-    sql: 'SELECT id FROM users WHERE email = ?',
-    args: [trimmedEmail]
-  });
-  if (existing.rows.length > 0) {
-    throw new Error('An account with this email already exists.');
-  }
-
-  const capacity = await getPlatformCapacity();
-  if (capacity.isFull) {
-    throw new Error('Enrollment is currently closed: Maximum capacity of 800 students has been reached.');
-  }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const result = await client.execute({
-    sql: `INSERT INTO users (role, full_name, cnic, whatsapp_number, email, password_hash)
-          VALUES ('student', ?, ?, ?, ?, ?)`,
-    args: [fullName.trim(), cnic.trim(), whatsappNumber.trim(), trimmedEmail, passwordHash]
-  });
-
-  const newUser = await client.execute({
-    sql: 'SELECT id, role, full_name, cnic, whatsapp_number, email, created_at FROM users WHERE id = ?',
-    args: [Number(result.lastInsertRowid)]
-  });
-  return newUser.rows[0];
-}
-
-async function findUserByEmail(email) {
-  const res = await client.execute({
-    sql: 'SELECT * FROM users WHERE email = ?',
-    args: [String(email).trim().toLowerCase()]
-  });
-  return res.rows[0] || null;
-}
-
-async function verifyPassword(password, hash) {
-  return await bcrypt.compare(password, hash);
-}
+// --------------------------------------------------------------
+// 3. COURSE FUNCTIONS
+// --------------------------------------------------------------
 
 async function getAllCourses() {
-  const res = await client.execute('SELECT * FROM courses ORDER BY display_order ASC, id ASC');
-  return res.rows;
-}
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('id', { ascending: true });
 
-async function getCourseById(courseId) {
-  const res = await client.execute({
-    sql: 'SELECT * FROM courses WHERE id = ?',
-    args: [courseId]
-  });
-  return res.rows[0] || null;
+  if (error) throw error;
+  return data || [];
 }
 
 async function getPublishedCourses() {
-  const res = await client.execute(`
-    SELECT * FROM courses
-    WHERE status = 'published'
-    ORDER BY display_order ASC, id ASC
-  `);
-  return res.rows;
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('status', 'published')
+    .order('display_order', { ascending: true })
+    .order('id', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function getCourseById(courseId) {
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('id', courseId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
 }
 
 async function addCourse({ title, description, status = 'published' }) {
@@ -293,82 +176,78 @@ async function addCourse({ title, description, status = 'published' }) {
     throw new Error('Course title and description are required.');
   }
 
-  const maxOrderRes = await client.execute('SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM courses');
-  const nextOrder = maxOrderRes.rows[0]?.next_order || 1;
+  const { data: maxOrderData, error: maxOrderError } = await supabase
+    .from('courses')
+    .select('display_order')
+    .order('display_order', { ascending: false })
+    .limit(1);
 
-  const result = await client.execute({
-    sql: `INSERT INTO courses (title, description, status, display_order, updated_at)
-          VALUES (?, ?, ?, ?, datetime('now'))`,
-    args: [trimmedTitle, trimmedDescription, status, nextOrder]
-  });
+  if (maxOrderError) throw maxOrderError;
+  const nextOrder = (maxOrderData && maxOrderData.length > 0) ? maxOrderData[0].display_order + 1 : 1;
 
-  return await getCourseById(Number(result.lastInsertRowid));
+  const { data, error } = await supabase
+    .from('courses')
+    .insert([
+      {
+        title: trimmedTitle,
+        description: trimmedDescription,
+        status,
+        display_order: nextOrder,
+        updated_at: new Date().toISOString()
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 async function updateCourse(courseId, payload) {
   const course = await getCourseById(courseId);
   if (!course) throw new Error('Course not found.');
 
-  const title = payload.title ? String(payload.title).trim() : course.title;
-  const description = payload.description ? String(payload.description).trim() : course.description;
-  const status = payload.status || course.status;
+  const updates = {
+    title: payload.title || course.title,
+    description: payload.description || course.description,
+    status: payload.status || course.status,
+    updated_at: new Date().toISOString()
+  };
 
-  await client.execute({
-    sql: `UPDATE courses
-          SET title = ?, description = ?, status = ?, updated_at = datetime('now')
-          WHERE id = ?`,
-    args: [title, description, status, courseId]
-  });
+  const { data, error } = await supabase
+    .from('courses')
+    .update(updates)
+    .eq('id', courseId)
+    .select()
+    .single();
 
-  return await getCourseById(courseId);
+  if (error) throw error;
+  return data;
 }
 
 async function deleteCourse(courseId) {
-  const cid = Number(courseId);
-  try {
-    await client.execute({ sql: 'DELETE FROM assignment_submissions WHERE course_id = ?', args: [cid] });
-    await client.execute({ sql: 'DELETE FROM question_progress WHERE question_id IN (SELECT id FROM questions WHERE course_id = ?)', args: [cid] });
-    await client.execute({ sql: 'DELETE FROM questions WHERE course_id = ?', args: [cid] });
-    await client.execute({ sql: 'DELETE FROM course_progress WHERE course_id = ?', args: [cid] });
-    await client.execute({ sql: 'DELETE FROM student_enrollments WHERE course_id = ?', args: [cid] });
-    await client.execute({ sql: 'DELETE FROM courses WHERE id = ?', args: [cid] });
-  } catch (err) {
-    console.error('Error deleting course:', err);
-    throw err;
-  }
+  const { error } = await supabase
+    .from('courses')
+    .delete()
+    .eq('id', courseId);
+
+  if (error) throw error;
 }
 
-async function deleteStudent(studentId) {
-  const student = await client.execute({
-    sql: "SELECT id FROM users WHERE id = ? AND role = 'student'",
-    args: [studentId]
-  });
-  if (student.rows.length === 0) {
-    throw new Error('Student not found.');
-  }
-
-  const tx = await client.transaction('write');
-  try {
-    await tx.execute({ sql: 'DELETE FROM question_progress WHERE student_id = ?', args: [studentId] });
-    await tx.execute({ sql: 'DELETE FROM course_progress WHERE student_id = ?', args: [studentId] });
-    await tx.execute({ sql: 'DELETE FROM student_enrollments WHERE student_id = ?', args: [studentId] });
-    await tx.execute({ sql: 'DELETE FROM assignment_submissions WHERE student_id = ?', args: [studentId] });
-    await tx.execute({ sql: 'DELETE FROM users WHERE id = ?', args: [studentId] });
-    await tx.commit();
-  } catch (err) {
-    await tx.rollback();
-    throw err;
-  }
-}
+// --------------------------------------------------------------
+// 4. QUESTIONS FUNCTIONS
+// --------------------------------------------------------------
 
 async function getQuestionsByCourse(courseId) {
-  const res = await client.execute({
-    sql: `SELECT * FROM questions
-          WHERE course_id = ?
-          ORDER BY display_order ASC, question_number ASC`,
-    args: [courseId]
-  });
-  return res.rows;
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('course_id', courseId)
+    .order('display_order', { ascending: true })
+    .order('question_number', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
 }
 
 async function addQuestionToCourse(courseId, payload) {
@@ -378,342 +257,479 @@ async function addQuestionToCourse(courseId, payload) {
   const questionText = String(payload.questionText || '').trim();
   if (!questionText) throw new Error('Question text is required.');
 
-  const nextNumberRes = await client.execute({
-    sql: `SELECT COALESCE(MAX(question_number), 0) + 1 AS next_number FROM questions WHERE course_id = ?`,
-    args: [courseId]
-  });
-  const nextNumber = nextNumberRes.rows[0]?.next_number || 1;
+  const { data: maxNumData, error: maxNumError } = await supabase
+    .from('questions')
+    .select('question_number')
+    .eq('course_id', courseId)
+    .order('question_number', { ascending: false })
+    .limit(1);
 
-  const result = await client.execute({
-    sql: `INSERT INTO questions (course_id, question_number, question_text, description, youtube_url, response_type, display_order, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-    args: [
-      courseId,
-      nextNumber,
-      questionText,
-      payload.description || '',
-      payload.youtubeUrl || '',
-      payload.responseType || 'short_answer',
-      nextNumber
-    ]
-  });
+  if (maxNumError) throw maxNumError;
+  const nextNumber = (maxNumData && maxNumData.length > 0) ? maxNumData[0].question_number + 1 : 1;
 
-  const created = await client.execute({
-    sql: 'SELECT * FROM questions WHERE id = ?',
-    args: [Number(result.lastInsertRowid)]
-  });
-  return created.rows[0];
+  const { data, error } = await supabase
+    .from('questions')
+    .insert([
+      {
+        course_id: courseId,
+        question_number: nextNumber,
+        question_text: questionText,
+        description: payload.description || '',
+        youtube_url: payload.youtubeUrl || '',
+        response_type: payload.responseType || 'short_answer',
+        display_order: nextNumber,
+        updated_at: new Date().toISOString()
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 async function updateQuestion(questionId, payload) {
-  const qRes = await client.execute({
-    sql: 'SELECT * FROM questions WHERE id = ?',
-    args: [questionId]
-  });
-  const question = qRes.rows[0];
-  if (!question) throw new Error('Question not found.');
+  const { data: existing, error: findError } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('id', questionId)
+    .maybeSingle();
 
-  await client.execute({
-    sql: `UPDATE questions
-          SET question_text = ?, description = ?, youtube_url = ?, response_type = ?, updated_at = datetime('now')
-          WHERE id = ?`,
-    args: [
-      String(payload.questionText || question.question_text).trim(),
-      String(payload.description ?? question.description),
-      String(payload.youtubeUrl ?? question.youtube_url),
-      payload.responseType || question.response_type,
-      questionId
-    ]
-  });
+  if (findError) throw findError;
+  if (!existing) throw new Error('Question not found.');
 
-  const updated = await client.execute({
-    sql: 'SELECT * FROM questions WHERE id = ?',
-    args: [questionId]
-  });
-  return updated.rows[0];
+  const updates = {
+    question_text: String(payload.questionText || existing.question_text).trim(),
+    description: payload.description ?? existing.description,
+    youtube_url: payload.youtubeUrl ?? existing.youtube_url,
+    response_type: payload.responseType || existing.response_type,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from('questions')
+    .update(updates)
+    .eq('id', questionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 async function deleteQuestion(questionId) {
-  await client.execute({
-    sql: 'DELETE FROM questions WHERE id = ?',
-    args: [questionId]
-  });
+  const { error } = await supabase
+    .from('questions')
+    .delete()
+    .eq('id', questionId);
+
+  if (error) throw error;
 }
 
+// --------------------------------------------------------------
+// 5. STUDENT RECORDS & ENROLLMENTS
+// --------------------------------------------------------------
+
 async function getStudentRecords() {
-  const res = await client.execute(`
-    SELECT u.id, u.full_name, u.cnic, u.whatsapp_number, u.email, u.created_at,
-      COALESCE((
-        SELECT json_group_array(DISTINCT cp.course_id)
-        FROM course_progress cp
-        WHERE cp.student_id = u.id AND cp.completed = 1
-      ), '[]') AS completed_course_ids,
-      COALESCE((
-        SELECT json_group_array(DISTINCT c.title)
-        FROM student_enrollments se
-        JOIN courses c ON c.id = se.course_id
-        WHERE se.student_id = u.id
-        ORDER BY c.display_order ASC, c.id ASC
-      ), '[]') AS enrolled_course_titles,
-      COALESCE((
-        SELECT json_group_array(DISTINCT se.course_id)
-        FROM student_enrollments se
-        WHERE se.student_id = u.id
-      ), '[]') AS enrolled_course_ids,
-      COALESCE((
-        SELECT json_group_array(DISTINCT c.title)
-        FROM course_progress cp
-        JOIN courses c ON c.id = cp.course_id
-        WHERE cp.student_id = u.id AND cp.completed = 1
-        ORDER BY c.display_order ASC, c.id ASC
-      ), '[]') AS completed_course_titles
-    FROM users u
-    WHERE u.role = 'student'
-    ORDER BY u.created_at DESC
-  `);
-  return res.rows;
+  const { data, error } = await supabase
+    .from('users')
+    .select(`
+      id,
+      full_name,
+      cnic,
+      whatsapp_number,
+      email,
+      created_at,
+      role
+    `)
+    .eq('role', 'student')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const students = await Promise.all((data || []).map(async (user) => {
+    const { data: enrolled, error: enrolledError } = await supabase
+      .from('student_enrollments')
+      .select(`
+        course_id,
+        courses (title)
+      `)
+      .eq('student_id', user.id);
+
+    if (enrolledError) console.error(enrolledError);
+
+    const { data: completed, error: completedError } = await supabase
+      .from('course_progress')
+      .select(`
+        course_id,
+        courses (title)
+      `)
+      .eq('student_id', user.id)
+      .eq('completed', true);
+
+    if (completedError) console.error(completedError);
+
+    const enrolledCourseTitles = (enrolled || []).map(item => item.courses?.title).filter(Boolean);
+    const completedCourseTitles = (completed || []).map(item => item.courses?.title).filter(Boolean);
+
+    return {
+      ...user,
+      enrolled_course_titles: JSON.stringify(enrolledCourseTitles),
+      completed_course_titles: JSON.stringify(completedCourseTitles),
+      enrolled_course_ids: JSON.stringify((enrolled || []).map(item => item.course_id)),
+      completed_course_ids: JSON.stringify((completed || []).map(item => item.course_id))
+    };
+  }));
+
+  return students;
+}
+
+async function deleteStudent(studentId) {
+  await supabase.from('question_progress').delete().eq('student_id', studentId);
+  await supabase.from('course_progress').delete().eq('student_id', studentId);
+  await supabase.from('student_enrollments').delete().eq('student_id', studentId);
+  await supabase.from('assignment_submissions').delete().eq('student_id', studentId);
+  const { error } = await supabase.from('users').delete().eq('id', studentId);
+  if (error) throw error;
 }
 
 async function getStudentProfileData(studentId) {
-  const userRes = await client.execute({
-    sql: `SELECT id, role, full_name, cnic, whatsapp_number, email, created_at FROM users WHERE id = ?`,
-    args: [studentId]
-  });
-  const user = userRes.rows[0];
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', studentId)
+    .maybeSingle();
+
+  if (error) throw error;
   if (!user) return null;
 
-  // Fetch all enrolled courses
-  const enrolledRes = await client.execute({
-    sql: `SELECT DISTINCT c.id, c.title
-          FROM student_enrollments se
-          JOIN courses c ON c.id = se.course_id
-          WHERE se.student_id = ?
-          ORDER BY c.display_order ASC, c.id ASC`,
-    args: [studentId]
-  });
+  const { data: enrolled, error: enrolledError } = await supabase
+    .from('student_enrollments')
+    .select(`
+      course_id,
+      courses (id, title)
+    `)
+    .eq('student_id', studentId)
+    .order('courses(display_order)', { ascending: true });
 
-  // Fetch all completed courses (from course_progress with completed=1 OR approved submissions)
-  const completedRes = await client.execute({
-    sql: `SELECT DISTINCT c.id, c.title, cp.completed_at
-          FROM course_progress cp
-          JOIN courses c ON c.id = cp.course_id
-          WHERE cp.student_id = ? AND cp.completed = 1
-          ORDER BY cp.completed_at DESC`,
-    args: [studentId]
-  });
+  if (enrolledError) console.error(enrolledError);
+
+  const { data: completed, error: completedError } = await supabase
+    .from('course_progress')
+    .select(`
+      course_id,
+      courses (id, title),
+      completed_at
+    `)
+    .eq('student_id', studentId)
+    .eq('completed', true)
+    .order('completed_at', { ascending: false });
+
+  if (completedError) console.error(completedError);
 
   return {
     ...user,
-    enrolledCourses: enrolledRes.rows,
-    completedCourses: completedRes.rows
+    enrolledCourses: (enrolled || []).map(item => item.courses),
+    completedCourses: (completed || []).map(item => ({ ...item.courses, completed_at: item.completed_at }))
   };
 }
 
 async function getStudentProgressSummary(studentId) {
-  const res = await client.execute({
-    sql: `
-      SELECT 
-        c.id AS courseId,
-        c.title,
-        c.status,
-        (SELECT COUNT(*) FROM questions q WHERE q.course_id = c.id) AS questionCount,
-        (SELECT COUNT(*) FROM question_progress qp 
-         JOIN questions q ON q.id = qp.question_id 
-         WHERE qp.student_id = ? AND q.course_id = c.id AND qp.completed = 1) AS completedQuestionCount,
-        COALESCE((SELECT cp.completed FROM course_progress cp WHERE cp.student_id = ? AND cp.course_id = c.id), 0) AS isCompleted
-      FROM courses c
-      WHERE c.status = 'published'
-      ORDER BY c.display_order ASC, c.id ASC
-    `,
-    args: [studentId, studentId]
-  });
+  const { data: courses, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('status', 'published')
+    .order('display_order', { ascending: true });
 
-  return res.rows.map((row) => {
-    const qCount = Number(row.questionCount || 0);
-    const compCount = Number(row.completedQuestionCount || 0);
+  if (error) throw error;
+
+  const result = await Promise.all((courses || []).map(async (course) => {
+    const { count: questionCount, error: qError } = await supabase
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', course.id);
+
+    if (qError) console.error(qError);
+
+    const questionIds = (await supabase.from('questions').select('id').eq('course_id', course.id)).data?.map(q => q.id) || [];
+    const { count: completedCount, error: cError } = await supabase
+      .from('question_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('student_id', studentId)
+      .eq('completed', true)
+      .in('question_id', questionIds);
+
+    if (cError) console.error(cError);
+
+    const { data: progress, error: pError } = await supabase
+      .from('course_progress')
+      .select('completed')
+      .eq('student_id', studentId)
+      .eq('course_id', course.id)
+      .maybeSingle();
+
+    if (pError) console.error(pError);
+
+    const total = questionCount || 0;
+    const comp = completedCount || 0;
+    const isCompleted = progress?.completed || false;
+
     return {
-      courseId: row.courseId,
-      title: row.title,
-      status: row.status,
-      questionCount: qCount,
-      completedQuestionCount: compCount,
-      completed: Boolean(row.isCompleted),
-      progressPercentage: qCount ? Math.min(100, Math.round((compCount / qCount) * 100)) : 0
+      courseId: course.id,
+      title: course.title,
+      status: course.status,
+      questionCount: total,
+      completedQuestionCount: comp,
+      completed: isCompleted,
+      progressPercentage: total ? Math.min(100, Math.round((comp / total) * 100)) : 0
     };
-  });
+  }));
+
+  return result;
 }
 
 async function getCourseCompletionCounts() {
-  const res = await client.execute(`
-    SELECT c.id, c.title,
-      COUNT(cp.id) AS students_completed
-    FROM courses c
-    LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.completed = 1
-    GROUP BY c.id, c.title
-    ORDER BY c.id ASC
-  `);
-  return res.rows;
+  const { data: courses, error } = await supabase
+    .from('courses')
+    .select('id, title');
+
+  if (error) throw error;
+
+  const result = await Promise.all((courses || []).map(async (course) => {
+    const { count, error: countError } = await supabase
+      .from('course_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', course.id)
+      .eq('completed', true);
+
+    if (countError) console.error(countError);
+    return {
+      id: course.id,
+      title: course.title,
+      students_completed: count || 0
+    };
+  }));
+
+  return result;
 }
 
+// --------------------------------------------------------------
+// 6. STUDENT DASHBOARD
+// --------------------------------------------------------------
+
 async function getStudentDashboardData(studentId) {
-  const res = await client.execute({
-    sql: `
-      SELECT 
-        c.*,
-        (SELECT COUNT(*) FROM questions q WHERE q.course_id = c.id) AS question_count,
-        (SELECT COUNT(*) FROM question_progress qp 
-         JOIN questions q ON q.id = qp.question_id 
-         WHERE qp.student_id = ? AND q.course_id = c.id AND qp.completed = 1) AS completed_questions,
-        EXISTS(SELECT 1 FROM student_enrollments se WHERE se.student_id = ? AND se.course_id = c.id) AS is_enrolled,
-        COALESCE((SELECT cp.completed FROM course_progress cp WHERE cp.student_id = ? AND cp.course_id = c.id), 0) AS is_completed
-      FROM courses c
-      WHERE c.status = 'published'
-      ORDER BY c.display_order ASC, c.id ASC
-    `,
-    args: [studentId, studentId, studentId]
-  });
+  const { data: courses, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('status', 'published')
+    .order('display_order', { ascending: true });
+
+  if (error) throw error;
 
   const enrolledCourseIds = [];
-  const courses = res.rows.map((row) => {
-    const isEnrolled = Boolean(row.is_enrolled);
-    if (isEnrolled) enrolledCourseIds.push(row.id);
-    const qCount = Number(row.question_count || 0);
-    const compCount = Number(row.completed_questions || 0);
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      status: row.status,
-      display_order: row.display_order,
-      enrolled: isEnrolled,
-      question_count: qCount,
-      completed_questions: compCount,
-      completed: Boolean(row.is_completed),
-      progress_percentage: qCount ? Math.min(100, Math.round((compCount / qCount) * 100)) : 0
-    };
-  });
+  const result = await Promise.all((courses || []).map(async (course) => {
+    const { data: enrollment, error: enrollError } = await supabase
+      .from('student_enrollments')
+      .select('student_id')
+      .eq('student_id', studentId)
+      .eq('course_id', course.id)
+      .maybeSingle();
 
-  return { courses, enrolledCourseIds };
+    if (enrollError) console.error(enrollError);
+
+    const isEnrolled = !!enrollment;
+    if (isEnrolled) enrolledCourseIds.push(course.id);
+
+    const { count: questionCount, error: qError } = await supabase
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', course.id);
+
+    if (qError) console.error(qError);
+
+    const questionIds = (await supabase.from('questions').select('id').eq('course_id', course.id)).data?.map(q => q.id) || [];
+    const { count: completedCount, error: cError } = await supabase
+      .from('question_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('student_id', studentId)
+      .eq('completed', true)
+      .in('question_id', questionIds);
+
+    if (cError) console.error(cError);
+
+    const { data: progress, error: pError } = await supabase
+      .from('course_progress')
+      .select('completed')
+      .eq('student_id', studentId)
+      .eq('course_id', course.id)
+      .maybeSingle();
+
+    if (pError) console.error(pError);
+
+    const total = questionCount || 0;
+    const comp = completedCount || 0;
+    const isCompleted = progress?.completed || false;
+
+    return {
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      status: course.status,
+      display_order: course.display_order,
+      enrolled: isEnrolled,
+      question_count: total,
+      completed_questions: comp,
+      completed: isCompleted,
+      progress_percentage: total ? Math.min(100, Math.round((comp / total) * 100)) : 0
+    };
+  }));
+
+  return { courses: result, enrolledCourseIds };
 }
 
 async function enrollStudentInCourse(studentId, courseId) {
-  const sid = Number(studentId);
-  const cid = Number(courseId);
-  const courseCheck = await client.execute({
-    sql: "SELECT id FROM courses WHERE id = ?",
-    args: [cid]
-  });
-  if (courseCheck.rows.length === 0) {
-    throw new Error('Course is not available for enrollment.');
-  }
+  const course = await getCourseById(courseId);
+  if (!course) throw new Error('Course is not available for enrollment.');
 
-  try {
-    await client.execute({
-      sql: 'INSERT OR IGNORE INTO student_enrollments (student_id, course_id) VALUES (?, ?)',
-      args: [sid, cid]
-    });
-  } catch (err) {
-    console.error('Error enrolling student:', err);
-    throw err;
-  }
+  const { error } = await supabase
+    .from('student_enrollments')
+    .upsert({
+      student_id: studentId,
+      course_id: courseId,
+      enrolled_at: new Date().toISOString()
+    }, { onConflict: 'student_id, course_id' });
+
+  if (error) throw error;
 }
 
 async function isStudentEnrolled(studentId, courseId) {
-  const res = await client.execute({
-    sql: 'SELECT 1 FROM student_enrollments WHERE student_id = ? AND course_id = ? LIMIT 1',
-    args: [studentId, courseId]
-  });
-  return res.rows.length > 0;
+  const { data, error } = await supabase
+    .from('student_enrollments')
+    .select('student_id')
+    .eq('student_id', studentId)
+    .eq('course_id', courseId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !!data;
 }
 
-/**
- * Upsert an assignment submission: if the student already has a submission
- * for this course, UPDATE it (keeping one record per student/course).
- * Otherwise, INSERT a new one.
- */
+// --------------------------------------------------------------
+// 7. ASSIGNMENT SUBMISSIONS
+// --------------------------------------------------------------
+
 async function upsertAssignmentSubmission({ studentId, courseId, answers, fileName, fileType, filePath, responseFiles }) {
-  const answersPath = path.join(submissionDataDir, `answers-${studentId}-${courseId}.json`);
-  fs.writeFileSync(answersPath, JSON.stringify({ answers, responseFiles: responseFiles || {} }), 'utf8');
-  const existing = await client.execute({
-    sql: 'SELECT id FROM assignment_submissions WHERE student_id = ? AND course_id = ? LIMIT 1',
-    args: [studentId, courseId]
-  });
+  const answersJson = { answers, responseFiles: responseFiles || {} };
 
-  if (existing.rows.length > 0) {
-    const existingId = Number(existing.rows[0].id);
-    await client.execute({
-      sql: `UPDATE assignment_submissions
-            SET answers_json = '{}', file_name = ?, file_type = ?, file_data = X'', file_path = ?, answers_path = ?,
-                status = 'pending', review_note = '', submitted_at = datetime('now'), reviewed_at = NULL
-            WHERE id = ?`,
-          args: [fileName, fileType || '', filePath || '', answersPath, existingId]
-    });
-    const updated = await client.execute({
-      sql: 'SELECT id, student_id, course_id, file_name, file_type, status, submitted_at FROM assignment_submissions WHERE id = ?',
-      args: [existingId]
-    });
-    return updated.rows[0];
-  }
+  const { data, error } = await supabase
+    .from('assignment_submissions')
+    .upsert({
+      student_id: studentId,
+      course_id: courseId,
+      answers_json: answersJson,
+      file_name: fileName || '',
+      file_type: fileType || '',
+      file_url: filePath || '',
+      answers_file_url: '',
+      status: 'pending',
+      submitted_at: new Date().toISOString()
+    }, { onConflict: 'student_id, course_id' })
+    .select()
+    .single();
 
-  // No existing submission — insert fresh
-  const result = await client.execute({
-    sql: `INSERT INTO assignment_submissions
-            (student_id, course_id, answers_json, file_name, file_type, file_data, file_path, answers_path)
-              VALUES (?, ?, '{}', ?, ?, X'', ?, ?)`,
-            args: [studentId, courseId, fileName, fileType || '', filePath || '', answersPath]
-  });
-  const created = await client.execute({
-    sql: 'SELECT id, student_id, course_id, file_name, file_type, status, submitted_at FROM assignment_submissions WHERE id = ?',
-    args: [Number(result.lastInsertRowid)]
-  });
-  return created.rows[0];
+  if (error) throw error;
+  return data;
 }
 
 async function getStudentSubmissions(studentId) {
-  const res = await client.execute({
-    sql: `SELECT s.id, s.course_id, c.title, s.file_name, s.file_type, s.status,
-            s.review_note, s.submitted_at, s.reviewed_at
-          FROM assignment_submissions s
-          JOIN courses c ON c.id = s.course_id
-          WHERE s.student_id = ?
-          ORDER BY s.submitted_at DESC`,
-    args: [studentId]
-  });
-  return res.rows;
+  const { data, error } = await supabase
+    .from('assignment_submissions')
+    .select(`
+      id,
+      course_id,
+      file_name,
+      file_type,
+      status,
+      review_note,
+      submitted_at,
+      reviewed_at,
+      courses (title)
+    `)
+    .eq('student_id', studentId)
+    .order('submitted_at', { ascending: false });
+
+  if (error) throw error;
+
+  return data.map(item => ({
+    id: item.id,
+    course_id: item.course_id,
+    title: item.courses?.title || '',
+    file_name: item.file_name,
+    file_type: item.file_type,
+    status: item.status,
+    review_note: item.review_note,
+    submitted_at: item.submitted_at,
+    reviewed_at: item.reviewed_at
+  }));
 }
 
 async function getAdminSubmissions() {
-  const res = await client.execute(`
-    SELECT s.id, s.student_id, u.full_name, u.email, s.course_id, c.title,
-      s.file_name, s.file_type, s.status, s.review_note, s.submitted_at, s.reviewed_at
-    FROM assignment_submissions s
-    JOIN users u ON u.id = s.student_id
-    JOIN courses c ON c.id = s.course_id
-    ORDER BY CASE s.status WHEN 'pending' THEN 0 ELSE 1 END, s.submitted_at DESC
-  `);
-  return res.rows;
+  const { data, error } = await supabase
+    .from('assignment_submissions')
+    .select(`
+      id,
+      student_id,
+      course_id,
+      file_name,
+      file_type,
+      status,
+      review_note,
+      submitted_at,
+      reviewed_at,
+      users (full_name, email),
+      courses (title)
+    `)
+    .order('submitted_at', { ascending: false });
+
+  if (error) throw error;
+
+  return data.map(item => ({
+    id: item.id,
+    student_id: item.student_id,
+    full_name: item.users?.full_name || '',
+    email: item.users?.email || '',
+    course_id: item.course_id,
+    title: item.courses?.title || '',
+    file_name: item.file_name,
+    file_type: item.file_type,
+    status: item.status,
+    review_note: item.review_note,
+    submitted_at: item.submitted_at,
+    reviewed_at: item.reviewed_at
+  }));
 }
 
 async function getAssignmentSubmission(submissionId) {
-  const res = await client.execute({
-    sql: `SELECT s.*, u.full_name, u.email, c.title
-          FROM assignment_submissions s
-          JOIN users u ON u.id = s.student_id
-          JOIN courses c ON c.id = s.course_id
-          WHERE s.id = ?`,
-    args: [submissionId]
-  });
-  const submission = res.rows[0];
-  if (!submission) return null;
-  let storedData = JSON.parse(submission.answers_json || '{}');
-  let answers = storedData;
-  let responseFiles = {};
-  if (submission.answers_path && fs.existsSync(submission.answers_path)) {
-    storedData = JSON.parse(fs.readFileSync(submission.answers_path, 'utf8'));
-    answers = storedData.answers || storedData;
-    responseFiles = storedData.responseFiles || {};
-  }
-  return { ...submission, answers, response_files: responseFiles };
+  const { data, error } = await supabase
+    .from('assignment_submissions')
+    .select(`
+      *,
+      users (full_name, email),
+      courses (title)
+    `)
+    .eq('id', submissionId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const answers = data.answers_json || {};
+
+  return {
+    ...data,
+    answers: answers.answers || {},
+    response_files: answers.responseFiles || {}
+  };
 }
 
 async function reviewAssignmentSubmission(submissionId, status, reviewNote = '') {
@@ -721,145 +737,165 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
     throw new Error('Invalid review status.');
   }
 
-  const tx = await client.transaction('write');
-  try {
-    const updateRes = await tx.execute({
-      sql: `UPDATE assignment_submissions
-            SET status = ?, review_note = ?, reviewed_at = datetime('now')
-            WHERE id = ?`,
-      args: [status, String(reviewNote || '').trim(), submissionId]
-    });
-    if (updateRes.rowsAffected === 0) {
-      throw new Error('Submission not found.');
-    }
+  const { data, error } = await supabase
+    .from('assignment_submissions')
+    .update({
+      status,
+      review_note: String(reviewNote || '').trim(),
+      reviewed_at: new Date().toISOString()
+    })
+    .eq('id', submissionId)
+    .select()
+    .single();
 
-    if (status === 'approved') {
-      const subRes = await tx.execute({
-        sql: 'SELECT student_id, course_id FROM assignment_submissions WHERE id = ?',
-        args: [submissionId]
-      });
-      const sub = subRes.rows[0];
-      if (sub) {
-        await tx.execute({
-          sql: `INSERT INTO course_progress (student_id, course_id, completed, completed_at)
-                VALUES (?, ?, 1, datetime('now'))
-                ON CONFLICT(student_id, course_id) DO UPDATE SET completed = 1, completed_at = datetime('now')`,
-          args: [sub.student_id, sub.course_id]
-        });
-      }
-    }
+  if (error) throw error;
 
-    await tx.commit();
-
-    const finalSub = await client.execute({
-      sql: 'SELECT * FROM assignment_submissions WHERE id = ?',
-      args: [submissionId]
-    });
-    return finalSub.rows[0];
-  } catch (err) {
-    await tx.rollback();
-    throw err;
+  if (status === 'approved' && data) {
+    await supabase
+      .from('course_progress')
+      .upsert({
+        student_id: data.student_id,
+        course_id: data.course_id,
+        completed: true,
+        completed_at: new Date().toISOString()
+      }, { onConflict: 'student_id, course_id' });
   }
+
+  return data;
 }
 
+// --------------------------------------------------------------
+// 8. QUESTION PROGRESS & TIMERS
+// --------------------------------------------------------------
+
 async function getStudentQuestionsForCourse(studentId, courseId) {
-  const res = await client.execute({
-    sql: `
-      SELECT 
-        q.id, q.course_id, q.question_number, q.question_text, q.description,
-        q.youtube_url, q.response_type, q.display_order,
-        qp.video_started_at,
-        (strftime('%s', 'now') - strftime('%s', qp.video_started_at)) AS elapsed_video_seconds,
-        COALESCE(qp.video_requirement_completed, 0) AS video_req_done,
-        COALESCE(qp.completed, 0) AS is_completed,
-        qp.completed_at
-      FROM questions q
-      LEFT JOIN question_progress qp ON qp.question_id = q.id AND qp.student_id = ?
-      WHERE q.course_id = ?
-      ORDER BY q.display_order ASC, q.question_number ASC
-    `,
-    args: [studentId, courseId]
+  const { data: questions, error: qError } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('course_id', courseId)
+    .order('display_order', { ascending: true })
+    .order('question_number', { ascending: true });
+
+  if (qError) throw qError;
+  if (!questions || questions.length === 0) return [];
+
+  const questionIds = questions.map(q => q.id);
+
+  const { data: progressData, error: pError } = await supabase
+    .from('question_progress')
+    .select('*')
+    .eq('student_id', studentId)
+    .in('question_id', questionIds);
+
+  if (pError) throw pError;
+
+  const progressMap = {};
+  (progressData || []).forEach(p => {
+    progressMap[p.question_id] = p;
   });
 
-  const rawQuestions = res.rows.map((row) => {
-    const hasVideo = Boolean(row.youtube_url && String(row.youtube_url).trim().length > 0);
-    const videoStarted = Boolean(row.video_started_at);
-    const elapsedSeconds = row.elapsed_video_seconds != null ? Math.max(0, Number(row.elapsed_video_seconds)) : 0;
-    const isRequirementDone = Boolean(row.video_req_done) || (videoStarted && elapsedSeconds >= 300);
+  return questions.map((q, idx) => {
+    const progress = progressMap[q.id] || {};
+    const hasVideo = Boolean(q.youtube_url && q.youtube_url.trim().length > 0);
+    const videoStarted = Boolean(progress.video_started_at);
+    const elapsedSeconds = videoStarted
+      ? Math.floor((new Date() - new Date(progress.video_started_at)) / 1000)
+      : 0;
+    const isRequirementDone = Boolean(progress.video_requirement_completed) || (videoStarted && elapsedSeconds >= 300);
     const remainingSeconds = hasVideo ? (isRequirementDone ? 0 : (videoStarted ? Math.max(0, 300 - elapsedSeconds) : 300)) : 0;
-    const isCompleted = Boolean(row.is_completed);
+    const isCompleted = Boolean(progress.completed);
+
+    const prevCompleted = idx === 0 || (progressMap[questions[idx - 1]?.id]?.completed || false);
+    const sequentiallyUnlocked = prevCompleted;
 
     return {
-      id: row.id,
-      course_id: row.course_id,
-      question_number: row.question_number,
-      question_text: row.question_text,
-      description: row.description,
-      youtube_url: row.youtube_url,
-      response_type: row.response_type,
-      display_order: row.display_order,
+      id: q.id,
+      course_id: q.course_id,
+      question_number: q.question_number,
+      question_text: q.question_text,
+      description: q.description,
+      youtube_url: q.youtube_url,
+      response_type: q.response_type,
+      display_order: q.display_order,
       has_video: hasVideo,
       video_started: videoStarted,
-      video_started_at: row.video_started_at,
-      video_requirement_completed: hasVideo ? isRequirementDone : true,
+      video_started_at: progress.video_started_at,
+      video_requirement_completed: isRequirementDone,
       video_timer_remaining_seconds: remainingSeconds,
-      // can_answer is resolved after sequential check below
       _video_can_answer: hasVideo ? isRequirementDone : true,
       completed: isCompleted,
-      completed_at: row.completed_at
-    };
-  });
-
-  // Apply sequential unlock: each question is only accessible if ALL
-  // previous questions (by order) are fully completed.
-  return rawQuestions.map((q, idx) => {
-    const previousCompleted = idx === 0 || rawQuestions[idx - 1].completed;
-    const sequentiallyUnlocked = previousCompleted;
-    return {
-      ...q,
+      completed_at: progress.completed_at,
       sequentially_unlocked: sequentiallyUnlocked,
-      // can_answer requires both sequential unlock AND video requirement
-      can_answer: sequentiallyUnlocked ? q._video_can_answer : false
+      can_answer: sequentiallyUnlocked ? (hasVideo ? isRequirementDone : true) : false
     };
   });
 }
 
 async function startQuestionVideoTimer(studentId, questionId) {
-  const existing = await client.execute({
-    sql: 'SELECT video_started_at, video_requirement_completed FROM question_progress WHERE student_id = ? AND question_id = ?',
-    args: [studentId, questionId]
-  });
+  const { data: existing, error: findError } = await supabase
+    .from('question_progress')
+    .select('video_started_at, video_requirement_completed')
+    .eq('student_id', studentId)
+    .eq('question_id', questionId)
+    .maybeSingle();
 
-  if (existing.rows.length === 0) {
-    await client.execute({
-      sql: `INSERT INTO question_progress (student_id, question_id, video_started_at, video_requirement_completed)
-            VALUES (?, ?, datetime('now'), 0)`,
-      args: [studentId, questionId]
-    });
-  } else if (!existing.rows[0].video_started_at) {
-    await client.execute({
-      sql: `UPDATE question_progress SET video_started_at = datetime('now') WHERE student_id = ? AND question_id = ?`,
-      args: [studentId, questionId]
-    });
+  if (findError) throw findError;
+
+  if (!existing) {
+    const { error: insertError } = await supabase
+      .from('question_progress')
+      .insert({
+        student_id: studentId,
+        question_id: questionId,
+        video_started_at: new Date().toISOString(),
+        video_requirement_completed: false
+      });
+
+    if (insertError) throw insertError;
+  } else if (!existing.video_started_at) {
+    const { error: updateError } = await supabase
+      .from('question_progress')
+      .update({ video_started_at: new Date().toISOString() })
+      .eq('student_id', studentId)
+      .eq('question_id', questionId);
+
+    if (updateError) throw updateError;
   }
 
-  const check = await client.execute({
-    sql: `SELECT video_started_at, (strftime('%s', 'now') - strftime('%s', video_started_at)) AS elapsed_seconds, video_requirement_completed
-          FROM question_progress WHERE student_id = ? AND question_id = ?`,
-    args: [studentId, questionId]
-  });
-  const row = check.rows[0];
-  const elapsed = Number(row?.elapsed_seconds || 0);
-  const isUnlocked = elapsed >= 300 || Boolean(row?.video_requirement_completed);
-  if (isUnlocked && !row?.video_requirement_completed) {
-    await client.execute({
-      sql: `UPDATE question_progress SET video_requirement_completed = 1 WHERE student_id = ? AND question_id = ?`,
-      args: [studentId, questionId]
-    });
+  return getQuestionTimerStatus(studentId, questionId);
+}
+
+async function getQuestionTimerStatus(studentId, questionId) {
+  const { data, error } = await supabase
+    .from('question_progress')
+    .select('video_started_at, video_requirement_completed')
+    .eq('student_id', studentId)
+    .eq('question_id', questionId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || !data.video_started_at) {
+    return {
+      videoStartedAt: null,
+      elapsedSeconds: 0,
+      remainingSeconds: 300,
+      unlocked: false
+    };
+  }
+
+  const elapsed = Math.floor((new Date() - new Date(data.video_started_at)) / 1000);
+  const isUnlocked = elapsed >= 300 || Boolean(data.video_requirement_completed);
+
+  if (isUnlocked && !data.video_requirement_completed) {
+    await supabase
+      .from('question_progress')
+      .update({ video_requirement_completed: true })
+      .eq('student_id', studentId)
+      .eq('question_id', questionId);
   }
 
   return {
-    videoStartedAt: row?.video_started_at,
+    videoStartedAt: data.video_started_at,
     elapsedSeconds: elapsed,
     remainingSeconds: isUnlocked ? 0 : Math.max(0, 300 - elapsed),
     unlocked: isUnlocked
@@ -867,26 +903,30 @@ async function startQuestionVideoTimer(studentId, questionId) {
 }
 
 async function setQuestionComplete(studentId, questionId) {
-  await client.execute({
-    sql: `INSERT INTO question_progress (student_id, question_id, video_requirement_completed, completed, completed_at)
-          VALUES (?, ?, 1, 1, datetime('now'))
-          ON CONFLICT(student_id, question_id) DO UPDATE SET completed = 1, completed_at = datetime('now')`,
-    args: [studentId, questionId]
-  });
+  const { error } = await supabase
+    .from('question_progress')
+    .upsert({
+      student_id: studentId,
+      question_id: questionId,
+      video_requirement_completed: true,
+      completed: true,
+      completed_at: new Date().toISOString()
+    }, { onConflict: 'student_id, question_id' });
+
+  if (error) throw error;
 }
 
 async function getOrCreateAssignmentTimer(studentId, courseId) {
-  const enrollment = await client.execute({
-    sql: `SELECT assignment_started_at, (strftime('%s', 'now') - strftime('%s', assignment_started_at)) AS elapsed_seconds
-          FROM student_enrollments
-          WHERE student_id = ? AND course_id = ?`,
-    args: [studentId, courseId]
-  });
+  const { data, error } = await supabase
+    .from('student_enrollments')
+    .select('assignment_started_at')
+    .eq('student_id', studentId)
+    .eq('course_id', courseId)
+    .maybeSingle();
 
-  let startedAt = enrollment.rows[0]?.assignment_started_at;
-  let elapsed = enrollment.rows[0]?.elapsed_seconds != null ? Number(enrollment.rows[0].elapsed_seconds) : null;
+  if (error) throw error;
 
-  if (!startedAt) {
+  if (!data || !data.assignment_started_at) {
     return {
       assignmentStartedAt: null,
       elapsedSeconds: 0,
@@ -895,44 +935,59 @@ async function getOrCreateAssignmentTimer(studentId, courseId) {
     };
   }
 
-  const remaining = Math.max(0, 300 - (elapsed || 0));
-  const isUnlocked = (elapsed || 0) >= 300;
+  const elapsed = Math.floor((new Date() - new Date(data.assignment_started_at)) / 1000);
+  const isUnlocked = elapsed >= 300;
 
   return {
-    assignmentStartedAt: startedAt,
-    elapsedSeconds: elapsed || 0,
-    remainingSeconds: remaining,
+    assignmentStartedAt: data.assignment_started_at,
+    elapsedSeconds: elapsed,
+    remainingSeconds: isUnlocked ? 0 : Math.max(0, 300 - elapsed),
     unlocked: isUnlocked
   };
 }
 
 async function startAssignmentTimer(studentId, courseId) {
-  await client.execute({
-    sql: `UPDATE student_enrollments SET assignment_started_at = datetime('now') WHERE student_id = ? AND course_id = ?`,
-    args: [studentId, courseId]
-  });
+  const { error } = await supabase
+    .from('student_enrollments')
+    .update({ assignment_started_at: new Date().toISOString() })
+    .eq('student_id', studentId)
+    .eq('course_id', courseId);
+
+  if (error) throw error;
   return getOrCreateAssignmentTimer(studentId, courseId);
 }
 
+// --------------------------------------------------------------
+// 9. RECENT ACTIVITY
+// --------------------------------------------------------------
+
 async function getRecentActivity(limit = 5) {
-  const res = await client.execute({
-    sql: `SELECT cp.completed_at, u.full_name, c.title
-          FROM course_progress cp
-          JOIN users u ON u.id = cp.student_id
-          JOIN courses c ON c.id = cp.course_id
-          WHERE cp.completed = 1
-          ORDER BY cp.completed_at DESC
-          LIMIT ?`,
-    args: [limit]
-  });
-  return res.rows;
+  const { data, error } = await supabase
+    .from('course_progress')
+    .select(`
+      completed_at,
+      users (full_name),
+      courses (title)
+    `)
+    .eq('completed', true)
+    .order('completed_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return (data || []).map(item => ({
+    completed_at: item.completed_at,
+    full_name: item.users?.full_name || '',
+    title: item.courses?.title || ''
+  }));
 }
 
+// --------------------------------------------------------------
+// 10. EXPORTS
+// --------------------------------------------------------------
+
 module.exports = {
-  client,
-  initDatabase,
   findUserByEmail,
-  verifyPassword,
   createUser,
   getPlatformCapacity,
   getAllCourses,
@@ -963,8 +1018,5 @@ module.exports = {
   startAssignmentTimer,
   startQuestionVideoTimer,
   setQuestionComplete,
-  getRecentActivity,
-  seedAdmin,
-  seedDefaultCourses,
-  yieldToEventLoop
+  getRecentActivity
 };

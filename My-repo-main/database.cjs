@@ -1,13 +1,9 @@
-const supabase = require('./supabase.cjs'); // Make sure this matches your filename (supabase.js or supabase.cjs)
-const bcrypt = require('bcryptjs');
+const supabase = require('./supabase.cjs');
 
 // --------------------------------------------------------------
-// 1. AUTHENTICATION FUNCTIONS (using Supabase Auth)
+// 1. AUTHENTICATION FUNCTIONS
 // --------------------------------------------------------------
 
-/**
- * Find a user by email – checks public.users table.
- */
 async function findUserByEmail(email) {
   const { data, error } = await supabase
     .from('users')
@@ -22,14 +18,15 @@ async function findUserByEmail(email) {
   return data;
 }
 
-/**
- * Create a new user (student) using Supabase Auth + insert into public.users.
- * FIXED: Now sets the session on the server client so RLS allows the insert.
- */
+// This is a placeholder – we are using Supabase Auth directly in server.cjs
+async function verifyPassword(plainPassword, hashedPassword) {
+  throw new Error('verifyPassword should be replaced by supabase.auth.signInWithPassword');
+}
+
 async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
   const trimmedEmail = String(email).trim().toLowerCase();
 
-  // 1. Check if user already exists in public.users
+  // Check if user already exists
   const { data: existing, error: checkError } = await supabase
     .from('users')
     .select('id')
@@ -40,13 +37,13 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
     throw new Error('An account with this email already exists.');
   }
 
-  // 2. Check capacity (max 800 students)
+  // Check capacity (max 800 students)
   const capacity = await getPlatformCapacity();
   if (capacity.isFull) {
     throw new Error('Enrollment is currently closed: Maximum capacity of 800 students has been reached.');
   }
 
-  // 3. Sign up with Supabase Auth
+  // Sign up with Supabase Auth
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email: trimmedEmail,
     password: password,
@@ -66,22 +63,9 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
     throw new Error('Registration failed – no user returned.');
   }
 
-  // ***** FIX STARTS HERE *****
-  // Set the server client's session to the newly registered user.
-  // This ensures the next query (insert profile) passes RLS.
-  if (authData.session) {
-    await supabase.auth.setSession({
-      access_token: authData.session.access_token,
-      refresh_token: authData.session.refresh_token
-    });
-  } else {
-    console.warn('Warning: No session returned from signUp. RLS might block the profile insert.');
-  }
-  // ***** FIX ENDS HERE *****
-
   const userId = authData.user.id;
 
-  // 4. Insert user profile into public.users (now RLS will allow this)
+  // Insert user profile into public.users
   const { data: profileData, error: profileError } = await supabase
     .from('users')
     .insert([
@@ -176,6 +160,7 @@ async function addCourse({ title, description, status = 'published' }) {
     throw new Error('Course title and description are required.');
   }
 
+  // Get next display order
   const { data: maxOrderData, error: maxOrderError } = await supabase
     .from('courses')
     .select('display_order')
@@ -257,6 +242,7 @@ async function addQuestionToCourse(courseId, payload) {
   const questionText = String(payload.questionText || '').trim();
   if (!questionText) throw new Error('Question text is required.');
 
+  // Get next question number
   const { data: maxNumData, error: maxNumError } = await supabase
     .from('questions')
     .select('question_number')
@@ -347,7 +333,9 @@ async function getStudentRecords() {
 
   if (error) throw error;
 
+  // For each student, fetch enrolled and completed courses
   const students = await Promise.all((data || []).map(async (user) => {
+    // Enrolled courses (from student_enrollments)
     const { data: enrolled, error: enrolledError } = await supabase
       .from('student_enrollments')
       .select(`
@@ -358,6 +346,7 @@ async function getStudentRecords() {
 
     if (enrolledError) console.error(enrolledError);
 
+    // Completed courses (from course_progress)
     const { data: completed, error: completedError } = await supabase
       .from('course_progress')
       .select(`
@@ -385,10 +374,12 @@ async function getStudentRecords() {
 }
 
 async function deleteStudent(studentId) {
+  // Delete all related records (cascading should handle if foreign keys are set, but we'll do manually)
   await supabase.from('question_progress').delete().eq('student_id', studentId);
   await supabase.from('course_progress').delete().eq('student_id', studentId);
   await supabase.from('student_enrollments').delete().eq('student_id', studentId);
   await supabase.from('assignment_submissions').delete().eq('student_id', studentId);
+  // Delete from users
   const { error } = await supabase.from('users').delete().eq('id', studentId);
   if (error) throw error;
 }
@@ -403,6 +394,7 @@ async function getStudentProfileData(studentId) {
   if (error) throw error;
   if (!user) return null;
 
+  // Enrolled courses
   const { data: enrolled, error: enrolledError } = await supabase
     .from('student_enrollments')
     .select(`
@@ -414,6 +406,7 @@ async function getStudentProfileData(studentId) {
 
   if (enrolledError) console.error(enrolledError);
 
+  // Completed courses
   const { data: completed, error: completedError } = await supabase
     .from('course_progress')
     .select(`
@@ -444,6 +437,7 @@ async function getStudentProgressSummary(studentId) {
   if (error) throw error;
 
   const result = await Promise.all((courses || []).map(async (course) => {
+    // Count total questions for this course
     const { count: questionCount, error: qError } = await supabase
       .from('questions')
       .select('*', { count: 'exact', head: true })
@@ -451,16 +445,28 @@ async function getStudentProgressSummary(studentId) {
 
     if (qError) console.error(qError);
 
-    const questionIds = (await supabase.from('questions').select('id').eq('course_id', course.id)).data?.map(q => q.id) || [];
-    const { count: completedCount, error: cError } = await supabase
-      .from('question_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('student_id', studentId)
-      .eq('completed', true)
-      .in('question_id', questionIds);
+    // Count completed questions for this student
+    const { data: qIds, error: qIdsError } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('course_id', course.id);
 
-    if (cError) console.error(cError);
+    if (qIdsError) console.error(qIdsError);
 
+    let completedCount = 0;
+    if (qIds && qIds.length > 0) {
+      const { count, error: cError } = await supabase
+        .from('question_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('student_id', studentId)
+        .eq('completed', true)
+        .in('question_id', qIds.map(q => q.id));
+
+      if (cError) console.error(cError);
+      completedCount = count || 0;
+    }
+
+    // Check if course is fully completed
     const { data: progress, error: pError } = await supabase
       .from('course_progress')
       .select('completed')
@@ -528,6 +534,7 @@ async function getStudentDashboardData(studentId) {
 
   const enrolledCourseIds = [];
   const result = await Promise.all((courses || []).map(async (course) => {
+    // Check enrollment
     const { data: enrollment, error: enrollError } = await supabase
       .from('student_enrollments')
       .select('student_id')
@@ -540,6 +547,7 @@ async function getStudentDashboardData(studentId) {
     const isEnrolled = !!enrollment;
     if (isEnrolled) enrolledCourseIds.push(course.id);
 
+    // Count total questions
     const { count: questionCount, error: qError } = await supabase
       .from('questions')
       .select('*', { count: 'exact', head: true })
@@ -547,16 +555,28 @@ async function getStudentDashboardData(studentId) {
 
     if (qError) console.error(qError);
 
-    const questionIds = (await supabase.from('questions').select('id').eq('course_id', course.id)).data?.map(q => q.id) || [];
-    const { count: completedCount, error: cError } = await supabase
-      .from('question_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('student_id', studentId)
-      .eq('completed', true)
-      .in('question_id', questionIds);
+    // Count completed questions
+    const { data: qIds, error: qIdsError } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('course_id', course.id);
 
-    if (cError) console.error(cError);
+    if (qIdsError) console.error(qIdsError);
 
+    let completedCount = 0;
+    if (qIds && qIds.length > 0) {
+      const { count, error: cError } = await supabase
+        .from('question_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('student_id', studentId)
+        .eq('completed', true)
+        .in('question_id', qIds.map(q => q.id));
+
+      if (cError) console.error(cError);
+      completedCount = count || 0;
+    }
+
+    // Check course completion
     const { data: progress, error: pError } = await supabase
       .from('course_progress')
       .select('completed')
@@ -629,7 +649,7 @@ async function upsertAssignmentSubmission({ studentId, courseId, answers, fileNa
       answers_json: answersJson,
       file_name: fileName || '',
       file_type: fileType || '',
-      file_url: filePath || '',
+      file_url: filePath || '',  // This will be the Cloudinary URL
       answers_file_url: '',
       status: 'pending',
       submitted_at: new Date().toISOString()
@@ -723,6 +743,7 @@ async function getAssignmentSubmission(submissionId) {
   if (error) throw error;
   if (!data) return null;
 
+  // Parse answers_json
   const answers = data.answers_json || {};
 
   return {
@@ -737,7 +758,8 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
     throw new Error('Invalid review status.');
   }
 
-  const { data, error } = await supabase
+  // 1. Update the submission
+  const { data: updateData, error: updateError } = await supabase
     .from('assignment_submissions')
     .update({
       status,
@@ -745,23 +767,33 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
       reviewed_at: new Date().toISOString()
     })
     .eq('id', submissionId)
-    .select()
-    .single();
+    .select();  // Note: no .single()
 
-  if (error) throw error;
+  if (updateError) throw updateError;
+  if (!updateData || updateData.length === 0) {
+    throw new Error('Submission not found.');
+  }
 
-  if (status === 'approved' && data) {
-    await supabase
+  const submission = updateData[0];
+
+  // 2. If approved, mark the course as completed
+  if (status === 'approved') {
+    const { error: progressError } = await supabase
       .from('course_progress')
       .upsert({
-        student_id: data.student_id,
-        course_id: data.course_id,
+        student_id: submission.student_id,
+        course_id: submission.course_id,
         completed: true,
         completed_at: new Date().toISOString()
       }, { onConflict: 'student_id, course_id' });
+
+    if (progressError) {
+      console.error('Error updating course progress:', progressError);
+      // We still return the submission, but log the error
+    }
   }
 
-  return data;
+  return submission;
 }
 
 // --------------------------------------------------------------
@@ -769,6 +801,7 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
 // --------------------------------------------------------------
 
 async function getStudentQuestionsForCourse(studentId, courseId) {
+  // 1. Get all questions for this course
   const { data: questions, error: qError } = await supabase
     .from('questions')
     .select('*')
@@ -779,6 +812,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
   if (qError) throw qError;
   if (!questions || questions.length === 0) return [];
 
+  // 2. Get progress for each question
   const questionIds = questions.map(q => q.id);
 
   const { data: progressData, error: pError } = await supabase
@@ -794,6 +828,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
     progressMap[p.question_id] = p;
   });
 
+  // 3. Build the result with computed fields
   return questions.map((q, idx) => {
     const progress = progressMap[q.id] || {};
     const hasVideo = Boolean(q.youtube_url && q.youtube_url.trim().length > 0);
@@ -805,6 +840,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
     const remainingSeconds = hasVideo ? (isRequirementDone ? 0 : (videoStarted ? Math.max(0, 300 - elapsedSeconds) : 300)) : 0;
     const isCompleted = Boolean(progress.completed);
 
+    // Sequential unlock: check if previous question is completed
     const prevCompleted = idx === 0 || (progressMap[questions[idx - 1]?.id]?.completed || false);
     const sequentiallyUnlocked = prevCompleted;
 
@@ -832,6 +868,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
 }
 
 async function startQuestionVideoTimer(studentId, questionId) {
+  // Check existing progress
   const { data: existing, error: findError } = await supabase
     .from('question_progress')
     .select('video_started_at, video_requirement_completed')
@@ -842,6 +879,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
   if (findError) throw findError;
 
   if (!existing) {
+    // Insert new record with video_started_at = now
     const { error: insertError } = await supabase
       .from('question_progress')
       .insert({
@@ -853,6 +891,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
 
     if (insertError) throw insertError;
   } else if (!existing.video_started_at) {
+    // Update existing record to set video_started_at
     const { error: updateError } = await supabase
       .from('question_progress')
       .update({ video_started_at: new Date().toISOString() })
@@ -862,6 +901,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
     if (updateError) throw updateError;
   }
 
+  // Fetch the updated record to return timer status
   return getQuestionTimerStatus(studentId, questionId);
 }
 
@@ -874,7 +914,7 @@ async function getQuestionTimerStatus(studentId, questionId) {
     .maybeSingle();
 
   if (error) throw error;
-  if (!data || !data.video_started_at) {
+  if (!data) {
     return {
       videoStartedAt: null,
       elapsedSeconds: 0,
@@ -883,10 +923,21 @@ async function getQuestionTimerStatus(studentId, questionId) {
     };
   }
 
-  const elapsed = Math.floor((new Date() - new Date(data.video_started_at)) / 1000);
+  const videoStartedAt = data.video_started_at;
+  if (!videoStartedAt) {
+    return {
+      videoStartedAt: null,
+      elapsedSeconds: 0,
+      remainingSeconds: 300,
+      unlocked: false
+    };
+  }
+
+  const elapsed = Math.floor((new Date() - new Date(videoStartedAt)) / 1000);
   const isUnlocked = elapsed >= 300 || Boolean(data.video_requirement_completed);
 
   if (isUnlocked && !data.video_requirement_completed) {
+    // Mark as completed
     await supabase
       .from('question_progress')
       .update({ video_requirement_completed: true })
@@ -895,7 +946,7 @@ async function getQuestionTimerStatus(studentId, questionId) {
   }
 
   return {
-    videoStartedAt: data.video_started_at,
+    videoStartedAt,
     elapsedSeconds: elapsed,
     remainingSeconds: isUnlocked ? 0 : Math.max(0, 300 - elapsed),
     unlocked: isUnlocked
@@ -983,11 +1034,30 @@ async function getRecentActivity(limit = 5) {
 }
 
 // --------------------------------------------------------------
-// 10. EXPORTS
+// 10. PLACEHOLDER FUNCTIONS (for compatibility)
+// --------------------------------------------------------------
+
+async function seedAdmin() {
+  // Admin seeding is handled via Supabase SQL or manual insert
+  console.log('Admin seeding is handled manually or via SQL.');
+}
+
+async function seedDefaultCourses() {
+  // Default courses are seeded via SQL or manually
+  console.log('Default courses seeding is handled manually or via SQL.');
+}
+
+async function yieldToEventLoop() {
+  return new Promise(resolve => setImmediate(resolve));
+}
+
+// --------------------------------------------------------------
+// 11. EXPORTS
 // --------------------------------------------------------------
 
 module.exports = {
   findUserByEmail,
+  verifyPassword,
   createUser,
   getPlatformCapacity,
   getAllCourses,
@@ -1018,5 +1088,8 @@ module.exports = {
   startAssignmentTimer,
   startQuestionVideoTimer,
   setQuestionComplete,
-  getRecentActivity
+  getRecentActivity,
+  seedAdmin,
+  seedDefaultCourses,
+  yieldToEventLoop
 };

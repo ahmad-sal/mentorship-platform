@@ -4,9 +4,11 @@ const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const supabase = require('./supabase.cjs');
+const cloudinary = require('./cloudinary.cjs');
+
 const {
   findUserByEmail,
-  // verifyPassword is no longer used – we will use supabase.auth.signInWithPassword directly
   createUser,
   getPlatformCapacity,
   getAllCourses,
@@ -39,20 +41,9 @@ const {
   getStudentProfileData,
   getStudentProgressSummary
 } = require('./database.cjs');
-const supabase = require('./supabase.cjs');
+
 const app = express();
 const PORT = 3000;
-const uploadDir = process.env.UPLOAD_PATH || path.join(__dirname, 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
-const assignmentUpload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDir,
-    filename: (req, file, callback) => {
-      callback(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname)}`);
-    }
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 }
-});
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -67,7 +58,11 @@ app.use(session({
   }
 }));
 
-
+// Multer setup with memory storage for Cloudinary
+const assignmentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 function requireStudent(req, res, next) {
   if (!req.session.user || req.session.user.role !== 'student') {
@@ -116,24 +111,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Direct project files zip download endpoint
-app.get(['/download', '/api/download', '/download-zip', '/project-files.zip'], (req, res) => {
-  const zipFile = path.join(__dirname, 'public', 'ahmad-saleem-platform.zip');
-  res.download(zipFile, 'ahmad-saleem-mentorship-platform.zip', (err) => {
-    if (err && !res.headersSent) {
-      res.status(500).json({ error: 'Could not send zip archive' });
-    }
-  });
-});
-
-// Practical classes page is now accessible publicly before login
-// app.use('/practical-classes.html', protectStudentPage('/student/practical-classes'));
-app.use('/submit-assignment.html', protectStudentPage('/student/submit-assignment'));
-
+// Static files
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use(express.static(path.join(__dirname), { index: false }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// Routes
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'Mentorship API is running smoothly.' });
 });
@@ -182,6 +165,10 @@ app.get('/student/submit-assignment', protectStudentPage('/student/dashboard'), 
   res.redirect('/student/dashboard');
 });
 
+// ============================================================
+// AUTH ENDPOINTS (Supabase Auth)
+// ============================================================
+
 app.post('/api/register', async (req, res) => {
   const { fullName, cnic, whatsappNumber, email, password, confirmPassword } = req.body || {};
 
@@ -202,23 +189,8 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    // Use the createUser function from database.cjs (which now uses Supabase Auth)
-    const user = await createUser({
-      fullName,
-      cnic,
-      whatsappNumber,
-      email,
-      password
-    });
-
-    // After successful registration, log the user in by storing their info in session
-    req.session.user = {
-      id: user.id,
-      role: user.role,
-      fullName: user.full_name,
-      email: user.email
-    };
-
+    const user = await createUser({ fullName, cnic, whatsappNumber, email, password });
+    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
     return res.status(201).json({ message: 'Registration successful.', user: req.session.user });
   } catch (error) {
     return res.status(400).json({ error: error.message || 'Registration failed.' });
@@ -233,7 +205,6 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
-    // 1. Sign in with Supabase Auth
     const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password: password
@@ -243,26 +214,16 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // 2. Fetch the user's profile from the public.users table
     const user = await findUserByEmail(email);
     if (!user) {
-      // Should not happen if sign-in succeeded, but just in case
       return res.status(401).json({ error: 'User profile not found.' });
     }
 
-    // 3. Check role (only students can log in via this endpoint)
     if (user.role !== 'student') {
       return res.status(401).json({ error: 'This account is not a student account.' });
     }
 
-    // 4. Store user info in session (compatible with existing middleware)
-    req.session.user = {
-      id: user.id,
-      role: user.role,
-      fullName: user.full_name,
-      email: user.email
-    };
-
+    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
     return res.json({ message: 'Login successful.', user: req.session.user });
   } catch (err) {
     console.error('Login error:', err);
@@ -278,7 +239,6 @@ app.post('/api/admin/login', async (req, res) => {
   }
 
   try {
-    // 1. Sign in with Supabase Auth
     const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password: password
@@ -288,25 +248,16 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // 2. Fetch the user's profile from the public.users table
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: 'User profile not found.' });
     }
 
-    // 3. Check role – only admins can log in here
     if (user.role !== 'admin') {
       return res.status(401).json({ error: 'This account is not an admin account.' });
     }
 
-    // 4. Store user info in session
-    req.session.user = {
-      id: user.id,
-      role: user.role,
-      fullName: user.full_name,
-      email: user.email
-    };
-
+    req.session.user = { id: user.id, role: user.role, fullName: user.full_name, email: user.email };
     return res.json({ message: 'Admin login successful.', user: req.session.user });
   } catch (err) {
     console.error('Admin login error:', err);
@@ -336,7 +287,10 @@ app.get('/api/capacity', async (req, res) => {
   }
 });
 
-// Admin APIs
+// ============================================================
+// ADMIN APIS
+// ============================================================
+
 app.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
   try {
     const [students, courses, courseStats, recentActivity, capacity] = await Promise.all([
@@ -381,7 +335,7 @@ app.get('/api/admin/students', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/students/:studentId', requireAdmin, async (req, res) => {
   try {
-    await deleteStudent(Number(req.params.studentId));
+    await deleteStudent(req.params.studentId);
     res.json({ message: 'Student removed successfully.' });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Unable to remove student.' });
@@ -390,7 +344,7 @@ app.delete('/api/admin/students/:studentId', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/students/:studentId', requireAdmin, async (req, res) => {
   try {
-    const studentId = Number(req.params.studentId);
+    const studentId = req.params.studentId;
     const [student, progress] = await Promise.all([
       getStudentProfileData(studentId),
       getStudentProgressSummary(studentId)
@@ -448,7 +402,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
 
 app.put('/api/admin/courses/:courseId', requireAdmin, async (req, res) => {
   try {
-    const course = await updateCourse(Number(req.params.courseId), {
+    const course = await updateCourse(req.params.courseId, {
       title: req.body.title,
       description: req.body.description,
       status: req.body.status
@@ -461,7 +415,7 @@ app.put('/api/admin/courses/:courseId', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/courses/:courseId', requireAdmin, async (req, res) => {
   try {
-    await deleteCourse(Number(req.params.courseId));
+    await deleteCourse(req.params.courseId);
     res.json({ message: 'Course deleted successfully.' });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Unable to delete course.' });
@@ -519,7 +473,10 @@ app.delete('/api/admin/questions/:questionId', requireAdmin, async (req, res) =>
   }
 });
 
-// Student APIs
+// ============================================================
+// STUDENT APIS
+// ============================================================
+
 app.get('/api/student/profile', requireStudent, async (req, res) => {
   try {
     const studentId = req.session.user.id;
@@ -620,26 +577,26 @@ app.post('/api/student/questions/:questionId/complete', requireStudent, async (r
   }
 });
 
+// ============================================================
+// SUBMISSION ENDPOINT (with Cloudinary error handling)
+// ============================================================
+
 app.post('/api/student/courses/:courseId/submit', requireStudent, assignmentUpload.any(), async (req, res) => {
   try {
     const courseId = Number(req.params.courseId);
+    const studentId = req.session.user.id;
+
     const course = await getCourseById(courseId);
     if (!course) return res.status(404).json({ error: 'Course not found.' });
 
-    const enrolled = await isStudentEnrolled(req.session.user.id, courseId);
+    const enrolled = await isStudentEnrolled(studentId, courseId);
     if (!enrolled) {
       return res.status(403).json({ error: 'Please enroll in this course first.' });
     }
 
-    const questions = await getStudentQuestionsForCourse(req.session.user.id, courseId);
+    const questions = await getStudentQuestionsForCourse(studentId, courseId);
     if (!questions.length) {
       return res.status(400).json({ error: 'No assignment questions have been assigned for this course yet.' });
-    }
-
-    const assignmentFile = (req.files || []).find(file => file.fieldname === 'assignmentFile');
-    const hasFileUpload = questions.some(q => q.response_type === 'file_upload');
-    if (hasFileUpload && !assignmentFile) {
-      return res.status(400).json({ error: 'Please attach your assignment file before submitting.' });
     }
 
     let answers;
@@ -649,15 +606,7 @@ app.post('/api/student/courses/:courseId/submit', requireStudent, assignmentUplo
       return res.status(400).json({ error: 'Assignment answers could not be parsed.' });
     }
 
-    const storedAnswers = Object.fromEntries(Object.entries(answers).map(([questionId, answer]) => {
-      const value = String(answer ?? '');
-      const normalizedValue = value.trimStart().startsWith('data:')
-        ? '[Uploaded response]'
-        : value.slice(0, 10000);
-      return [questionId, normalizedValue];
-    }));
-
-    // 2. Strict validation: Students MUST answer ALL questions
+    // Validate all questions are answered
     for (const q of questions) {
       const ans = answers[q.id] !== undefined ? String(answers[q.id]).trim() : '';
       if (!ans) {
@@ -665,8 +614,6 @@ app.post('/api/student/courses/:courseId/submit', requireStudent, assignmentUplo
           error: `Please answer all quiz/curriculum questions before submitting. Question #${q.question_number} is still unanswered.`
         });
       }
-
-      // Check 5-minute video timer rule if admin attached a video
       if (q.has_video && !q.can_answer) {
         const remaining = Math.max(1, Math.ceil(q.video_timer_remaining_seconds || 300));
         return res.status(400).json({
@@ -675,23 +622,95 @@ app.post('/api/student/courses/:courseId/submit', requireStudent, assignmentUplo
       }
     }
 
+    // Upload files to Cloudinary (with error handling)
+    const uploadedFiles = {};
+    const responseFiles = {};
+
+    try {
+      // Main assignment file
+      const assignmentFile = (req.files || []).find(file => file.fieldname === 'assignmentFile');
+      if (assignmentFile) {
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            {
+              folder: `mentorship/${courseId}/assignments`,
+              resource_type: 'auto',
+              public_id: `${studentId}-${Date.now()}`
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          ).end(assignmentFile.buffer);
+        });
+        uploadedFiles.mainFile = {
+          url: uploadResult.secure_url,
+          public_id: uploadResult.public_id,
+          originalname: assignmentFile.originalname,
+          mimetype: assignmentFile.mimetype
+        };
+      }
+
+      // Response files for questions
+      for (const file of (req.files || [])) {
+        if (file.fieldname.startsWith('responseFile_')) {
+          const questionId = file.fieldname.replace('responseFile_', '');
+          const uploadResult = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream(
+              {
+                folder: `mentorship/${courseId}/responses/${questionId}`,
+                resource_type: 'auto',
+                public_id: `${studentId}-${Date.now()}`
+              },
+              (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+              }
+            ).end(file.buffer);
+          });
+          responseFiles[questionId] = {
+            url: uploadResult.secure_url,
+            public_id: uploadResult.public_id,
+            originalname: file.originalname,
+            mimetype: file.mimetype
+          };
+        }
+      }
+    } catch (uploadError) {
+      console.error('Cloudinary upload error:', uploadError);
+      return res.status(500).json({ error: 'File upload failed. Please try again later.' });
+    }
+
+    const storedAnswers = Object.fromEntries(
+      Object.entries(answers).map(([questionId, answer]) => {
+        const value = String(answer ?? '');
+        const normalizedValue = value.trimStart().startsWith('data:')
+          ? '[Uploaded response file]'
+          : value.slice(0, 10000);
+        return [questionId, normalizedValue];
+      })
+    );
+
     const submission = await upsertAssignmentSubmission({
-      studentId: req.session.user.id,
+      studentId,
       courseId,
       answers: storedAnswers,
-      fileName: (req.files || []).find(file => file.fieldname === 'assignmentFile')?.originalname || '',
-      fileType: (req.files || []).find(file => file.fieldname === 'assignmentFile')?.mimetype || '',
-      filePath: (req.files || []).find(file => file.fieldname === 'assignmentFile')?.path || '',
-      responseFiles: Object.fromEntries((req.files || [])
-        .filter(file => file.fieldname.startsWith('responseFile_'))
-        .map(file => [file.fieldname.replace('responseFile_', ''), { path: file.path, type: file.mimetype }]))
+      fileName: uploadedFiles.mainFile?.originalname || '',
+      fileType: uploadedFiles.mainFile?.mimetype || '',
+      filePath: uploadedFiles.mainFile?.url || '',
+      responseFiles: responseFiles
     });
 
     res.json({ message: 'Assignment submitted successfully for mentor review!', submission });
   } catch (err) {
+    console.error('Submission error:', err);
     res.status(500).json({ error: err.message || 'Submission error.' });
   }
 });
+
+// ============================================================
+// ADMIN SUBMISSION REVIEW ENDPOINTS
+// ============================================================
 
 app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
   try {
@@ -716,12 +735,18 @@ app.get('/api/admin/submissions/:submissionId/file', requireAdmin, async (req, r
   try {
     const submission = await getAssignmentSubmission(Number(req.params.submissionId));
     if (!submission) return res.status(404).json({ error: 'Submission not found.' });
-    res.type(submission.file_type || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${submission.file_name.replace(/"/g, '')}"`);
+
+    if (submission.file_url && submission.file_url.startsWith('http')) {
+      return res.redirect(submission.file_url);
+    }
+
     if (submission.file_path && fs.existsSync(submission.file_path)) {
+      res.type(submission.file_type || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${submission.file_name.replace(/"/g, '')}"`);
       return res.sendFile(path.resolve(submission.file_path));
     }
-    res.send(submission.file_data);
+
+    return res.status(404).json({ error: 'File not found.' });
   } catch (err) {
     res.status(500).json({ error: 'Error downloading file.' });
   }
@@ -731,11 +756,20 @@ app.get('/api/admin/submissions/:submissionId/response/:questionId', requireAdmi
   try {
     const submission = await getAssignmentSubmission(Number(req.params.submissionId));
     const responseFile = submission?.response_files?.[String(req.params.questionId)];
-    if (!responseFile || !fs.existsSync(responseFile.path)) {
+    if (!responseFile) {
       return res.status(404).json({ error: 'Response file not found.' });
     }
-    res.type(responseFile.type || 'application/octet-stream');
-    return res.sendFile(path.resolve(responseFile.path));
+
+    if (responseFile.url && responseFile.url.startsWith('http')) {
+      return res.redirect(responseFile.url);
+    }
+
+    if (responseFile.path && fs.existsSync(responseFile.path)) {
+      res.type(responseFile.type || 'application/octet-stream');
+      return res.sendFile(path.resolve(responseFile.path));
+    }
+
+    return res.status(404).json({ error: 'File not found.' });
   } catch (err) {
     res.status(500).json({ error: 'Error loading response file.' });
   }
@@ -750,6 +784,10 @@ app.patch('/api/admin/submissions/:submissionId/review', requireAdmin, async (re
   }
 });
 
+// ============================================================
+// ERROR HANDLING
+// ============================================================
+
 app.use((err, req, res, next) => {
   if (!req.path.startsWith('/api/')) return next(err);
 
@@ -761,6 +799,10 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ error: err.message || 'Unexpected API error.' });
 });
 
+// ============================================================
+// START SERVER
+// ============================================================
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Ahmad Saleem Mentorship is running at http://localhost:${PORT}`);
 });
@@ -770,8 +812,6 @@ server.on('error', (error) => {
     console.log(`Ahmad Saleem Mentorship is already running at http://localhost:${PORT}`);
     return;
   }
-
   console.log('Ahmad Saleem Mentorship could not start.');
   process.exitCode = 1;
 });
-

@@ -176,6 +176,7 @@
 
     async function loadProgress() {
       try {
+        // 1. Fetch the list of students
         const res = await fetch('/api/admin/progress');
         if (!res.ok) {
           window.location.href = '/admin/login';
@@ -183,74 +184,85 @@
         }
         const data = await res.json();
         const tbody = document.getElementById('cohortTableBody');
-        if (!data.students.length) {
+
+        if (!data.students || data.students.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No student records found.</td></tr>';
           return;
         }
 
-        const studentsWithCourseData = await Promise.all(data.students.map(async s => {
+        // 2. For each student, fetch their profile to get enrolled & completed courses
+        const studentsWithDetails = await Promise.all(data.students.map(async (student) => {
           let enrolledCourses = [];
           let completedCourses = [];
-          let enrolledCourseIds = [];
-          try { enrolledCourses = typeof s.enrolled_course_titles === 'string' ? JSON.parse(s.enrolled_course_titles || '[]') : (s.enrolled_course_titles || []); } catch(e) {}
-          try { completedCourses = typeof s.completed_course_titles === 'string' ? JSON.parse(s.completed_course_titles || '[]') : (s.completed_course_titles || []); } catch(e) {}
-          try { enrolledCourseIds = typeof s.enrolled_course_ids === 'string' ? JSON.parse(s.enrolled_course_ids || '[]') : (s.enrolled_course_ids || []); } catch(e) {}
-
-          if (!enrolledCourses.length && Array.isArray(s.enrolledCourses)) {
-            enrolledCourses = s.enrolledCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean);
-          }
-          if (!completedCourses.length && Array.isArray(s.completedCourses)) {
-            completedCourses = s.completedCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean);
-          }
 
           try {
-            const profileRes = await fetch(`/api/admin/students/${s.id}`);
+            const profileRes = await fetch(`/api/admin/students/${student.id}`);
             if (profileRes.ok) {
               const profileData = await profileRes.json();
               const profile = profileData.student || {};
-              const profileEnrolled = Array.isArray(profile.enrolledCourses)
-                ? profile.enrolledCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean)
-                : [];
-              const profileCompleted = Array.isArray(profile.completedCourses)
-                ? profile.completedCourses.map(course => typeof course === 'string' ? course : course.title).filter(Boolean)
-                : [];
-              if (profileEnrolled.length) enrolledCourses = profileEnrolled;
-              if (profileCompleted.length) completedCourses = profileCompleted;
+
+              // Extract enrolled course titles
+              if (Array.isArray(profile.enrolledCourses)) {
+                enrolledCourses = profile.enrolledCourses
+                  .map(course => typeof course === 'string' ? course : course.title)
+                  .filter(Boolean);
+              }
+
+              // Extract completed course titles
+              if (Array.isArray(profile.completedCourses)) {
+                completedCourses = profile.completedCourses
+                  .map(course => typeof course === 'string' ? course : course.title)
+                  .filter(Boolean);
+              }
             }
-          } catch (e) {
-            console.warn(`Could not load course names for student ${s.id}:`, e);
+          } catch (err) {
+            console.warn(`Could not fetch profile for student ${student.id}:`, err);
           }
 
-          if (!Array.isArray(enrolledCourses) || !enrolledCourses.length) {
-            enrolledCourses = enrolledCourseIds.map(courseId => {
-              const course = (data.courses || []).find(item => Number(item.id) === Number(courseId));
-              return course ? course.title : '';
-            }).filter(Boolean);
+          // If still empty, fallback to data from the initial list
+          if (enrolledCourses.length === 0) {
+            try {
+              const titles = typeof student.enrolled_course_titles === 'string'
+                ? JSON.parse(student.enrolled_course_titles || '[]')
+                : (student.enrolled_course_titles || []);
+              enrolledCourses = Array.isArray(titles) ? titles : [];
+            } catch (e) {}
           }
 
-          const enrolledText = Array.isArray(enrolledCourses) && enrolledCourses.length ? enrolledCourses.join(', ') : '—';
-          const completedText = Array.isArray(completedCourses) && completedCourses.length ? completedCourses.join(', ') : '—';
+          if (completedCourses.length === 0) {
+            try {
+              const titles = typeof student.completed_course_titles === 'string'
+                ? JSON.parse(student.completed_course_titles || '[]')
+                : (student.completed_course_titles || []);
+              completedCourses = Array.isArray(titles) ? titles : [];
+            } catch (e) {}
+          }
+
+          const enrolledText = enrolledCourses.length ? enrolledCourses.join(', ') : '—';
+          const completedText = completedCourses.length ? completedCourses.join(', ') : '—';
 
           return `
             <tr>
-              <td><strong>${s.full_name || 'Student'}</strong></td>
-              <td>${s.email}</td>
-              <td>${s.whatsapp_number || '—'}</td>
+              <td><strong>${student.full_name || 'Student'}</strong></td>
+              <td>${student.email}</td>
+              <td>${student.whatsapp_number || '—'}</td>
               <td>${enrolledText}</td>
               <td>${completedText}</td>
-              <td>${new Date(s.created_at).toLocaleDateString()}</td>
+              <td>${new Date(student.created_at).toLocaleDateString()}</td>
               <td>
-                <a href="/admin/students/${s.id}" class="btn btn-outline btn-sm">Full Report</a>
+                <a href="/admin/students/${student.id}" class="btn btn-outline btn-sm">Full Report</a>
               </td>
             </tr>
           `;
         }));
 
-        tbody.innerHTML = studentsWithCourseData.join('');
+        tbody.innerHTML = studentsWithDetails.join('');
 
         if (window.app && app.renderIcons) app.renderIcons();
       } catch (err) {
-        console.error(err);
+        console.error('Error loading progress:', err);
+        document.getElementById('cohortTableBody').innerHTML =
+          '<tr><td colspan="7" style="text-align:center; color:var(--rose);">Failed to load student data.</td></tr>';
       }
     }
 

@@ -551,7 +551,7 @@ app.post('/api/student/questions/:questionId/start-video', requireStudent, async
   try {
     const questionId = Number(req.params.questionId);
     const timerStatus = await startQuestionVideoTimer(req.session.user.id, questionId);
-    res.json({ message: '5-minute video lecture timer started.', timer: timerStatus, ok: true });
+    res.json({ message: '10-minute video lecture timer started.', timer: timerStatus, ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Error starting video timer.' });
   }
@@ -615,9 +615,9 @@ app.post('/api/student/courses/:courseId/submit', requireStudent, assignmentUplo
         });
       }
       if (q.has_video && !q.can_answer) {
-        const remaining = Math.max(1, Math.ceil(q.video_timer_remaining_seconds || 300));
+        const remaining = Math.max(1, Math.ceil(q.video_timer_remaining_seconds || 600));
         return res.status(400).json({
-          error: `Question #${q.question_number} has a mandatory 5-minute video lesson. You must complete the 5-minute video before submitting (Remaining: ${Math.floor(remaining / 60)}m ${remaining % 60}s).`
+          error: `Question #${q.question_number} has a mandatory 10-minute video lesson. You must complete the 10-minute video before submitting (Remaining: ${Math.floor(remaining / 60)}m ${remaining % 60}s).`
         });
       }
     }

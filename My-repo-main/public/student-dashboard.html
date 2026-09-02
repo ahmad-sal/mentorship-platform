@@ -938,7 +938,7 @@
             <div class="q-header">
               <span class="q-num">Question #${q.question_number || (idx + 1)}</span>
               <div style="display:flex; gap:0.5rem; align-items:center;">
-                ${hasVideo ? `<span id="q-video-badge-${q.id}" class="timer-badge ${canAnswer ? 'badge-done' : (q.video_started ? 'badge-running' : 'badge-waiting')}">${canAnswer ? '✅ Video Lecture Done' : (q.video_started ? `⏳ Timer: ${formatTime(remaining)}` : '⚠️ 5-Min Video Required')}</span>` : ''}
+                ${hasVideo ? `<span id="q-video-badge-${q.id}" class="timer-badge ${canAnswer ? 'badge-done' : (q.video_started ? 'badge-running' : 'badge-waiting')}">${canAnswer ? '✅ Video Lecture Done' : (q.video_started ? `⏳ Timer: ${formatTime(remaining)}` : '⚠️ 10-Min Video Required')}</span>` : ''}
                 <span class="badge ${isCompleted ? 'badge-emerald' : 'badge-amber'}" id="q-status-${q.id}">
                   ${isCompleted ? 'Completed' : 'Pending'}
                 </span>
@@ -951,13 +951,13 @@
             ${hasVideo ? `
               <div class="video-req-box ${canAnswer ? 'timer-unlocked' : (q.video_started ? 'timer-active' : '')}" id="video-box-${q.id}">
                 <div>
-                  <strong style="font-size:0.9rem; display:block;">Mandatory 5-Minute Video Lecture</strong>
+                  <strong style="font-size:0.9rem; display:block;">Mandatory 10-Minute Video Lecture</strong>
                   <span id="video-instruction-${q.id}" style="font-size:0.82rem; color:var(--text-muted);">
                     ${canAnswer
-                      ? '✅ 5-minute study time fulfilled. You may now submit your written answer.'
+                      ? '✅ 10-minute study time fulfilled. You may now submit your written answer.'
                       : (q.video_started
                           ? `⏳ Video lesson in progress. Answer field and completion button will automatically unlock in <span id="timer-text-${q.id}" style="font-weight:800; color:var(--amber);">${formatTime(remaining)}</span>.`
-                          : 'Students must watch the attached video for at least 5 minutes before the answer field unlocks.')
+                          : 'Students must watch the attached video for at least 10 minutes before the answer field unlocks.')
                     }
                   </span>
                 </div>
@@ -1017,7 +1017,7 @@
                   <textarea
                     class="answer-textarea"
                     id="ans-${q.id}"
-                    placeholder="${canAnswer ? 'Type your complete answer or implementation steps here...' : '🔒 Locked: Please watch the 5-minute video lesson first to unlock this answer field.'}"
+                    placeholder="${canAnswer ? 'Type your complete answer or implementation steps here...' : '🔒 Locked: Please watch the 10-minute video lesson first to unlock this answer field.'}"
                     ${!canAnswer ? 'disabled' : ''}
                     oninput="handleAnswerInput(${q.id}, this.value)"
                   >${currentAnswer}</textarea>
@@ -1041,7 +1041,7 @@
               style="margin-top: 0.75rem;"
             >
               <i data-lucide="check-circle-2"></i>
-              <span>${canAnswer ? 'Mark Question as Complete' : '🔒 Complete 5-Min Video First'}</span>
+              <span>${canAnswer ? 'Mark Question as Complete' : '🔒 Complete 10-Min Video First'}</span>
             </button>
           </div>
         `;
@@ -1059,7 +1059,7 @@
 
     async function startVideoTimer(questionId, videoUrl, videoStarted = false) {
       if (!videoStarted) {
-        alert("You must watch the video for 5 minutes and must like the video.");
+        alert("You must watch the video for 10 minutes and must like the video.");
       }
       if (videoUrl) {
         window.open(videoUrl, '_blank');
@@ -1143,7 +1143,7 @@
 
       const instruction = document.getElementById(`video-instruction-${questionId}`);
       if (instruction) {
-        instruction.textContent = '✅ 5-minute study time fulfilled. You may now submit your written answer.';
+        instruction.textContent = '✅ 10-minute study time fulfilled. You may now submit your written answer.';
       }
 
       const textarea = document.getElementById(`ans-${questionId}`);
@@ -1321,14 +1321,14 @@
         return;
       }
 
-      // 2. Check 5-minute video requirements (skip locked questions)
+      // 2. Check 10-minute video requirements (skip locked questions)
       for (const q of currentCourseQuestions) {
         if (!q.sequentially_unlocked) continue;
         if (q.has_video && !q.can_answer) {
           alertBox.style.display = 'block';
           alertBox.style.background = 'var(--rose-subtle)';
           alertBox.style.color = 'var(--rose)';
-          alertBox.textContent = `Question #${q.question_number} requires completing the 5-minute video lesson before submitting.`;
+          alertBox.textContent = `Question #${q.question_number} requires completing the 10-minute video lesson before submitting.`;
           return;
         }
       }

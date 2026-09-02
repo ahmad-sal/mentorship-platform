@@ -1,5 +1,6 @@
 const supabase = require('./supabase.cjs');
 const supabaseAdmin = supabase.supabaseAdmin || supabase.admin || supabase;
+const VIDEO_REQUIREMENT_SECONDS = 10 * 60;
 
 function requireAdminDeleteAccess() {
   if (!supabase.supabaseAdmin && !supabase.admin && !supabase.hasServiceRoleKey) {
@@ -1023,8 +1024,8 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
     const elapsedSeconds = videoStarted
       ? Math.floor((new Date() - new Date(progress.video_started_at)) / 1000)
       : 0;
-    const isRequirementDone = Boolean(progress.video_requirement_completed) || (videoStarted && elapsedSeconds >= 300);
-    const remainingSeconds = hasVideo ? (isRequirementDone ? 0 : (videoStarted ? Math.max(0, 300 - elapsedSeconds) : 300)) : 0;
+    const isRequirementDone = Boolean(progress.video_requirement_completed) || (videoStarted && elapsedSeconds >= VIDEO_REQUIREMENT_SECONDS);
+    const remainingSeconds = hasVideo ? (isRequirementDone ? 0 : (videoStarted ? Math.max(0, VIDEO_REQUIREMENT_SECONDS - elapsedSeconds) : VIDEO_REQUIREMENT_SECONDS)) : 0;
     const isCompleted = Boolean(progress.completed);
 
     // Sequential unlock: check if previous question is completed
@@ -1105,7 +1106,7 @@ async function getQuestionTimerStatus(studentId, questionId) {
     return {
       videoStartedAt: null,
       elapsedSeconds: 0,
-      remainingSeconds: 300,
+      remainingSeconds: VIDEO_REQUIREMENT_SECONDS,
       unlocked: false
     };
   }
@@ -1115,13 +1116,13 @@ async function getQuestionTimerStatus(studentId, questionId) {
     return {
       videoStartedAt: null,
       elapsedSeconds: 0,
-      remainingSeconds: 300,
+      remainingSeconds: VIDEO_REQUIREMENT_SECONDS,
       unlocked: false
     };
   }
 
   const elapsed = Math.floor((new Date() - new Date(videoStartedAt)) / 1000);
-  const isUnlocked = elapsed >= 300 || Boolean(data.video_requirement_completed);
+  const isUnlocked = elapsed >= VIDEO_REQUIREMENT_SECONDS || Boolean(data.video_requirement_completed);
 
   if (isUnlocked && !data.video_requirement_completed) {
     // Mark as completed
@@ -1135,7 +1136,7 @@ async function getQuestionTimerStatus(studentId, questionId) {
   return {
     videoStartedAt,
     elapsedSeconds: elapsed,
-    remainingSeconds: isUnlocked ? 0 : Math.max(0, 300 - elapsed),
+    remainingSeconds: isUnlocked ? 0 : Math.max(0, VIDEO_REQUIREMENT_SECONDS - elapsed),
     unlocked: isUnlocked
   };
 }

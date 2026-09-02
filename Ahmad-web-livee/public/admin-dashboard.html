@@ -434,7 +434,7 @@
             <td>
               <div style="display:flex; gap:0.5rem; align-items:center;">
                 <button class="btn btn-secondary btn-sm" onclick="openQuestionsModal(${c.id}, '${c.title.replace(/'/g, "\\'")}')"><i data-lucide="help-circle"></i> Questions</button>
-                <button class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="deleteCourseTrack(${c.id}, '${c.title.replace(/'/g, "\\'")}')" title="Remove Course">
+                <button type="button" class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="event.preventDefault(); event.stopPropagation(); deleteCourseTrack(${c.id}, '${c.title.replace(/'/g, "\\'")}')" title="Remove Course">
                   <i data-lucide="trash-2"></i> Remove
                 </button>
               </div>
@@ -463,7 +463,7 @@
           <td>
             <div style="display:flex; gap:0.5rem; align-items:center;">
               <a href="/admin/students/${s.id}" class="btn btn-outline btn-sm">View Details</a>
-              <button class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="deleteStudentRecord(${s.id}, '${(s.full_name || 'Student').replace(/'/g, "\\'")}')" title="Remove Student">
+              <button type="button" class="btn btn-sm" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); cursor:pointer;" onclick="event.preventDefault(); event.stopPropagation(); deleteStudentRecord(${s.id}, '${(s.full_name || 'Student').replace(/'/g, "\\'")}')" title="Remove Student">
                 <i data-lucide="trash-2"></i> Remove
               </button>
             </div>

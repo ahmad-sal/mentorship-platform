@@ -1,4 +1,11 @@
 const supabase = require('./supabase.cjs');
+const supabaseAdmin = supabase.supabaseAdmin || supabase.admin || supabase;
+
+function requireAdminDeleteAccess() {
+  if (!supabase.supabaseAdmin && !supabase.admin && !supabase.hasServiceRoleKey) {
+    throw new Error('Delete operations are disabled because SUPABASE_SERVICE_ROLE_KEY is not configured. Add it to .env to enable removal.');
+  }
+}
 
 // --------------------------------------------------------------
 // 1. AUTHENTICATION FUNCTIONS
@@ -25,16 +32,36 @@ async function verifyPassword(plainPassword, hashedPassword) {
 
 async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
   const trimmedEmail = String(email).trim().toLowerCase();
+  const trimmedCnic = String(cnic).trim();
 
-  // Check if user already exists
-  const { data: existing, error: checkError } = await supabase
+  const { data: existing, error: emailCheckError } = await supabase
     .from('users')
     .select('id')
     .eq('email', trimmedEmail)
     .maybeSingle();
 
+  if (emailCheckError) {
+    console.error('Error checking existing email:', emailCheckError);
+    throw new Error('Registration failed – unable to verify account details.');
+  }
+
   if (existing) {
     throw new Error('An account with this email already exists.');
+  }
+
+  const { data: existingCnic, error: cnicCheckError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('cnic', trimmedCnic)
+    .maybeSingle();
+
+  if (cnicCheckError) {
+    console.error('Error checking existing CNIC:', cnicCheckError);
+    throw new Error('Registration failed – unable to verify account details.');
+  }
+
+  if (existingCnic) {
+    throw new Error('An account with this CNIC already exists.');
   }
 
   // Check capacity (max 800 students)
@@ -72,7 +99,7 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
       {
         id: userId,
         full_name: fullName.trim(),
-        cnic: cnic.trim(),
+        cnic: trimmedCnic,
         whatsapp_number: whatsappNumber.trim(),
         email: trimmedEmail,
         role: 'student'
@@ -83,6 +110,12 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
 
   if (profileError) {
     console.error('Profile insertion failed:', profileError);
+    if (profileError.code === '23505' && profileError.constraint === 'users_cnic_key') {
+      throw new Error('An account with this CNIC already exists.');
+    }
+    if (profileError.code === '23505' && profileError.constraint === 'users_email_key') {
+      throw new Error('An account with this email already exists.');
+    }
     throw new Error('Registration failed – unable to create profile.');
   }
 
@@ -211,12 +244,69 @@ async function updateCourse(courseId, payload) {
 }
 
 async function deleteCourse(courseId) {
-  const { error } = await supabase
+  requireAdminDeleteAccess();
+
+  const id = Number(courseId);
+  if (!Number.isFinite(id)) {
+    throw new Error('Invalid course ID.');
+  }
+
+  const { data: questions, error: questionFetchError } = await supabaseAdmin
+    .from('questions')
+    .select('id')
+    .eq('course_id', id);
+
+  if (questionFetchError) throw questionFetchError;
+
+  const questionIds = (questions || []).map(q => q.id);
+
+  if (questionIds.length > 0) {
+    const { error: questionProgressError } = await supabaseAdmin
+      .from('question_progress')
+      .delete()
+      .in('question_id', questionIds);
+
+    if (questionProgressError) throw questionProgressError;
+  }
+
+  const { error: assignmentError } = await supabaseAdmin
+    .from('assignment_submissions')
+    .delete()
+    .eq('course_id', id);
+
+  if (assignmentError) throw assignmentError;
+
+  const { error: questionError } = await supabaseAdmin
+    .from('questions')
+    .delete()
+    .eq('course_id', id);
+
+  if (questionError) throw questionError;
+
+  const { error: progressError } = await supabaseAdmin
+    .from('course_progress')
+    .delete()
+    .eq('course_id', id);
+
+  if (progressError) throw progressError;
+
+  const { error: enrollmentError } = await supabaseAdmin
+    .from('student_enrollments')
+    .delete()
+    .eq('course_id', id);
+
+  if (enrollmentError) throw enrollmentError;
+
+  const { data: deletedCourse, error } = await supabaseAdmin
     .from('courses')
     .delete()
-    .eq('id', courseId);
+    .eq('id', id)
+    .select('id');
 
   if (error) throw error;
+  if (!deletedCourse || deletedCourse.length === 0) {
+    throw new Error('Course not found or delete was blocked by database permissions.');
+  }
 }
 
 // --------------------------------------------------------------
@@ -317,7 +407,7 @@ async function deleteQuestion(questionId) {
 // --------------------------------------------------------------
 
 async function getStudentRecords() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('users')
     .select(`
       id,
@@ -335,38 +425,59 @@ async function getStudentRecords() {
 
   // For each student, fetch enrolled and completed courses
   const students = await Promise.all((data || []).map(async (user) => {
-    // Enrolled courses (from student_enrollments)
-    const { data: enrolled, error: enrolledError } = await supabase
+    const { data: enrolledRows, error: enrolledError } = await supabaseAdmin
       .from('student_enrollments')
-      .select(`
-        course_id,
-        courses (title)
-      `)
+      .select('course_id')
       .eq('student_id', user.id);
 
     if (enrolledError) console.error(enrolledError);
 
-    // Completed courses (from course_progress)
-    const { data: completed, error: completedError } = await supabase
+    const enrolledCourseIds = [...new Set((enrolledRows || []).map(item => item.course_id).filter(Boolean))];
+    let enrolledCourseTitles = [];
+
+    if (enrolledCourseIds.length > 0) {
+      const { data: enrolledCourses, error: courseError } = await supabaseAdmin
+        .from('courses')
+        .select('id, title, display_order')
+        .in('id', enrolledCourseIds)
+        .order('display_order', { ascending: true });
+
+      if (courseError) console.error(courseError);
+
+      const courseMap = new Map((enrolledCourses || []).map(course => [course.id, course.title]));
+      enrolledCourseTitles = enrolledCourseIds.map(courseId => courseMap.get(courseId)).filter(Boolean);
+    }
+
+    const { data: completedRows, error: completedError } = await supabaseAdmin
       .from('course_progress')
-      .select(`
-        course_id,
-        courses (title)
-      `)
+      .select('course_id')
       .eq('student_id', user.id)
       .eq('completed', true);
 
     if (completedError) console.error(completedError);
 
-    const enrolledCourseTitles = (enrolled || []).map(item => item.courses?.title).filter(Boolean);
-    const completedCourseTitles = (completed || []).map(item => item.courses?.title).filter(Boolean);
+    const completedCourseIds = [...new Set((completedRows || []).map(item => item.course_id).filter(Boolean))];
+    let completedCourseTitles = [];
+
+    if (completedCourseIds.length > 0) {
+      const { data: completedCourses, error: completeCourseError } = await supabaseAdmin
+        .from('courses')
+        .select('id, title, display_order')
+        .in('id', completedCourseIds)
+        .order('display_order', { ascending: true });
+
+      if (completeCourseError) console.error(completeCourseError);
+
+      const courseMap = new Map((completedCourses || []).map(course => [course.id, course.title]));
+      completedCourseTitles = completedCourseIds.map(courseId => courseMap.get(courseId)).filter(Boolean);
+    }
 
     return {
       ...user,
       enrolled_course_titles: JSON.stringify(enrolledCourseTitles),
       completed_course_titles: JSON.stringify(completedCourseTitles),
-      enrolled_course_ids: JSON.stringify((enrolled || []).map(item => item.course_id)),
-      completed_course_ids: JSON.stringify((completed || []).map(item => item.course_id))
+      enrolled_course_ids: JSON.stringify(enrolledCourseIds),
+      completed_course_ids: JSON.stringify(completedCourseIds)
     };
   }));
 
@@ -374,18 +485,60 @@ async function getStudentRecords() {
 }
 
 async function deleteStudent(studentId) {
-  // Delete all related records (cascading should handle if foreign keys are set, but we'll do manually)
-  await supabase.from('question_progress').delete().eq('student_id', studentId);
-  await supabase.from('course_progress').delete().eq('student_id', studentId);
-  await supabase.from('student_enrollments').delete().eq('student_id', studentId);
-  await supabase.from('assignment_submissions').delete().eq('student_id', studentId);
-  // Delete from users
-  const { error } = await supabase.from('users').delete().eq('id', studentId);
+  requireAdminDeleteAccess();
+
+  const { data: student, error: findError } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('id', studentId)
+    .eq('role', 'student')
+    .maybeSingle();
+
+  if (findError) throw findError;
+  if (!student) throw new Error('Student not found.');
+
+  const { error: questionProgressError } = await supabaseAdmin
+    .from('question_progress')
+    .delete()
+    .eq('student_id', studentId);
+
+  if (questionProgressError) throw questionProgressError;
+
+  const { error: courseProgressError } = await supabaseAdmin
+    .from('course_progress')
+    .delete()
+    .eq('student_id', studentId);
+
+  if (courseProgressError) throw courseProgressError;
+
+  const { error: enrollmentsError } = await supabaseAdmin
+    .from('student_enrollments')
+    .delete()
+    .eq('student_id', studentId);
+
+  if (enrollmentsError) throw enrollmentsError;
+
+  const { error: submissionError } = await supabaseAdmin
+    .from('assignment_submissions')
+    .delete()
+    .eq('student_id', studentId);
+
+  if (submissionError) throw submissionError;
+
+  const { data: deletedStudent, error } = await supabaseAdmin
+    .from('users')
+    .delete()
+    .eq('id', studentId)
+    .select('id');
+
   if (error) throw error;
+  if (!deletedStudent || deletedStudent.length === 0) {
+    throw new Error('Student not found or delete was blocked by database permissions.');
+  }
 }
 
 async function getStudentProfileData(studentId) {
-  const { data: user, error } = await supabase
+  const { data: user, error } = await supabaseAdmin
     .from('users')
     .select('*')
     .eq('id', studentId)
@@ -394,36 +547,69 @@ async function getStudentProfileData(studentId) {
   if (error) throw error;
   if (!user) return null;
 
-  // Enrolled courses
-  const { data: enrolled, error: enrolledError } = await supabase
+  const { data: enrolledRows, error: enrolledError } = await supabaseAdmin
     .from('student_enrollments')
-    .select(`
-      course_id,
-      courses (id, title)
-    `)
-    .eq('student_id', studentId)
-    .order('courses(display_order)', { ascending: true });
+    .select('course_id')
+    .eq('student_id', studentId);
 
   if (enrolledError) console.error(enrolledError);
 
-  // Completed courses
-  const { data: completed, error: completedError } = await supabase
+  const enrolledCourseIds = [...new Set((enrolledRows || []).map(item => item.course_id).filter(Boolean))];
+  let enrolledCourses = [];
+  let enrolledCourseTitles = [];
+
+  if (enrolledCourseIds.length > 0) {
+    const { data: courseRows, error: courseLookupError } = await supabaseAdmin
+      .from('courses')
+      .select('id, title, display_order')
+      .in('id', enrolledCourseIds)
+      .order('display_order', { ascending: true });
+
+    if (courseLookupError) console.error(courseLookupError);
+
+    const orderedCourses = [...(courseRows || [])].sort((a, b) => (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER));
+    enrolledCourses = orderedCourses;
+    enrolledCourseTitles = orderedCourses.map(course => course.title).filter(Boolean);
+  }
+
+  const { data: completedRows, error: completedError } = await supabaseAdmin
     .from('course_progress')
-    .select(`
-      course_id,
-      courses (id, title),
-      completed_at
-    `)
+    .select('course_id, completed_at')
     .eq('student_id', studentId)
     .eq('completed', true)
     .order('completed_at', { ascending: false });
 
   if (completedError) console.error(completedError);
 
+  const completedCourseIds = [...new Set((completedRows || []).map(item => item.course_id).filter(Boolean))];
+  let completedCourses = [];
+  let completedCourseTitles = [];
+
+  if (completedCourseIds.length > 0) {
+    const { data: completedCourseRows, error: completedCourseLookupError } = await supabaseAdmin
+      .from('courses')
+      .select('id, title, display_order')
+      .in('id', completedCourseIds)
+      .order('display_order', { ascending: true });
+
+    if (completedCourseLookupError) console.error(completedCourseLookupError);
+
+    const courseMap = new Map((completedCourseRows || []).map(course => [course.id, course]));
+    completedCourses = (completedRows || [])
+      .map(row => {
+        const match = courseMap.get(row.course_id);
+        return match ? { ...match, completed_at: row.completed_at } : null;
+      })
+      .filter(Boolean);
+    completedCourseTitles = completedCourses.map(course => course.title).filter(Boolean);
+  }
+
   return {
     ...user,
-    enrolledCourses: (enrolled || []).map(item => item.courses),
-    completedCourses: (completed || []).map(item => ({ ...item.courses, completed_at: item.completed_at }))
+    enrolledCourses,
+    completedCourses,
+    enrolledCourseTitles,
+    completedCourseTitles
   };
 }
 
@@ -758,7 +944,15 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
     throw new Error('Invalid review status.');
   }
 
-  // 1. Update the submission
+  const { data: existing, error: fetchError } = await supabase
+    .from('assignment_submissions')
+    .select('*')
+    .eq('id', submissionId)
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+  if (!existing) throw new Error('Submission not found.');
+
   const { data: updateData, error: updateError } = await supabase
     .from('assignment_submissions')
     .update({
@@ -767,33 +961,26 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
       reviewed_at: new Date().toISOString()
     })
     .eq('id', submissionId)
-    .select();  // Note: no .single()
+    .select()
+    .single();
 
   if (updateError) throw updateError;
-  if (!updateData || updateData.length === 0) {
-    throw new Error('Submission not found.');
+
+  const completionStatus = status === 'approved';
+  const { error: progressError } = await supabase
+    .from('course_progress')
+    .upsert({
+      student_id: existing.student_id,
+      course_id: existing.course_id,
+      completed: completionStatus,
+      completed_at: completionStatus ? new Date().toISOString() : null
+    }, { onConflict: 'student_id, course_id' });
+
+  if (progressError) {
+    console.error('Error updating course progress:', progressError);
   }
 
-  const submission = updateData[0];
-
-  // 2. If approved, mark the course as completed
-  if (status === 'approved') {
-    const { error: progressError } = await supabase
-      .from('course_progress')
-      .upsert({
-        student_id: submission.student_id,
-        course_id: submission.course_id,
-        completed: true,
-        completed_at: new Date().toISOString()
-      }, { onConflict: 'student_id, course_id' });
-
-    if (progressError) {
-      console.error('Error updating course progress:', progressError);
-      // We still return the submission, but log the error
-    }
-  }
-
-  return submission;
+  return updateData;
 }
 
 // --------------------------------------------------------------

@@ -235,27 +235,22 @@
         const s = data.student;
         const progressList = Array.isArray(data.progress) ? data.progress : [];
 
-        // 1. Extract Enrolled Course Names (from student object, with fallback to all courses in progress list)
+        // Only show courses actually enrolled via the Enroll & Start action.
         let enrolledCourses = [];
-        if (Array.isArray(s.enrolledCourses) && s.enrolledCourses.length > 0) {
+        if (Array.isArray(s.enrolledCourseTitles) && s.enrolledCourseTitles.length > 0) {
+          enrolledCourses = s.enrolledCourseTitles.filter(Boolean);
+        } else if (Array.isArray(s.enrolledCourses) && s.enrolledCourses.length > 0) {
           enrolledCourses = s.enrolledCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
-        } else if (progressList.length > 0) {
-          // If no explicit enrollments record, every course tracked for the student counts
-          enrolledCourses = progressList.map(p => p.title).filter(Boolean);
         }
         window.currentStudentEnrolledCourses = enrolledCourses;
 
-        // 2. Extract Completed Course Names (from student completedCourses + progress records with completed: true)
+        // Only show courses explicitly marked complete in course progress.
         let completedCourses = [];
-        if (Array.isArray(s.completedCourses) && s.completedCourses.length > 0) {
+        if (Array.isArray(s.completedCourseTitles) && s.completedCourseTitles.length > 0) {
+          completedCourses = s.completedCourseTitles.filter(Boolean);
+        } else if (Array.isArray(s.completedCourses) && s.completedCourses.length > 0) {
           completedCourses = s.completedCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
         }
-        // Also check if any course in progress list is marked complete (100% or completed: true)
-        progressList.forEach(p => {
-          if ((p.completed || Number(p.progressPercentage) >= 100) && p.title && !completedCourses.includes(p.title)) {
-            completedCourses.push(p.title);
-          }
-        });
         window.currentStudentCompletedCourses = completedCourses;
 
         document.getElementById('stName').textContent = s.full_name || 'Student';

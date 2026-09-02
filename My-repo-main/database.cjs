@@ -1,6 +1,12 @@
 const supabase = require('./supabase.cjs');
 const supabaseAdmin = supabase.supabaseAdmin || supabase.admin || supabase;
 
+function requireServiceRoleAccess() {
+  if (!supabase.supabaseAdmin && !supabase.admin && !supabase.hasServiceRoleKey) {
+    throw new Error('Server database writes require SUPABASE_SERVICE_ROLE_KEY to be configured.');
+  }
+}
+
 function requireAdminDeleteAccess() {
   if (!supabase.supabaseAdmin && !supabase.admin && !supabase.hasServiceRoleKey) {
     throw new Error('Delete operations are disabled because SUPABASE_SERVICE_ROLE_KEY is not configured. Add it to .env to enable removal.');
@@ -794,10 +800,11 @@ async function getStudentDashboardData(studentId) {
 }
 
 async function enrollStudentInCourse(studentId, courseId) {
+  requireServiceRoleAccess();
   const course = await getCourseById(courseId);
   if (!course) throw new Error('Course is not available for enrollment.');
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('student_enrollments')
     .upsert({
       student_id: studentId,
@@ -825,9 +832,10 @@ async function isStudentEnrolled(studentId, courseId) {
 // --------------------------------------------------------------
 
 async function upsertAssignmentSubmission({ studentId, courseId, answers, fileName, fileType, filePath, responseFiles }) {
+  requireServiceRoleAccess();
   const answersJson = { answers, responseFiles: responseFiles || {} };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('assignment_submissions')
     .upsert({
       student_id: studentId,
@@ -1055,6 +1063,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
 }
 
 async function startQuestionVideoTimer(studentId, questionId) {
+  requireServiceRoleAccess();
   // Check existing progress
   const { data: existing, error: findError } = await supabase
     .from('question_progress')
@@ -1067,7 +1076,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
 
   if (!existing) {
     // Insert new record with video_started_at = now
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseAdmin
       .from('question_progress')
       .insert({
         student_id: studentId,
@@ -1079,7 +1088,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
     if (insertError) throw insertError;
   } else if (!existing.video_started_at) {
     // Update existing record to set video_started_at
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('question_progress')
       .update({ video_started_at: new Date().toISOString() })
       .eq('student_id', studentId)
@@ -1125,7 +1134,7 @@ async function getQuestionTimerStatus(studentId, questionId) {
 
   if (isUnlocked && !data.video_requirement_completed) {
     // Mark as completed
-    await supabase
+    await supabaseAdmin
       .from('question_progress')
       .update({ video_requirement_completed: true })
       .eq('student_id', studentId)
@@ -1141,7 +1150,8 @@ async function getQuestionTimerStatus(studentId, questionId) {
 }
 
 async function setQuestionComplete(studentId, questionId) {
-  const { error } = await supabase
+  requireServiceRoleAccess();
+  const { error } = await supabaseAdmin
     .from('question_progress')
     .upsert({
       student_id: studentId,
@@ -1185,7 +1195,8 @@ async function getOrCreateAssignmentTimer(studentId, courseId) {
 }
 
 async function startAssignmentTimer(studentId, courseId) {
-  const { error } = await supabase
+  requireServiceRoleAccess();
+  const { error } = await supabaseAdmin
     .from('student_enrollments')
     .update({ assignment_started_at: new Date().toISOString() })
     .eq('student_id', studentId)

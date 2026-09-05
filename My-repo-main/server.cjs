@@ -553,7 +553,8 @@ app.post('/api/student/questions/:questionId/start-video', requireStudent, async
     const timerStatus = await startQuestionVideoTimer(req.session.user.id, questionId);
     res.json({ message: '10-minute video lecture timer started.', timer: timerStatus, ok: true });
   } catch (err) {
-    res.status(500).json({ error: 'Error starting video timer.' });
+    console.error('Error starting video timer:', err);
+    return res.status(500).json({ error: err.message || err });
   }
 });
 
@@ -563,7 +564,8 @@ app.post('/api/student/questions/:questionId/watch', requireStudent, async (req,
     const timerStatus = await startQuestionVideoTimer(req.session.user.id, questionId);
     res.json({ message: 'Video requirement status updated.', timer: timerStatus, ok: true });
   } catch (err) {
-    res.status(500).json({ error: 'Error saving video watch progress.' });
+    console.error('Error saving video watch progress:', err);
+    return res.status(500).json({ error: err.message || err });
   }
 });
 
@@ -573,7 +575,20 @@ app.post('/api/student/questions/:questionId/complete', requireStudent, async (r
     await setQuestionComplete(req.session.user.id, questionId);
     res.json({ message: 'Question marked complete.', ok: true });
   } catch (err) {
-    res.status(500).json({ error: 'Error saving question progress.' });
+    // Log full context server-side for debugging (Render logs). No API keys or secrets here.
+    console.error('Error saving question progress:', {
+      route: req.originalUrl,
+      method: req.method,
+      student_id: req.session.user ? req.session.user.id : null,
+      question_id: Number(req.params.questionId),
+      http_status: 500,
+      supabase_code: err && err.code,
+      supabase_error: err && err.message,
+      supabase_details: err && err.details,
+      supabase_hint: err && err.hint
+    });
+    // err.message from Supabase never contains API keys or passwords, so it is safe to surface.
+    return res.status(500).json({ error: err.message || 'Error saving question progress.', ok: false });
   }
 });
 

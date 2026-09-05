@@ -1,0 +1,240 @@
+/* Shared responsive safeguards for all standalone pages. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+.nav-container,
+.top,
+.wrap,
+.admin-container,
+.dash-wrap,
+.dash-container,
+.profile-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.nav-container,
+.top {
+  flex-wrap: wrap;
+}
+
+.logo-text,
+.brand {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.nav-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-header,
+.dash-header,
+.enrollment-alert,
+.profile-header,
+.q-header,
+.question-header {
+  min-width: 0;
+}
+
+.admin-header > *,
+.dash-header > *,
+.enrollment-alert > *,
+.profile-header > *,
+.q-header > *,
+.question-header > * {
+  min-width: 0;
+}
+
+.table-container,
+.table-card {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table,
+.progress-table {
+  min-width: 42rem;
+}
+
+.course-grid,
+.steps-grid,
+.course-dash-grid,
+.stats-grid,
+.info-grid,
+.profile-info-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.feature-grid,
+.bottom-banner,
+.learn-layout {
+  min-width: 0;
+}
+
+.hero > *,
+.feature-item,
+.bottom-banner > *,
+.learn-layout > *,
+.card,
+.panel,
+.profile-card,
+.questions-container,
+.question-item,
+.course-dash-card,
+.stat-card {
+  min-width: 0;
+}
+
+h1,
+h2,
+h3,
+p,
+span,
+.label,
+.info-val {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .nav-container,
+  .top {
+    gap: 0.75rem;
+  }
+
+  .nav-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .nav-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .theme-label,
+  #themeLabel {
+    display: none;
+  }
+
+  .theme-toggle-btn {
+    padding: 0.55rem;
+  }
+
+  .admin-container,
+  .dash-container,
+  .dash-wrap,
+  .profile-wrap {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero,
+  .feature-grid,
+  .bottom-banner,
+  .learn-layout,
+  .playlist-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero {
+    gap: 1.5rem !important;
+  }
+
+  .panel,
+  .profile-card,
+  .questions-container {
+    padding: 1.25rem;
+  }
+
+  .admin-header,
+  .dash-header,
+  .enrollment-alert,
+  .profile-header {
+    align-items: flex-start;
+  }
+
+  .admin-header .btn,
+  .dash-header .btn,
+  .report-toolbar .btn,
+  .matrix-toolbar button,
+  .print-report-btn,
+  .print-matrix-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .file-upload-row,
+  .upload-row,
+  .question-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-container,
+  .top {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .logo-text {
+    font-size: 0.9rem;
+  }
+
+  .nav-actions .btn {
+    font-size: 0.78rem;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  .wrap {
+    margin-top: 1.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .panel,
+  .profile-card,
+  .questions-container,
+  .question-item {
+    padding: 1rem;
+  }
+
+  .data-table,
+  .progress-table {
+    min-width: 36rem;
+  }
+}

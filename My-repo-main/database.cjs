@@ -798,7 +798,9 @@ async function enrollStudentInCourse(studentId, courseId) {
   const course = await getCourseById(courseId);
   if (!course) throw new Error('Course is not available for enrollment.');
 
-  const { error } = await supabase
+  const client = supabaseAdmin || supabase;
+
+  const { error } = await client
     .from('student_enrollments')
     .upsert({
       student_id: studentId,
@@ -827,8 +829,9 @@ async function isStudentEnrolled(studentId, courseId) {
 
 async function upsertAssignmentSubmission({ studentId, courseId, answers, fileName, fileType, filePath, responseFiles }) {
   const answersJson = { answers, responseFiles: responseFiles || {} };
+  const client = supabaseAdmin || supabase;
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('assignment_submissions')
     .upsert({
       student_id: studentId,
@@ -968,7 +971,8 @@ async function reviewAssignmentSubmission(submissionId, status, reviewNote = '')
   if (updateError) throw updateError;
 
   const completionStatus = status === 'approved';
-  const { error: progressError } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { error: progressError } = await client
     .from('course_progress')
     .upsert({
       student_id: existing.student_id,
@@ -1057,7 +1061,8 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
 
 async function startQuestionVideoTimer(studentId, questionId) {
   // Check existing progress
-  const { data: existing, error: findError } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { data: existing, error: findError } = await client
     .from('question_progress')
     .select('video_started_at, video_requirement_completed')
     .eq('student_id', studentId)
@@ -1068,7 +1073,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
 
   if (!existing) {
     // Insert new record with video_started_at = now
-    const { error: insertError } = await supabase
+    const { error: insertError } = await client
       .from('question_progress')
       .insert({
         student_id: studentId,
@@ -1080,7 +1085,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
     if (insertError) throw insertError;
   } else if (!existing.video_started_at) {
     // Update existing record to set video_started_at
-    const { error: updateError } = await supabase
+    const { error: updateError } = await client
       .from('question_progress')
       .update({ video_started_at: new Date().toISOString() })
       .eq('student_id', studentId)
@@ -1125,8 +1130,9 @@ async function getQuestionTimerStatus(studentId, questionId) {
   const isUnlocked = elapsed >= VIDEO_REQUIREMENT_SECONDS || Boolean(data.video_requirement_completed);
 
   if (isUnlocked && !data.video_requirement_completed) {
-    // Mark as completed
-    await supabase
+    // Mark as completed using service role to bypass RLS
+    const client = supabaseAdmin || supabase;
+    await client
       .from('question_progress')
       .update({ video_requirement_completed: true })
       .eq('student_id', studentId)
@@ -1142,7 +1148,8 @@ async function getQuestionTimerStatus(studentId, questionId) {
 }
 
 async function setQuestionComplete(studentId, questionId) {
-  const { error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { error } = await client
     .from('question_progress')
     .upsert({
       student_id: studentId,
@@ -1186,7 +1193,8 @@ async function getOrCreateAssignmentTimer(studentId, courseId) {
 }
 
 async function startAssignmentTimer(studentId, courseId) {
-  const { error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { error } = await client
     .from('student_enrollments')
     .update({ assignment_started_at: new Date().toISOString() })
     .eq('student_id', studentId)

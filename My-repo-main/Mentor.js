@@ -215,7 +215,14 @@ const app = {
 
   toggleMobileMenu() {
     const drawer = document.getElementById('mobileDrawer');
-    if (drawer) drawer.classList.toggle('open');
+    const menuButton = document.getElementById('mobileMenuBtn');
+    if (!drawer) return;
+
+    const isOpen = drawer.classList.toggle('open');
+    if (menuButton) {
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+    }
   },
 
   // 2. Theme Toggle (Daylight White vs Dark)

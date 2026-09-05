@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="Mentor.css">
+  <link rel="stylesheet" href="/responsive.css">
 </head>
 <body class="light-theme">
   
@@ -27,9 +28,11 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="/login">Student Login</a>
-        <a class="btn btn-primary" href="/register">Register</a>
-        <a class="btn btn-secondary" href="/admin/login">Admin</a>
+        <div class="desktop-auth-links">
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Register</a>
+          <a class="btn btn-secondary" href="/admin/login">Admin</a>
+        </div>
 
         <!-- Theme Toggle Button -->
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="app.toggleTheme()" title="Toggle Theme">
@@ -37,7 +40,7 @@
           <span class="theme-label" id="themeLabel">Dark Mode</span>
         </button>
 
-        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="app.toggleMobileMenu()">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="app.toggleMobileMenu()" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
           <i data-lucide="menu"></i>
         </button>
       </div>
@@ -47,6 +50,11 @@
     <div class="mobile-drawer" id="mobileDrawer">
       <button class="mobile-nav-item" onclick="app.navigate('home')">Home</button>
       <button class="mobile-nav-item" onclick="app.navigate('courses')">Courses</button>
+      <div class="mobile-auth-links">
+        <a class="mobile-nav-item" href="/login">Student Login</a>
+        <a class="mobile-nav-item" href="/register">Register</a>
+        <a class="mobile-nav-item" href="/admin/login">Admin</a>
+      </div>
     </div>
   </header>
 

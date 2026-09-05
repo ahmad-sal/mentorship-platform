@@ -1,5 +1,6 @@
 const supabase = require('./supabase.cjs');
 const supabaseAdmin = supabase.supabaseAdmin || supabase.admin || supabase;
+const studentDb = supabaseAdmin || supabase;
 const VIDEO_REQUIREMENT_SECONDS = 10 * 60;
 
 function requireAdminDeleteAccess() {
@@ -722,7 +723,7 @@ async function getStudentDashboardData(studentId) {
   const enrolledCourseIds = [];
   const result = await Promise.all((courses || []).map(async (course) => {
     // Check enrollment
-    const { data: enrollment, error: enrollError } = await supabase
+    const { data: enrollment, error: enrollError } = await studentDb
       .from('student_enrollments')
       .select('student_id')
       .eq('student_id', studentId)
@@ -752,7 +753,7 @@ async function getStudentDashboardData(studentId) {
 
     let completedCount = 0;
     if (qIds && qIds.length > 0) {
-      const { count, error: cError } = await supabase
+      const { count, error: cError } = await studentDb
         .from('question_progress')
         .select('*', { count: 'exact', head: true })
         .eq('student_id', studentId)
@@ -764,7 +765,7 @@ async function getStudentDashboardData(studentId) {
     }
 
     // Check course completion
-    const { data: progress, error: pError } = await supabase
+    const { data: progress, error: pError } = await studentDb
       .from('course_progress')
       .select('completed')
       .eq('student_id', studentId)
@@ -798,9 +799,7 @@ async function enrollStudentInCourse(studentId, courseId) {
   const course = await getCourseById(courseId);
   if (!course) throw new Error('Course is not available for enrollment.');
 
-  const client = supabaseAdmin || supabase;
-
-  const { error } = await client
+  const { error } = await studentDb
     .from('student_enrollments')
     .upsert({
       student_id: studentId,
@@ -812,7 +811,7 @@ async function enrollStudentInCourse(studentId, courseId) {
 }
 
 async function isStudentEnrolled(studentId, courseId) {
-  const { data, error } = await supabase
+  const { data, error } = await studentDb
     .from('student_enrollments')
     .select('student_id')
     .eq('student_id', studentId)
@@ -1007,7 +1006,7 @@ async function getStudentQuestionsForCourse(studentId, courseId) {
   // 2. Get progress for each question
   const questionIds = questions.map(q => q.id);
 
-  const { data: progressData, error: pError } = await supabase
+  const { data: progressData, error: pError } = await studentDb
     .from('question_progress')
     .select('*')
     .eq('student_id', studentId)
@@ -1099,7 +1098,7 @@ async function startQuestionVideoTimer(studentId, questionId) {
 }
 
 async function getQuestionTimerStatus(studentId, questionId) {
-  const { data, error } = await supabase
+  const { data, error } = await studentDb
     .from('question_progress')
     .select('video_started_at, video_requirement_completed')
     .eq('student_id', studentId)
@@ -1163,7 +1162,7 @@ async function setQuestionComplete(studentId, questionId) {
 }
 
 async function getOrCreateAssignmentTimer(studentId, courseId) {
-  const { data, error } = await supabase
+  const { data, error } = await studentDb
     .from('student_enrollments')
     .select('assignment_started_at')
     .eq('student_id', studentId)

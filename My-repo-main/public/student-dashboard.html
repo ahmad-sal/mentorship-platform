@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -842,7 +842,7 @@
         const res = await fetch(`/api/student/courses/${cleanCourseId}/questions`);
         const data = await res.json();
         if (!res.ok) {
-          questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">${data.error || 'Please enroll in this course first.'}</div>`;
+          questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">Unable to load questions: ${data.error || 'Please try again.'}</div>`;
           return;
         }
 

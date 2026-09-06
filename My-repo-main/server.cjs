@@ -494,9 +494,11 @@ app.get('/api/student/profile', requireStudent, async (req, res) => {
 
 app.get('/api/student/dashboard', requireStudent, async (req, res) => {
   try {
-    const data = await getStudentDashboardData(req.session.user.id);
+    const studentId = await resolveStudentId(req.session.user);
+    const data = await getStudentDashboardData(studentId);
     res.json(data);
   } catch (err) {
+    console.error('Error fetching student dashboard:', err);
     res.status(500).json({ error: 'Error fetching student dashboard.' });
   }
 });
@@ -522,18 +524,20 @@ app.post('/api/student/courses/:courseId/enroll', requireStudent, async (req, re
 app.get('/api/student/courses/:courseId/questions', requireStudent, async (req, res) => {
   try {
     const courseId = Number(req.params.courseId);
+    const studentId = await resolveStudentId(req.session.user);
     const course = await getCourseById(courseId);
     if (!course) return res.status(404).json({ error: 'Course not found.' });
 
-    const enrolled = await isStudentEnrolled(req.session.user.id, courseId);
+    const enrolled = await isStudentEnrolled(studentId, courseId);
     if (!enrolled) {
       return res.status(403).json({ error: 'Please enroll in this course first.' });
     }
 
-    const questions = await getStudentQuestionsForCourse(req.session.user.id, courseId);
-    const assignmentTimer = await getOrCreateAssignmentTimer(req.session.user.id, courseId);
+    const questions = await getStudentQuestionsForCourse(studentId, courseId);
+    const assignmentTimer = await getOrCreateAssignmentTimer(studentId, courseId);
     res.json({ course, questions, assignment_timer: assignmentTimer });
   } catch (err) {
+    console.error('Error fetching course questions:', err);
     res.status(500).json({ error: 'Error fetching course questions.' });
   }
 });

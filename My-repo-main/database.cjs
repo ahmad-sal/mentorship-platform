@@ -27,6 +27,24 @@ async function findUserByEmail(email) {
   return data;
 }
 
+async function resolveStudentId(sessionUser) {
+  const email = String(sessionUser && sessionUser.email || '').trim().toLowerCase();
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
+    .from('users')
+    .select('id, email, role')
+    .eq('email', email)
+    .eq('role', 'student')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error('Student profile not found for the authenticated session.');
+  }
+
+  return data.id;
+}
+
 // This is a placeholder – we are using Supabase Auth directly in server.cjs
 async function verifyPassword(plainPassword, hashedPassword) {
   throw new Error('verifyPassword should be replaced by supabase.auth.signInWithPassword');
@@ -1252,6 +1270,7 @@ async function yieldToEventLoop() {
 
 module.exports = {
   findUserByEmail,
+  resolveStudentId,
   verifyPassword,
   createUser,
   getPlatformCapacity,

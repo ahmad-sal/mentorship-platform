@@ -29,6 +29,7 @@ const {
   isStudentEnrolled,
   upsertAssignmentSubmission,
   getStudentSubmissions,
+  resolveStudentId,
   getAdminSubmissions,
   getAssignmentSubmission,
   reviewAssignmentSubmission,
@@ -572,14 +573,19 @@ app.post('/api/student/questions/:questionId/watch', requireStudent, async (req,
 app.post('/api/student/questions/:questionId/complete', requireStudent, async (req, res) => {
   try {
     const questionId = Number(req.params.questionId);
-    await setQuestionComplete(req.session.user.id, questionId);
+    const sessionUser = req.session.user;
+    const studentId = await resolveStudentId(sessionUser);
+    console.log('Session user:', sessionUser);
+    console.log('Student ID being saved:', studentId);
+    await setQuestionComplete(studentId, questionId);
     res.json({ message: 'Question marked complete.', ok: true });
   } catch (err) {
+    console.error('Supabase question_progress error:', err);
     // Log full context server-side for debugging (Render logs). No API keys or secrets here.
     console.error('Error saving question progress:', {
       route: req.originalUrl,
       method: req.method,
-      student_id: req.session.user ? req.session.user.id : null,
+      session_user_id: req.session.user ? req.session.user.id : null,
       question_id: Number(req.params.questionId),
       http_status: 500,
       supabase_code: err && err.code,

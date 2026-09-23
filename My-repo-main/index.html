@@ -3,260 +3,572 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ahmad Saleem Mentorship — Practical Learning Portal</title>
+  <title>Ahmad Saleem Mentorship — Practical Skills Mentorship Platform</title>
+  <meta name="description" content="Practical, project-based mentorship in YouTube Automation, Canva design, WordPress and Artificial Intelligence. Learn in a structured workspace, submit assignments for mentor review, and track your progress." />
+  <meta name="theme-color" content="#08101f" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="Mentor.css">
-  <link rel="stylesheet" href="/responsive.css">
+  <link rel="stylesheet" href="/theme.css">
 </head>
-<body class="light-theme">
-  
-  <!-- TOP NAVIGATION BAR -->
+<body class="light-theme home-page">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <!-- ============================================================
+       TOP NAVIGATION
+       ============================================================ -->
   <header class="site-header" id="siteHeader">
     <div class="nav-container">
-      <div class="brand-logo" id="brandLogo" onclick="app.navigate('home')">
-        <div class="logo-icon">
-          <i data-lucide="graduation-cap"></i>
-        </div>
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
         <span class="logo-text">Ahmad Saleem</span>
-      </div>
+      </a>
 
-      <nav class="desktop-nav" id="desktopNav">
-        <button class="nav-link active" onclick="app.navigate('home')" id="navHomeBtn">Home</button>
-        <button class="nav-link" onclick="app.navigate('courses')" id="navCoursesBtn">Courses</button>
+      <nav class="desktop-nav" id="desktopNav" aria-label="Primary">
+        <button class="nav-link active" type="button" onclick="app.navigate('home')" id="navHomeBtn">Home</button>
+        <button class="nav-link" type="button" onclick="app.navigate('courses')" id="navCoursesBtn">Courses</button>
       </nav>
 
       <div class="nav-actions">
         <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
           <a class="btn btn-secondary" href="/login">Student Login</a>
-          <a class="btn btn-primary" href="/register">Register</a>
-          <a class="btn btn-secondary" href="/admin/login">Admin</a>
+          <a class="btn btn-primary" href="/register">
+            Get Started
+            <i data-lucide="arrow-right"></i>
+          </a>
         </div>
 
-        <!-- Theme Toggle Button -->
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="app.toggleTheme()" title="Toggle Theme">
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="app.toggleTheme()" aria-label="Toggle colour theme">
           <span id="themeIcon" aria-hidden="true"></span>
           <span class="theme-label" id="themeLabel">Dark Mode</span>
         </button>
 
-        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="app.toggleMobileMenu()" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" onclick="app.toggleMobileMenu()"
+                aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
           <i data-lucide="menu"></i>
         </button>
       </div>
     </div>
 
-    <!-- Mobile Drawer -->
     <div class="mobile-drawer" id="mobileDrawer">
-      <button class="mobile-nav-item" onclick="app.navigate('home')">Home</button>
-      <button class="mobile-nav-item" onclick="app.navigate('courses')">Courses</button>
-      <div class="mobile-auth-links">
-        <a class="mobile-nav-item" href="/login">Student Login</a>
-        <a class="mobile-nav-item" href="/register">Register</a>
-        <a class="mobile-nav-item" href="/admin/login">Admin</a>
+      <div class="mobile-drawer-inner">
+        <button class="mobile-nav-item" type="button" onclick="app.navigate('home')"><i data-lucide="graduation-cap"></i> Home</button>
+        <button class="mobile-nav-item" type="button" onclick="app.navigate('courses')"><i data-lucide="book-open"></i> Courses</button>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- MAIN APP CONTAINER -->
-  <main class="main-container" id="mainContainer">
+  <main id="mainContent">
 
-    <!-- 1. HOME VIEW -->
+    <!-- ============================================================
+         1. HOME VIEW
+         ============================================================ -->
     <section id="viewHome" class="view-section active">
+
       <!-- HERO -->
-      <div class="hero-grid">
-        <div class="hero-left">
-          <div class="pill-badge">
-            <i data-lucide="sparkles"></i>
-            <span>Practical Hands-On Mentorship</span>
+      <div class="hero-surface">
+        <div class="hero-bg" aria-hidden="true">
+          <span class="hero-bg__mesh"></span>
+          <span class="hero-bg__grid"></span>
+          <span class="hero-bg__glow hero-bg__glow--a"></span>
+          <span class="hero-bg__glow hero-bg__glow--b"></span>
+          <span class="hero-bg__beam"></span>
+        </div>
+
+        <div class="main-container">
+          <div class="hero-grid">
+            <div class="hero-left">
+              <span class="pill-badge pill-glass">
+                <i data-lucide="sparkles"></i>
+                <span>Practical, project-based mentorship</span>
+              </span>
+
+              <h1 class="display-1 hero-title">
+                Turn your skills into
+                <span>real-world progress</span>
+              </h1>
+
+              <p class="hero-desc">
+                Four focused course tracks in YouTube Automation, Canva design, WordPress and
+                Artificial Intelligence — taught through hands-on curriculum tasks, guided video
+                lessons and assignments reviewed by your mentor.
+              </p>
+
+              <div class="hero-actions">
+                <button class="btn btn-primary btn-lg" type="button" onclick="app.navigate('courses')" id="heroExploreBtn">
+                  <span>Explore course tracks</span>
+                  <i data-lucide="arrow-right"></i>
+                </button>
+                <a class="btn btn-glass btn-lg" href="/register">
+                  <i data-lucide="user-plus"></i>
+                  <span>Create free account</span>
+                </a>
+              </div>
+
+              <div class="hero-features">
+                <div class="feature-item"><i data-lucide="check-circle-2"></i><span>Mentor-reviewed assignments</span></div>
+                <div class="feature-item"><i data-lucide="check-circle-2"></i><span>Beginner-friendly tracks</span></div>
+                <div class="feature-item"><i data-lucide="check-circle-2"></i><span>E-certificate on completion</span></div>
+              </div>
+            </div>
+
+            <div class="hero-right">
+              <div class="card mentor-card">
+                <div class="mentor-card-header">
+                  <span class="status-indicator">
+                    <span class="status-dot pulse"></span>
+                    <span class="status-text">Mentor profile</span>
+                  </span>
+                  <a class="whatsapp-contact" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer" aria-label="Contact Ahmad Saleem on WhatsApp">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.6 4.1 1.6 5.9L.2 24l6.5-1.7a11.8 11.8 0 0 0 5.4 1.3h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.3ZM12.2 21.6h-.1a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.8 1 1-3.7-.2-.4a9.7 9.7 0 0 1-1.5-5.2C2.2 6.4 6.7 2 12.1 2c2.6 0 5.1 1 6.9 2.9a9.7 9.7 0 0 1 2.9 6.9c0 5.4-4.4 9.8-9.7 9.8Zm5.4-7.3c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.2-.2.3-.7.9-.8 1.1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.4-3.8-3.2-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.8 4.3 1.8.8 2.4.9 3.3.8.5-.1 1.7-.7 1.9-1.3.2-.6.2-1.2.1-1.3-.1-.2-.3-.3-.6-.4Z"/></svg>
+                    <span>Contact</span>
+                  </a>
+                </div>
+
+                <div class="mentor-img-wrapper" id="mentorImgWrapper">
+                  <img id="mentorPhoto" class="mentor-photo" src="/images/profile.jpeg" alt="Mentor Ahmad Saleem"
+                       loading="lazy" decoding="async"
+                       onerror="this.onerror=null;this.src='/images/profile%20copy.jpeg'">
+                </div>
+
+                <div class="mentor-card-body">
+                  <h2 class="mentor-name">Ahmad Saleem</h2>
+                  <p class="mentor-role">Lead Mentor &amp; Digital Skills Instructor</p>
+                  <p class="mentor-bio">
+                    Dedicated to helping students learn practical digital skills through clear
+                    explanations, useful tools, and real-world examples.
+                  </p>
+
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="pill-badge">
-            <i data-lucide="award"></i>
-            <span>5+ Years of Experience</span>
-          </div>
+        </div>
+      </div>
 
-          <h1 class="hero-title">
-            Master Tech Skills with <br/>
-            <span class="highlight-text">Ahmad Saleem</span>
-          </h1>
+      <div class="home-marquee" aria-label="Skills covered in the mentorship">
+        <div class="home-marquee__track">
+          <span class="home-marquee__tag home-marquee__tag--blue"><i data-lucide="play-circle"></i>YouTube Automation</span>
+          <span class="home-marquee__tag home-marquee__tag--green"><i data-lucide="image"></i>Canva Design</span>
+          <span class="home-marquee__tag home-marquee__tag--red"><i data-lucide="layers"></i>WordPress</span>
+          <span class="home-marquee__tag home-marquee__tag--amber"><i data-lucide="sparkles"></i>Artificial Intelligence</span>
+          <span class="home-marquee__tag home-marquee__tag--blue"><i data-lucide="play-circle"></i>YouTube Automation</span>
+          <span class="home-marquee__tag home-marquee__tag--green"><i data-lucide="image"></i>Canva Design</span>
+          <span class="home-marquee__tag home-marquee__tag--red"><i data-lucide="layers"></i>WordPress</span>
+          <span class="home-marquee__tag home-marquee__tag--amber"><i data-lucide="sparkles"></i>Artificial Intelligence</span>
+        </div>
+      </div>
 
-          <p class="hero-desc">
-            I teach practical skills through project‑based learning and real‑world assignments. Join my courses and build a portfolio that stands out.
-          </p>
-
-          <div class="hero-actions">
-            <button class="btn btn-primary btn-lg" onclick="app.navigate('courses')" id="heroExploreBtn">
-              <span>Explore Course Tracks</span>
-              <i data-lucide="arrow-right"></i>
+      <div class="main-container">
+        <!-- ============================================================
+             2. WHAT STUDENTS CAN ACHIEVE
+             ============================================================ -->
+        <div class="section-block" id="outcomes">
+          <div class="section-header">
+            <div>
+              <span class="section-kicker">Outcomes</span>
+              <h2 class="section-title mt-1">What you can build here</h2>
+              <p class="section-subtitle">
+                Every track is built around practical deliverables rather than passive theory.
+              </p>
+            </div>
+            <button class="btn btn-outline" type="button" onclick="app.navigate('courses')">
+              Browse tracks <i data-lucide="arrow-right"></i>
             </button>
           </div>
 
-          <div class="hero-features">
-            <div class="feature-item">
-              <i data-lucide="check-circle-2"></i>
-              <span>Practical Course Guidance</span>
-            </div>
-            <div class="feature-item">
-              <i data-lucide="check-circle-2"></i>
-              <span>Beginner-Friendly Learning</span>
-            </div>
-            <div class="feature-item">
-              <i data-lucide="check-circle-2"></i>
-              <span>Verified Credentials</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- MENTOR PROFILE CARD WITH SQUARE IMAGE -->
-        <div class="hero-right">
-          <div class="card mentor-card">
-            <div class="mentor-card-header">
-              <div class="status-indicator">
-                <span class="status-dot"></span>
-              </div>
-              <a class="whatsapp-contact" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer" aria-label="Contact Ahmad Saleem on WhatsApp">
-                <span>Contact us:</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.6 4.1 1.6 5.9L.2 24l6.5-1.7a11.8 11.8 0 0 0 5.4 1.3h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.3ZM12.2 21.6h-.1a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.8 1 1-3.7-.2-.4a9.7 9.7 0 0 1-1.5-5.2C2.2 6.4 6.7 2 12.1 2c2.6 0 5.1 1 6.9 2.9a9.7 9.7 0 0 1 2.9 6.9c0 5.4-4.4 9.8-9.7 9.8Zm5.4-7.3c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.2-.2.3-.7.9-.8 1.1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.4-3.8-3.2-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.8 4.3 1.8.8 2.4.9 3.3.8.5-.1 1.7-.7 1.9-1.3.2-.6.2-1.2.1-1.3-.1-.2-.3-.3-.6-.4Z"/></svg>
-               <span class="whatsapp-icon-only"></span>
-              </a>
-            </div>
-
-            <!-- Square Profile Image Container -->
-            <div class="mentor-img-wrapper" id="mentorImgWrapper">
-              <img id="mentorPhoto" src="public/images/profile.jpeg" alt="Mentor Ahmad Saleem" class="mentor-photo" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'" />
-            </div>
-
-            <div class="mentor-card-body">
-              <h3 class="mentor-name">Ahmad Saleem</h3>
-              <p class="mentor-role">Lead Mentor & Digital Skills Instructor</p>
-              <p class="mentor-bio">
-                Dedicated to helping students learn practical digital skills through clear explanations, useful tools, and real-world examples.
+          <div class="grid-3" data-reveal-group>
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="target"></i></span>
+              <h3>A repeatable content engine</h3>
+              <p class="muted small mt-1">
+                YouTube Automation takes you from niche research to upload workflows, thumbnails,
+                SEO and channel growth systems.
               </p>
+            </article>
 
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="sparkles"></i></span>
+              <h3>A professional design workflow</h3>
+              <p class="muted small mt-1">
+                Canva takes you from a blank canvas to social graphics, brand kits, presentations
+                and client-ready exports.
+              </p>
+            </article>
+
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="layers"></i></span>
+              <h3>A live website you launched yourself</h3>
+              <p class="muted small mt-1">
+                WordPress covers themes, page builders, speed, security and on-page SEO so you can
+                publish confidently.
+              </p>
+            </article>
+
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="zap"></i></span>
+              <h3>An AI-powered toolkit</h3>
+              <p class="muted small mt-1">
+                Artificial Intelligence covers prompt engineering, image and video generation,
+                voiceovers and AI-assisted websites.
+              </p>
+            </article>
+
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="trending-up"></i></span>
+              <h3>Visible progress you can point to</h3>
+              <p class="muted small mt-1">
+                Your workspace tracks each curriculum task and completion percentage per course
+                track, in real time.
+              </p>
+            </article>
+
+            <article class="card card-hover" data-reveal-item>
+              <span class="feature-icon"><i data-lucide="award"></i></span>
+              <h3>An e-certificate on completion</h3>
+              <p class="muted small mt-1">
+                Finish the required tasks and your course completion is recorded on your student
+                profile and certificate.
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             3. MENTORSHIP BENEFITS
+             ============================================================ -->
+        <div class="section-block">
+          <div class="card card-deep-indigo mentorship-highlight" style="padding:clamp(1.5rem,4vw,2.75rem);">
+            <div class="row-between" style="align-items:flex-start;">
+              <div style="max-width:44ch;">
+                <span class="section-kicker mentorship-kicker">Why mentorship</span>
+                <h2 class="mt-1 mentorship-title">You are not learning alone</h2>
+                <p class="mt-2 mentorship-copy">
+                  The platform keeps a mentor in the loop at the moments that matter — not just at
+                  the end. Your answers and files reach a real review queue.
+                </p>
+                <a class="btn btn-white mt-3" href="/register">
+                  Start learning <i data-lucide="arrow-right"></i>
+                </a>
+              </div>
+
+              <div style="flex:1 1 320px; min-width:min(100%,280px);">
+                <div class="grid-2" style="gap:0.85rem;">
+                  <div class="info-box mentorship-info-box">
+                    <div class="info-label mentorship-info-label">Guided curriculum</div>
+                    <div class="info-val mentorship-info-value">Structured tasks per track</div>
+                  </div>
+                  <div class="info-box mentorship-info-box">
+                    <div class="info-label mentorship-info-label">Video lessons</div>
+                    <div class="info-val mentorship-info-value">Optional required viewing</div>
+                  </div>
+                  <div class="info-box mentorship-info-box">
+                    <div class="info-label mentorship-info-label">Submissions</div>
+                    <div class="info-val mentorship-info-value">Mentor review queue</div>
+                  </div>
+                  <div class="info-box mentorship-info-box">
+                    <div class="info-label mentorship-info-label">Feedback</div>
+                    <div class="info-val mentorship-info-value">Review notes on your work</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- HOW IT WORKS -->
-      <div class="section-block how-it-works-card">
-        <div class="how-header">
-          <h2 class="section-title">How The Mentorship Works</h2>
-          <p class="section-subtitle">A clear three-step path from choosing a skill to building confidence with it.</p>
-        </div>
-
-        <div class="steps-grid">
-          <div class="step-card">
-            <div class="step-badge">1</div>
-            <h3 class="step-title">
-              <i data-lucide="play-circle"></i>
-              <span>Choose Your Skill</span>
-            </h3>
-            <p class="step-desc">
-              Browse the course tracks and choose the skill that matches your goals and interests.
-            </p>
+        <!-- ============================================================
+             4. HOW THE PLATFORM WORKS
+             ============================================================ -->
+        <div class="section-block" id="howItWorks">
+          <div class="section-header text-center">
+            <div>
+              <span class="section-kicker">The process</span>
+              <h2 class="section-title mt-1">How the mentorship works</h2>
+              <p class="section-subtitle" style="margin-inline:auto;">
+                A clear path from choosing a skill to having your work reviewed.
+              </p>
+            </div>
           </div>
 
-          <div class="step-card">
-            <div class="step-badge badge-indigo">2</div>
-            <h3 class="step-title">
-              <i data-lucide="clock"></i>
-              <span>Learn the Essentials</span>
-            </h3>
-            <p class="step-desc">
-              Follow the course focus points to understand the tools, concepts, and workflows that matter most.
-            </p>
-          </div>
+          <div class="steps-grid" data-reveal-group>
+            <div class="step-card" data-reveal-item>
+              <span class="step-badge">1</span>
+              <h3 class="step-title"><i data-lucide="compass"></i><span>Choose your track</span></h3>
+              <p class="step-desc">
+                Browse the course tracks and enrol in the skill that matches your goals. Your
+                workspace is created the moment you enrol.
+              </p>
+            </div>
 
-          <div class="step-card">
-            <div class="step-badge badge-emerald">3</div>
-            <h3 class="step-title">
-              <i data-lucide="award"></i>
-              <span>Apply Your Skills</span>
-            </h3>
-            <p class="step-desc">
-              Practice what you learn with useful projects and examples that connect skills to real work.
-            </p>
+            <div class="step-card" data-reveal-item>
+              <span class="step-badge badge-indigo">2</span>
+              <h3 class="step-title"><i data-lucide="play-circle"></i><span>Work through the lessons</span></h3>
+              <p class="step-desc">
+                Follow each curriculum question, watch the reference lesson where one is attached,
+                and mark tasks complete as you go.
+              </p>
+            </div>
+
+            <div class="step-card" data-reveal-item>
+              <span class="step-badge badge-emerald">3</span>
+              <h3 class="step-title"><i data-lucide="send"></i><span>Submit for mentor review</span></h3>
+              <p class="step-desc">
+                Attach your final practical work and send it in. Your mentor reviews the submission
+                and returns feedback in your workspace.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- FAQ SECTION -->
-      <div class="section-block faq-section">
-        <div class="section-header text-center">
-          <h2 class="section-title">Frequently Asked Questions</h2>
+           <!-- ============================================================
+             5. INSIDE THE WORKSPACE
+             ============================================================ -->
+        <div class="section-block">
+          <div class="section-header">
+            <div>
+              <span class="section-kicker">Your workspace</span>
+              <h2 class="section-title mt-1">A learning workspace, not a video dump</h2>
+              <p class="section-subtitle">
+                Everything you submit and complete lives in one place, tied to your account.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid-2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));">
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="layout-dashboard"></i></span>
+              <h3>Student dashboard</h3>
+              <p class="muted small mt-1">
+                Pick a track, see your enrolled courses, and open the active course workspace
+                without leaving the page.
+              </p>
+            </div>
+
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="message-square"></i></span>
+              <h3>Curriculum tasks &amp; questions</h3>
+              <p class="muted small mt-1">
+                Each track lists numbered questions. Locked tasks unlock in order so you are never
+                asked to skip ahead.
+              </p>
+            </div>
+
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="play"></i></span>
+              <h3>Reference video lessons</h3>
+              <p class="muted small mt-1">
+                Where a question includes a video requirement, your answer field unlocks once the
+                study time is fulfilled.
+              </p>
+            </div>
+
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="pie-chart"></i></span>
+              <h3>Real-time progress</h3>
+              <p class="muted small mt-1">
+                Track completed tasks and overall percentage per course on your dashboard and
+                student profile.
+              </p>
+            </div>
+
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="file-up"></i></span>
+              <h3>Assignment submissions</h3>
+              <p class="muted small mt-1">
+                Attach documents, images or archives — PDF, DOCX, ZIP, PNG, JPG and PPTX are
+                supported up to 10&nbsp;MB.
+              </p>
+            </div>
+
+            <div class="card card-hover">
+              <span class="feature-icon"><i data-lucide="shield-check"></i></span>
+              <h3>Private student account</h3>
+              <p class="muted small mt-1">
+                Access is protected by your own student login. Only you and your mentor can see
+                your submissions.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="faq-list" id="faqList">
-          <!-- Populated by JavaScript -->
+           <!-- ============================================================
+             6. MENTOR
+             ============================================================ -->
+        <div class="section-block">
+          <div class="card mentor-panel" style="padding:clamp(1.5rem,4vw,2.5rem);">
+            <div>
+              <span class="mentor-label">Meet your mentor</span>
+              <h2 class="mentor-name">Ahmad Saleem</h2>
+              <p class="mentor-role">Digital Skills Instructor &amp; Creator</p>
+              <div class="row mt-3">
+                <a class="btn btn-secondary btn-sm" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer">
+                  <i data-lucide="phone"></i> Message on WhatsApp
+                </a>
+              </div>
+            </div>
+            <div>
+              <p class="muted">
+                I teach practical digital skills through project-based learning and real-world
+                assignments across YouTube Automation, Canva, WordPress and Artificial
+                Intelligence. Five years of hands-on work in these tools shapes how each track is
+                taught — clear explanations, useful tools, and tasks that connect skills to real
+                work.
+              </p>
+              <div class="hero-features mt-3" style="border-top:none; padding-top:0;">
+                <div class="feature-item"><i data-lucide="check"></i><span>Clear, beginner-friendly explanations</span></div>
+                <div class="feature-item"><i data-lucide="check"></i><span>Feedback on submitted work</span></div>
+                <div class="feature-item"><i data-lucide="check"></i><span>Lifetime access to course resources</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+           <!-- ============================================================
+             7. FAQ
+             ============================================================ -->
+        <div class="section-block faq-section" id="faq">
+          <div class="section-header text-center">
+            <div>
+              <span class="section-kicker">Questions</span>
+              <h2 class="section-title mt-1">Frequently asked questions</h2>
+            </div>
+          </div>
+
+          <div class="faq-list" id="faqList">
+            <!-- Populated by Mentor.js -->
+          </div>
+        </div>
+
+           <!-- ============================================================
+             8. FINAL CTA
+             ============================================================ -->
+        <div class="section-block">
+          <div class="middle-banner" data-reveal>
+            <span class="pill-badge pill-glass" style="margin-bottom:1rem;">
+              <i data-lucide="rocket"></i>
+              <span>Ready when you are</span>
+            </span>
+            <h2>Start your first track today</h2>
+            <p>
+              Create your student account, choose a skill, and get straight into a workspace built
+              for practical progress.
+            </p>
+            <div class="row" style="justify-content:center; margin-top:1.5rem;">
+              <a class="btn btn-white btn-lg" href="/register">
+                Create student account <i data-lucide="arrow-right"></i>
+              </a>
+              <a class="btn btn-glass btn-lg" href="/login">I already have an account</a>
+            </div>
+            <p class="tiny mt-3" data-enroll-note hidden style="color:#ffd9a8;">
+              <i data-lucide="alert-circle"></i>
+              Enrollment is currently paused — the cohort has reached its seat capacity.
+            </p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. COURSES VIEW -->
+    <!-- ============================================================
+         2. COURSES VIEW
+         ============================================================ -->
     <section id="viewCourses" class="view-section">
-      <div class="page-heading">
-        <div class="pill-badge">
-          <i data-lucide="book-open"></i>
-          <span>Curriculum</span>
+      <div class="main-container">
+        <div class="page-heading">
+          <span class="pill-badge"><i data-lucide="book-open"></i><span>Curriculum</span></span>
+          <h1 class="page-title">Course tracks</h1>
+          <p class="page-subtitle">
+            Explore each track and the practical skills covered across the programme. Every track
+            runs for two months and is built around real deliverables.
+          </p>
         </div>
-        <h1 class="page-title">Course Tracks</h1>
-        <p class="page-subtitle">Explore each course and discover the practical skills covered in the program.</p>
-      </div>
 
-      <div class="course-grid" id="allCoursesGrid">
-        <!-- Populated by JavaScript -->
+        <div class="course-grid" id="allCoursesGrid" data-reveal-group>
+          <!-- Populated by Mentor.js -->
+        </div>
+
+        <div class="middle-banner mt-4" data-reveal>
+          <h2>Not sure which track fits?</h2>
+          <p>Message your mentor on WhatsApp and describe your goal — you will get a straight answer.</p>
+          <div class="row" style="justify-content:center; margin-top:1.5rem;">
+            <a class="btn btn-white" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="phone"></i> Ask on WhatsApp
+            </a>
+            <a class="btn btn-glass" href="/register">Create account</a>
+          </div>
+        </div>
       </div>
     </section>
 
   </main>
 
-  <!-- FOOTER -->
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
   <footer class="site-footer">
-    <div class="footer-accent" aria-hidden="true"></div>
     <div class="footer-container">
       <div class="footer-col brand-col">
         <div class="brand-logo">
-          <div class="logo-icon">
-            <i data-lucide="graduation-cap"></i>
-          </div>
+          <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
           <span class="logo-text">Ahmad Saleem Mentorship</span>
         </div>
         <p class="footer-desc">
-          Helping students build practical digital skills through focused courses, useful tools, and real-world learning.
+          Helping students build practical digital skills through focused courses, useful tools,
+          and real-world learning.
         </p>
         <div class="footer-badges">
-          <span class="badge badge-emerald">
-            <i data-lucide="shield-check"></i>
-            <span>Practical Learning</span>
-          </span>
-          <span class="badge badge-primary">
-            <i data-lucide="award"></i>
-            <span>Mentor Guidance</span>
-          </span>
+          <span class="badge badge-emerald"><i data-lucide="shield-check"></i><span>Practical learning</span></span>
+          <span class="badge badge-accent"><i data-lucide="award"></i><span>Mentor guidance</span></span>
         </div>
       </div>
 
       <div class="footer-col">
         <span class="footer-kicker">Explore</span>
-        <h4 class="footer-heading">Quick Links</h4>
+        <h4 class="footer-heading">Platform</h4>
         <ul class="footer-links">
-          <li><a href="javascript:void(0)" onclick="app.navigate('home')"><span>Home</span><i data-lucide="arrow-right"></i></a></li>
-          <li><a href="javascript:void(0)" onclick="app.navigate('courses')"><span>All Courses</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/"><span>Home</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="#viewCourses" onclick="app.navigate('courses')"><span>All courses</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="#howItWorks"><span>How it works</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="#faq"><span>FAQ</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span>
+        <h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links">
+          <li><a href="/register"><span>Create account</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/login"><span>Student login</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/student/dashboard"><span>Learning workspace</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/student/profile"><span>Profile &amp; certificate</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-kicker">Support</span>
+        <h4 class="footer-heading">Contact</h4>
+        <ul class="footer-links">
+          <li><a href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer"><span>WhatsApp mentor</span><i data-lucide="external-link"></i></a></li>
+          <li><a href="/admin/login"><span>Admin portal</span><i data-lucide="arrow-right"></i></a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 Mentor Ahmad Saleem. All rights reserved.</p>
+      <p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p>
+      <p>Built for practical, project-based learning.</p>
     </div>
   </footer>
 
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- JAVASCRIPT CONTROLLER -->
-  <script src="Mentor.js"></script>
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
 </body>
 </html>
-

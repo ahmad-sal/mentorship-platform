@@ -112,6 +112,54 @@ app.use((req, res, next) => {
   next();
 });
 
+// ------------------------------------------------------------
+// Static asset guards
+// ------------------------------------------------------------
+// The project root doubles as a static directory so the public pages can load
+// /Mentor.css, /Mentor.js and friends. That must never expose server source,
+// database files or student uploads.
+//
+// Student uploads are served exclusively through the authenticated
+// /api/admin/submissions/:id/* routes; the legacy /uploads directory is not
+// referenced anywhere and must stay unreachable.
+const BLOCKED_STATIC_DIRS = ['/uploads', '/scripts', '/node_modules', '/.git', '/src'];
+const BLOCKED_STATIC_FILES = [
+  '/package.json',
+  '/package-lock.json',
+  '/bun.lock',
+  '/tsconfig.json',
+  '/metadata.json',
+  '/vite.config.ts',
+  '/.env',
+  '/.env.example',
+  '/.gitignore'
+];
+const BLOCKED_STATIC_EXTENSIONS = [
+  '.cjs', '.mjs', '.ts', '.tsx', '.db', '.db-shm', '.db-wal', '.sqlite', '.sqlite3',
+  '.env', '.zip', '.md', '.lock', '.log', '.bak', '.sql', '.pem', '.key'
+];
+
+function isBlockedStaticPath(pathname) {
+  const lower = String(pathname || '/').toLowerCase();
+  if (BLOCKED_STATIC_DIRS.some((dir) => lower === dir || lower.startsWith(dir + '/') || lower.startsWith(dir + '.'))) {
+    return true;
+  }
+  if (BLOCKED_STATIC_FILES.includes(lower)) return true;
+  return BLOCKED_STATIC_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+app.use((req, res, next) => {
+  let pathname = req.path || '/';
+  try {
+    pathname = decodeURIComponent(pathname);
+  } catch (e) {
+    // Malformed percent-encoding — treat the raw path as authoritative.
+  }
+  if (!isBlockedStaticPath(pathname)) return next();
+  if (pathname.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
+  return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use(express.static(path.join(__dirname), { index: false }));
@@ -807,6 +855,17 @@ app.patch('/api/admin/submissions/:submissionId/review', requireAdmin, async (re
   } catch (error) {
     res.status(400).json({ error: error.message || 'Unable to review submission.' });
   }
+});
+
+// ============================================================
+// 404 — unmatched page routes
+// ============================================================
+
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Endpoint not found.' });
+  }
+  return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 // ============================================================

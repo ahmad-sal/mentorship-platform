@@ -4,498 +4,260 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Learning Dashboard | Ahmad Saleem Mentorship</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Mentor.css">
-  <style>
-    .dash-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 5rem;
-    }
-    .dash-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .user-greeting h1 {
-      font-size: 1.85rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 0.2rem 0;
-    }
-    .user-greeting p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-    .enrollment-alert {
-      background: var(--primary-subtle);
-      border: 1px solid var(--primary-border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .course-dash-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-    .course-dash-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-xl);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.2s;
-    }
-    .course-dash-card.active-course {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-subtle);
-    }
-    .question-count-badge {
-      width: 3.2rem;
-      height: 3.2rem;
-      flex: 0 0 3.2rem;
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-radius: 50%;
-      background: #e8f7ef;
-      border: 2px solid #8ed2ad;
-      color: #147a50;
-      line-height: 1;
-    }
-    .question-count-badge strong {
-      font-size: 1.05rem;
-    }
-    .question-count-badge span {
-      margin-top: 0.2rem;
-      font-size: 0.55rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .progress-bar-bg {
-      height: 8px;
-      border-radius: 999px;
-      background: var(--bg-subtle);
-      overflow: hidden;
-      margin: 1rem 0 0.5rem;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--primary);
-      border-radius: 999px;
-      transition: width 0.3s ease;
-    }
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-muted);
-    }
-    /* Assignment & Questions Area */
-    .questions-container {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-xl);
-      padding: 2rem;
-      margin-top: 2rem;
-    }
-    .question-item {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      transition: all 0.2s;
-    }
-    .question-item.completed-q {
-      border-color: var(--emerald-border);
-      background: var(--emerald-subtle);
-    }
-    .question-item.locked-q {
-      border-color: var(--amber-border);
-      background: var(--amber-subtle);
-    }
-    .question-item.unanswered-highlight {
-      border-color: var(--rose);
-      box-shadow: 0 0 0 3px var(--rose-subtle);
-    }
-    .q-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-    .q-num {
-      font-weight: 800;
-      font-size: 0.85rem;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .q-text {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: var(--text-main);
-    }
-    .q-desc {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-    }
-    .video-req-box {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .video-req-box.timer-active {
-      border-color: var(--amber);
-      background: var(--amber-subtle);
-    }
-    .video-req-box.timer-unlocked {
-      border-color: var(--emerald);
-      background: var(--emerald-subtle);
-    }
-    .video-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: var(--radius-sm);
-      background: #dc2626;
-      color: white;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-    }
-    .video-btn:hover {
-      background: #b91c1c;
-      color: white;
-      text-decoration: none;
-    }
-    .timer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-weight: 800;
-      font-size: 0.85rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
-    }
-    .timer-badge.badge-waiting {
-      background: var(--amber-subtle);
-      color: var(--amber);
-      border: 1px solid var(--amber-border);
-    }
-    .timer-badge.badge-running {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
-    }
-    .timer-badge.badge-done {
-      background: var(--emerald-subtle);
-      color: var(--emerald);
-      border: 1px solid var(--emerald-border);
-    }
-    .answer-textarea {
-      width: 100%;
-      min-height: 90px;
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background: var(--bg-surface);
-      color: var(--text-main);
-      font-family: inherit;
-      resize: vertical;
-      margin-bottom: 0.75rem;
-      transition: border-color 0.2s, background-color 0.2s;
-    }
-    .answer-textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    .answer-textarea:disabled {
-      background: var(--bg-elevated);
-      color: var(--text-muted);
-      cursor: not-allowed;
-      border-style: dashed;
-    }
-    .submission-upload-box {
-      border: 2px dashed var(--primary-border);
-      border-radius: var(--radius-lg);
-      padding: 2rem;
-      text-align: center;
-      background: var(--primary-subtle);
-      margin-top: 2rem;
-    }
-    .assignment-file-input {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    .assignment-file-picker {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background: var(--bg-surface);
-      color: var(--text-main);
-      cursor: pointer;
-      text-align: center;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .assignment-file-picker:hover,
-    .assignment-file-input:focus-visible + .assignment-file-picker {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-subtle);
-    }
-    .assignment-file-picker-button {
-      padding: 0.35rem 0.7rem;
-      border-radius: var(--radius-sm);
-      background: var(--primary);
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .assignment-file-name {
-      overflow: hidden;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .all-answered-status {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      padding: 0.85rem 1.15rem;
-      border-radius: var(--radius-md);
-      margin-bottom: 1.25rem;
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-    /* Course Thumbnail Banner */
-    .course-thumbnail-banner {
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      position: relative;
-      width: 100%;
-      height: 200px;
-      margin-bottom: 1.75rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-color);
-    }
-    .course-thumbnail-banner img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.4s ease;
-    }
-    .course-thumbnail-banner:hover img {
-      transform: scale(1.03);
-    }
-    .course-thumbnail-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.12) 100%);
-      display: flex;
-      align-items: flex-end;
-      padding: 1.25rem 1.5rem;
-      gap: 0.75rem;
-    }
-    .course-thumbnail-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(255,255,255,0.18);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.28);
-      border-radius: 999px;
-      padding: 0.35rem 0.9rem;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.04em;
-    }
-    /* Locked question overlay */
-    .question-lock-overlay {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: linear-gradient(135deg, var(--amber-subtle) 0%, var(--bg-elevated) 100%);
-      border: 2px dashed var(--amber-border);
-      border-radius: var(--radius-md);
-      padding: 1.15rem 1.25rem;
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--amber);
-    }
-    .question-lock-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--amber-subtle);
-      border: 1px solid var(--amber-border);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 1.2rem;
-    }
-  </style>
-<link rel="stylesheet" href="/responsive.css">
+  <link rel="stylesheet" href="/theme.css">
 </head>
 <body class="light-theme">
-  <header class="site-header">
-    <div class="nav-container">
-      <a class="brand-logo" href="/">
-        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+  <a class="skip-link" href="#workspaceTop">Skip to main content</a>
+
+  <div class="app-shell">
+    <!-- ============================================================
+         SIDEBAR
+         ============================================================ -->
+    <aside class="app-sidebar" id="appSidebar" aria-label="Workspace navigation">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
         <span class="logo-text">Ahmad Saleem</span>
       </a>
-      <div class="nav-actions">
-        <a class="btn btn-text" href="/student/profile"><i data-lucide="user"></i> My Profile</a>
-        <button class="btn btn-secondary btn-sm" onclick="logout()"><i data-lucide="log-in"></i> Logout</button>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-          <span id="themeIcon"></span>
-          <span id="themeLabel">Dark Mode</span>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Workspace</span>
+        <a class="sidebar-link active" href="#workspaceTop" data-sidebar-target="workspaceTop">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a class="sidebar-link" href="#coursesSection" data-sidebar-target="coursesSection">
+          <i data-lucide="book-open"></i><span>My courses</span>
+        </a>
+        <a class="sidebar-link" href="#questionsSection" data-sidebar-target="questionsSection">
+          <i data-lucide="message-square"></i><span>Curriculum tasks</span>
+        </a>
+        <a class="sidebar-link" href="#submissionSection" data-sidebar-target="submissionSection">
+          <i data-lucide="file-up"></i><span>Assignments</span>
+        </a>
+        <a class="sidebar-link" href="#statsSection" data-sidebar-target="statsSection">
+          <i data-lucide="pie-chart"></i><span>Progress</span>
+        </a>
+      </nav>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Account</span>
+        <a class="sidebar-link" href="/student/profile">
+          <i data-lucide="user"></i><span>Profile &amp; certificate</span>
+        </a>
+        <a class="sidebar-link" href="/student/practical-classes">
+          <i data-lucide="play-circle"></i><span>Live classes</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="avatar avatar-sm" id="sidebarAvatar" aria-hidden="true">S</span>
+          <span class="sidebar-user__meta">
+            <span class="sidebar-user__name" id="sidebarUserName">Student</span>
+            <span class="sidebar-user__role">Student account</span>
+          </span>
+        </div>
+        <button class="sidebar-link mt-2" type="button" onclick="logout()" style="border:none; width:100%;">
+          <i data-lucide="log-out"></i><span>Log out</span>
         </button>
       </div>
-    </div>
-  </header>
+    </aside>
 
-  <main class="dash-container">
-    <div class="dash-header">
-      <div class="user-greeting">
-        <span class="pill-badge"><i data-lucide="award"></i> Student Workspace</span>
-        <h1 id="welcomeHeading">Welcome, Student</h1>
-        <p>Select your course track, complete hands-on questions, and submit your final work for review.</p>
-      </div>
-      <div>
-        <a href="/student/profile" class="btn btn-outline"><i data-lucide="award"></i> View Course Certificate & Progress</a>
-      </div>
-    </div>
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
 
-    <!-- Active Courses Grid -->
-    <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1rem;">Course Tracks</h2>
-    <div class="course-dash-grid" id="courseDashGrid">
-      <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading courses...</div>
-    </div>
+    <!-- ============================================================
+         MAIN COLUMN
+         ============================================================ -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <span class="app-topbar__title">Learning workspace</span>
+        <span class="app-topbar__spacer"></span>
 
-    <!-- Active Enrolled Course Workspace -->
-    <div id="courseWorkspace" style="display: none;">
-      <div class="questions-container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <span class="pill-badge" id="currentCourseBadge">Active Track</span>
-            <h2 id="currentCourseTitle" style="font-size: 1.6rem; font-weight: 800; margin-top: 0.35rem;"></h2>
-            <p id="currentCourseDesc" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+        <a class="btn btn-secondary btn-sm" href="/student/profile"><i data-lucide="award"></i> Profile</a>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="logout()"><i data-lucide="log-out"></i> Log out</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </header>
+
+      <div class="app-content">
+        <!-- WELCOME -->
+        <div class="dash-header workspace-section" id="workspaceTop">
+          <div class="user-greeting">
+            <span class="pill-badge"><i data-lucide="award"></i><span>Student workspace</span></span>
+            <h1 id="welcomeHeading">Welcome, Student</h1>
+            <p>Select your course track, complete the hands-on tasks, and submit your final work for mentor review.</p>
           </div>
           <div>
-            <a id="practicalClassLink" href="/student/practical-classes" class="btn btn-primary btn-sm"><i data-lucide="play-circle"></i> Open Video Playlist</a>
+            <a href="/student/profile" class="btn btn-outline">
+              <i data-lucide="award"></i> Course certificate &amp; progress
+            </a>
           </div>
         </div>
 
-        <!-- Course Thumbnail Banner -->
-        <div class="course-thumbnail-banner" id="courseThumbnailBanner">
-          <img id="courseThumbnailImg" alt="Course Thumbnail" />
-          <div class="course-thumbnail-overlay">
-            <span class="course-thumbnail-pill">📚 Active Course Track</span>
-            <span class="course-thumbnail-pill" id="courseThumbnailTitle" style="font-size:0.95rem; padding:0.45rem 1.1rem;"></span>
+        <!-- PROGRESS OVERVIEW -->
+        <section class="workspace-section" id="statsSection" aria-labelledby="progressHeading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">Progress overview</span>
+              <h2 id="progressHeading" class="mt-1">Your learning at a glance</h2>
+            </div>
+            <span class="badge badge-neutral"><i data-lucide="refresh-cw"></i> Live sync</span>
           </div>
-        </div>
 
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Curriculum Tasks & Questions</h3>
-        <div id="questionsList">
-          <!-- Loaded asynchronously -->
-        </div>
-
-        <!-- Assignment Submission Section -->
-        <div class="submission-upload-box">
-          <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem;">Submit Final Practical Assignment</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 600px; margin: 0 auto 1.25rem;">
-            Review all mandatory submission checkpoints below. The submit button activates once the 5-minute timer finishes, all questions are answered, and your work file is attached.
-          </p>
-
-          <!-- Submission Checkpoints -->
-          <div class="assessment-checklist">
-            <div class="checklist-row item-pending" id="checkRowQuestions">
-              <div style="display:flex; align-items:center; gap:0.5rem;">
-                <i data-lucide="check-square" id="checkIconQuestions"></i>
-                <span>1. Course Quiz & Assessment Questions</span>
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-label">Courses enrolled</div>
+              <div class="stat-num" id="statCourses">—</div>
+              <div class="stat-foot">Across all tracks</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Tasks completed</div>
+              <div class="stat-num" id="statLessons">—</div>
+              <div class="stat-foot">Marked complete by you</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Curriculum tasks</div>
+              <div class="stat-num" id="statAssignments">—</div>
+              <div class="stat-foot">Available in your tracks</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Overall progress</div>
+              <div class="stat-num" id="statProgress">—</div>
+              <div class="progress-bar-bg" style="margin-top:0.5rem;">
+                <div class="progress-bar-fill" id="statProgressBar" data-progress="0" style="width:0;"></div>
               </div>
-              <span class="badge badge-amber" id="checkBadgeQuestions">0 / 0 Answered</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- COURSE TRACKS -->
+        <section class="workspace-section" id="coursesSection" aria-labelledby="courseTracksHeading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">Your tracks</span>
+              <h2 id="courseTracksHeading" class="mt-1">Course tracks</h2>
             </div>
           </div>
 
-          <div id="submissionStatus" style="display:none; margin:0 auto 1.25rem; max-width:500px; padding:0.85rem 1rem; border-radius:var(--radius-md); text-align:left; border:1px solid var(--border-color);">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-              <strong>Submission status</strong>
-              <span id="submissionStatusBadge" class="badge"></span>
+          <div class="course-dash-grid" id="courseDashGrid" aria-live="polite">
+            <!-- Loading skeletons, replaced once the dashboard data resolves -->
+            <div class="skeleton-card" aria-hidden="true">
+              <div class="skeleton skeleton-media"></div>
+              <div class="skeleton skeleton-text w-40"></div>
+              <div class="skeleton skeleton-title"></div>
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-text w-75"></div>
             </div>
-            <div id="submissionStatusDate" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.35rem;"></div>
-            <div id="submissionReviewNote" style="display:none; margin-top:0.5rem; font-size:0.84rem; white-space:pre-wrap;"></div>
+            <div class="skeleton-card" aria-hidden="true">
+              <div class="skeleton skeleton-media"></div>
+              <div class="skeleton skeleton-text w-40"></div>
+              <div class="skeleton skeleton-title"></div>
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-text w-75"></div>
+            </div>
+            <div class="skeleton-card" aria-hidden="true">
+              <div class="skeleton skeleton-media"></div>
+              <div class="skeleton skeleton-text w-40"></div>
+              <div class="skeleton skeleton-title"></div>
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-text w-75"></div>
+            </div>
           </div>
+        </section>
 
-          <form id="submissionForm" style="max-width: 500px; margin: 0 auto; text-align: left;">
-            <div id="submissionAlert" style="display: none; padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;"></div>
+        <!-- ACTIVE COURSE WORKSPACE -->
+        <div id="courseWorkspace" style="display: none;">
+          <div class="questions-container" style="padding:clamp(1.15rem,3vw,2rem);">
+            <div class="panel-heading workspace-section" id="questionsSection">
+              <div>
+                <span class="pill-badge" id="currentCourseBadge">Active track</span>
+                <h2 id="currentCourseTitle" class="mt-2"></h2>
+                <p id="currentCourseDesc" class="muted small"></p>
+              </div>
+              <div class="row">
+                <a id="practicalClassLink" href="/student/practical-classes" class="btn btn-primary btn-sm">
+                  <i data-lucide="play-circle"></i> Open video playlist
+                </a>
+              </div>
+            </div>
 
-            <button type="submit" id="submitAssignmentBtn" class="btn btn-primary btn-block btn-lg" disabled>
-              <i data-lucide="lock"></i>
-              <span id="submitBtnText">Answer all questions to unlock submission</span>
-            </button>
-          </form>
+            <!-- Course thumbnail banner -->
+            <div class="course-thumbnail-banner" id="courseThumbnailBanner">
+              <img id="courseThumbnailImg" alt="Active course track" />
+              <div class="course-thumbnail-overlay">
+                <span class="course-thumbnail-pill"><i data-lucide="book-open"></i> Active course track</span>
+                <span class="course-thumbnail-pill" id="courseThumbnailTitle"></span>
+              </div>
+            </div>
+
+            <h3 class="mb-2">Curriculum tasks &amp; questions</h3>
+            <div id="questionsList">
+              <div class="loading-inline">
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Loading curriculum tasks…</span>
+              </div>
+            </div>
+
+            <!-- ASSIGNMENT SUBMISSION -->
+            <div class="submission-upload-box workspace-section" id="submissionSection">
+              <span class="pill-badge"><i data-lucide="send"></i><span>Final submission</span></span>
+              <h3 class="mt-2" style="font-size:1.3rem;">Submit your final practical assignment</h3>
+              <p class="muted small" style="max-width:56ch; margin:0.5rem auto 1.25rem;">
+                Review the mandatory checkpoints below. The submit button activates once all locked
+                questions are answered, every required video lesson is fulfilled, and your work file
+                is attached.
+              </p>
+
+              <!-- Submission checkpoints -->
+              <div class="assessment-checklist">
+                <div class="checklist-row item-pending" id="checkRowQuestions">
+                  <span class="row" style="gap:0.5rem;">
+                    <i class="icon" data-lucide="check-square" id="checkIconQuestions"></i>
+                    <span>1. Course quiz &amp; assessment questions</span>
+                  </span>
+                  <span class="badge badge-amber" id="checkBadgeQuestions">0 / 0 answered</span>
+                </div>
+              </div>
+
+              <div id="submissionStatus" class="alert" style="display:none; max-width:520px; margin:0 auto 1.25rem; text-align:left;">
+                <div style="width:100%;">
+                  <div class="row-between">
+                    <strong>Submission status</strong>
+                    <span id="submissionStatusBadge" class="badge"></span>
+                  </div>
+                  <div id="submissionStatusDate" class="tiny muted mt-1"></div>
+                  <div id="submissionReviewNote" class="small mt-2" style="white-space:pre-wrap;"></div>
+                </div>
+              </div>
+
+              <form id="submissionForm" style="max-width: 520px; margin: 0 auto; text-align: left;">
+                <div id="submissionAlert" class="alert" style="display:none; margin-bottom:1rem;"></div>
+
+                <button type="submit" id="submitAssignmentBtn" class="btn btn-secondary btn-block btn-lg" disabled>
+                  <i data-lucide="lock"></i>
+                  <span id="submitBtnText">Answer all questions to unlock submission</span>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
   <script>
     let currentStudent = null;
     let dashboardData = null;
@@ -509,22 +271,6 @@
     let activeTimers = {};
     let studentSubmissions = [];
     const submissionNoticeByCourse = {};
-
-    function syncThemeUI() {
-      const saved = localStorage.getItem('themePreference') || 'light';
-      document.body.classList.toggle('dark-theme', saved === 'dark');
-      document.body.classList.toggle('light-theme', saved !== 'dark');
-      const label = document.getElementById('themeLabel');
-      const icon = document.getElementById('themeIcon');
-      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
-      if (icon && typeof getIcon === 'function') icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
-    }
-    function toggleTheme() {
-      const isDark = document.body.classList.contains('dark-theme');
-      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
-      syncThemeUI();
-    }
-    syncThemeUI();
 
     function formatTime(seconds) {
       const s = Math.max(0, Math.floor(seconds));
@@ -616,14 +362,14 @@
         if (activeCourseId) courseAssignmentFiles[activeCourseId] = file;
         answersState[questionId] = `Uploaded file: ${file.name}`;
         if (previewDiv) {
-          previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${file.name}</div>`;
+          previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-top:0.5rem;">📎 ${file.name}</div>`;
         }
         updateSubmissionButtonState();
         return;
       }
 
       if (previewDiv) {
-        previewDiv.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">Processing file upload...</span>`;
+        previewDiv.innerHTML = `<span class="tiny muted">Processing file upload...</span>`;
       }
 
       const reader = new FileReader();
@@ -631,18 +377,18 @@
         answersState[questionId] = e.target.result;
         if (previewDiv) {
           if (file.type.startsWith('image/')) {
-            previewDiv.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block; margin-top:0.5rem;" />`;
+            previewDiv.innerHTML = `<img src="${e.target.result}" alt="Uploaded response preview" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border); display:block; margin-top:0.5rem;" />`;
           } else if (file.type.startsWith('video/')) {
-            previewDiv.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block; margin-top:0.5rem;"></video>`;
+            previewDiv.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border); display:block; margin-top:0.5rem;"></video>`;
           } else {
-            previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${file.name}</div>`;
+            previewDiv.innerHTML = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-top:0.5rem;">📎 ${file.name}</div>`;
           }
         }
         updateSubmissionButtonState();
       };
       reader.onerror = function() {
         if (previewDiv) {
-          previewDiv.innerHTML = `<span style="font-size:0.8rem; color:var(--rose);">Error reading file.</span>`;
+          previewDiv.innerHTML = `<span class="tiny" style="color:var(--danger);">Error reading file.</span>`;
         }
       };
       reader.readAsDataURL(file);
@@ -657,12 +403,48 @@
           return;
         }
         currentStudent = data.user;
-        document.getElementById('welcomeHeading').textContent = `Welcome, ${currentStudent.fullName || currentStudent.email || 'Student'}`;
+        const displayName = currentStudent.fullName || currentStudent.email || 'Student';
+        document.getElementById('welcomeHeading').textContent = `Welcome, ${displayName}`;
+        const sidebarName = document.getElementById('sidebarUserName');
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        if (sidebarName) sidebarName.textContent = displayName;
+        if (sidebarAvatar) sidebarAvatar.textContent = String(displayName).charAt(0).toUpperCase();
         await loadDashboard();
       } catch (e) {
         console.error('Session check error:', e);
         window.location.href = '/login';
       }
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    // Real figures derived from the dashboard payload — nothing is invented.
+    function renderStats() {
+      const courses = dashboardData && Array.isArray(dashboardData.courses) ? dashboardData.courses : [];
+      const enrolled = courses.filter(c => c.enrolled || c.completed);
+
+      const enrolledCount = enrolled.length;
+      const completedTasks = enrolled.reduce((sum, c) => sum + Number(c.completed_questions || 0), 0);
+      const totalTasks = enrolled.reduce((sum, c) => sum + Number(c.question_count || 0), 0);
+      const overall = enrolledCount
+        ? Math.round(enrolled.reduce((sum, c) => sum + Number(c.progress_percentage || 0), 0) / enrolledCount)
+        : 0;
+
+      setText('statCourses', enrolledCount.toString());
+      setText('statLessons', completedTasks.toString());
+      setText('statAssignments', totalTasks.toString());
+      setText('statProgress', overall + '%');
+
+      const bar = document.getElementById('statProgressBar');
+      if (bar) {
+        bar.setAttribute('data-progress', String(overall));
+        if (overall >= 100) bar.classList.add('is-success');
+        else bar.classList.remove('is-success');
+      }
+      if (window.MentorUI && typeof window.MentorUI.refresh === 'function') window.MentorUI.refresh();
     }
 
     async function loadDashboard(desiredCourseId = null) {
@@ -686,12 +468,13 @@
           const submissionsData = await submissionsRes.json();
           studentSubmissions = Array.isArray(submissionsData.submissions) ? submissionsData.submissions : [];
         }
+        renderStats();
         renderCourseCards();
 
         // Determine which course track to keep or select
         let targetCourseId = null;
 
-        // 1. If user was already on a course, stay on that exact course
+        // 1. If the student was already in a course, stay on that exact course
         if (previouslySelectedCourseId !== null && previouslySelectedCourseId !== undefined) {
           const existing = dashboardData.courses.find(c => Number(c.id) === Number(previouslySelectedCourseId));
           if (existing) {
@@ -699,7 +482,7 @@
           }
         }
 
-        // 2. If no previously selected course, pick first enrolled course with questions or first available
+        // 2. Otherwise pick the first enrolled course with questions, or the first available
         if (targetCourseId === null) {
           const enrolledList = dashboardData.enrolledCourseIds ? dashboardData.enrolledCourseIds.map(Number) : [];
           const enrolledCourse = dashboardData.courses.find(c =>
@@ -721,77 +504,98 @@
         console.error('Error loading dashboard:', err);
         const container = document.getElementById('courseDashGrid');
         if (container) {
-          container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">Failed to load courses. Please refresh.</p>';
+          container.innerHTML = `
+            <div class="error-state" style="grid-column:1/-1;">
+              <span class="empty-state__icon" aria-hidden="true"><i data-lucide="alert-circle"></i></span>
+              <h3>We couldn't load your courses</h3>
+              <p>Something went wrong while fetching your dashboard. Check your connection and try again.</p>
+              <button class="btn btn-primary" type="button" onclick="loadDashboard()">
+                <i data-lucide="refresh-cw"></i> Retry
+              </button>
+            </div>`;
+          if (window.app && app.renderIcons) app.renderIcons();
         }
       }
     }
 
     function getCourseThumbnail(title) {
-      const t = String(title || '').toLowerCase();
-      if (t.includes('youtube')) return '/images/yt.png';
-      if (t.includes('canva') || t.includes('graphic')) return '/images/canva.png';
-      if (t.includes('wordpress') || t.includes('web')) return '/images/wp.png';
-      if (t.includes('ai') || t.includes('artificial')) return '/images/Ai.png';
-      return '/images/profile.jpeg';
+      return getCourseBannerThumbnail(title);
     }
 
     function getCourseBannerThumbnail(title) {
       const t = String(title || '').toLowerCase();
-      if (t.includes('youtube')) return '/images/thumb-yt.jpeg';
-      if (t.includes('canva') || t.includes('graphic')) return '/images/thumb-graphics.jpeg';
-      if (t.includes('wordpress') || t.includes('web')) return '/images/thumb-webdev.jpeg';
-      if (t.includes('ai') || t.includes('artificial')) return '/images/thumb-ai.jpeg';
+      if (t.includes('youtube')) return '/images/yt.png';
+      if (t.includes('canva') || t.includes('graphic')) return '/images/canva.png';
+      if (t.includes('wordpress') || t.includes('web')) return '/images/wp.png';
+      if (t.includes('ai') || t.includes('artificial')) return '/images/ai.png';
       return '/images/profile.jpeg';
     }
 
     function renderCourseCards() {
       const container = document.getElementById('courseDashGrid');
+      if (!container) return;
+
       if (!dashboardData || !dashboardData.courses || !dashboardData.courses.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);">No courses published yet.</p>';
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <span class="empty-state__icon" aria-hidden="true"><i data-lucide="book-open"></i></span>
+            <h3>No course tracks published yet</h3>
+            <p>Your mentor hasn't published a track yet. As soon as one is live it will appear here.</p>
+            <a class="btn btn-secondary" href="/#viewCourses"><i data-lucide="compass"></i> Browse the catalogue</a>
+          </div>`;
+        if (window.app && app.renderIcons) app.renderIcons();
         return;
       }
 
-      container.innerHTML = dashboardData.courses.map(c => `
-        <div class="course-dash-card ${Number(c.id) === Number(activeCourseId) ? 'active-course' : ''}" id="card-${c.id}">
+      container.innerHTML = dashboardData.courses.map(c => {
+        const isActive = Number(c.id) === Number(activeCourseId);
+        const statusClass = c.completed ? 'badge-emerald' : (c.enrolled ? 'badge-primary' : 'badge-amber');
+        const statusLabel = c.completed ? 'Completed' : (c.enrolled ? 'Enrolled' : 'Available');
+        const progress = Number(c.progress_percentage || 0);
+
+        return `
+        <div class="course-dash-card ${isActive ? 'active-course' : ''}" id="card-${c.id}">
           <div>
-            <div style="width:100%; height:140px; border-radius:12px; overflow:hidden; margin-bottom:1rem; border:1px solid var(--border-color); background:var(--bg-elevated);">
-              <img src="${getCourseThumbnail(c.title)}" alt="${c.title}" style="width:100%; height:100%; object-fit:cover; display:block;" />
+            <div class="course-dash-card__media">
+              <img src="${getCourseThumbnail(c.title)}" alt="${c.title}" loading="lazy" decoding="async" />
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span class="badge ${c.completed ? 'badge-emerald' : (c.enrolled ? 'badge-primary' : 'badge-amber')}">
-                ${c.completed ? 'Completed' : (c.enrolled ? 'Enrolled' : 'Available')}
-              </span>
-              <span class="question-count-badge" aria-label="${c.question_count} questions in this course" title="${c.question_count} questions in this course">
+            <div class="row-between" style="margin-bottom:0.6rem;">
+              <span class="badge ${statusClass}">${statusLabel}</span>
+              <span class="question-count-badge" aria-label="${c.question_count} curriculum tasks in this course" title="${c.question_count} curriculum tasks in this course">
                 <strong>${c.question_count}</strong>
-                <span>Questions</span>
+                <span>Tasks</span>
               </span>
             </div>
-            <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:0.35rem;">${c.title}</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4; margin-bottom:1rem;">${c.description}</p>
+            <h3>${c.title}</h3>
+            <p class="course-dash-card__desc">${c.description}</p>
           </div>
 
           <div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${c.progress_percentage || 0}%"></div>
+              <div class="progress-bar-fill ${progress >= 100 ? 'is-success' : ''}" data-progress="${progress}" style="width:0;"></div>
             </div>
             <div class="progress-info">
               <span>Progress</span>
-              <span>${c.completed_questions || 0}/${c.question_count || 0} (${c.progress_percentage || 0}%)</span>
+              <span>${c.completed_questions || 0}/${c.question_count || 0} · ${progress}%</span>
             </div>
 
-            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+            <div class="row mt-2" style="gap:0.5rem;">
               ${c.enrolled
-                ? `<button class="btn ${Number(c.id) === Number(activeCourseId) ? 'btn-primary' : 'btn-secondary'} btn-sm btn-block" onclick="selectCourse(${c.id})">
-                    ${Number(c.id) === Number(activeCourseId) ? 'Currently Viewing' : 'Open Course'}
+                ? `<button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-sm btn-block" type="button" onclick="selectCourse(${c.id})">
+                    ${isActive ? 'Currently viewing' : 'Open course'}
                    </button>`
-                : `<button class="btn btn-outline btn-sm btn-block" onclick="enrollCourse(${c.id})">
-                    Enroll & Start
+                : `<button class="btn btn-outline btn-sm btn-block" type="button" onclick="enrollCourse(${c.id})">
+                    Enrol &amp; start
                    </button>`
               }
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
+
+      if (window.app && app.renderIcons) app.renderIcons();
+      if (window.MentorUI && typeof window.MentorUI.refresh === 'function') window.MentorUI.refresh();
     }
 
     async function enrollCourse(courseId) {
@@ -800,6 +604,7 @@
         const res = await fetch(`/api/student/courses/${cleanId}/enroll`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Enrollment failed.');
+        if (window.app && app.showToast) app.showToast('Enrolled successfully. Your workspace is ready.');
         await loadDashboard(cleanId);
       } catch (e) {
         alert(e.message);
@@ -814,13 +619,13 @@
       }
       activeCourseId = cleanCourseId;
 
-      // Issue 2 Fix: Strictly display submission notice only for the course that was actually submitted
+      // Show a submission notice only for the course that was actually submitted
       const submissionAlert = document.getElementById('submissionAlert');
       if (submissionAlert) {
         if (submissionNoticeByCourse[cleanCourseId]) {
-          submissionAlert.style.display = 'block';
-          submissionAlert.style.background = 'var(--emerald-subtle)';
-          submissionAlert.style.color = 'var(--emerald)';
+          submissionAlert.style.display = 'flex';
+          submissionAlert.className = 'alert alert-success is-visible';
+          submissionAlert.style.marginBottom = '1rem';
           submissionAlert.textContent = submissionNoticeByCourse[cleanCourseId];
         } else {
           submissionAlert.style.display = 'none';
@@ -836,13 +641,33 @@
       const questionsList = document.getElementById('questionsList');
       workspace.style.display = 'block';
       renderSubmissionStatus(cleanCourseId);
-      questionsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Loading questions...</div>';
+      questionsList.innerHTML = `
+        <div class="skeleton-card" aria-hidden="true">
+          <div class="skeleton skeleton-text w-40"></div>
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-text w-75"></div>
+          <div class="skeleton skeleton-text"></div>
+        </div>
+        <div class="skeleton-card mt-2" aria-hidden="true">
+          <div class="skeleton skeleton-text w-40"></div>
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-text w-75"></div>
+        </div>`;
 
       try {
         const res = await fetch(`/api/student/courses/${cleanCourseId}/questions`);
         const data = await res.json();
         if (!res.ok) {
-          questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">Unable to load questions: ${data.error || 'Please try again.'}</div>`;
+          questionsList.innerHTML = `
+            <div class="error-state">
+              <span class="empty-state__icon" aria-hidden="true"><i data-lucide="alert-circle"></i></span>
+              <h3>Unable to load curriculum tasks</h3>
+              <p>${data.error || 'Please try again in a moment.'}</p>
+              <button class="btn btn-primary" type="button" onclick="selectCourse(${cleanCourseId})">
+                <i data-lucide="refresh-cw"></i> Retry
+              </button>
+            </div>`;
+          if (window.app && app.renderIcons) app.renderIcons();
           return;
         }
 
@@ -852,7 +677,7 @@
         document.getElementById('currentCourseDesc').textContent = course.description;
         document.getElementById('practicalClassLink').href = `/practical-classes.html?course=${encodeURIComponent(course.title)}`;
 
-        // Update course thumbnail banner
+        // Update the course thumbnail banner
         const thumb = getCourseBannerThumbnail(course.title);
         const thumbImg = document.getElementById('courseThumbnailImg');
         const thumbTitle = document.getElementById('courseThumbnailTitle');
@@ -860,15 +685,31 @@
         if (thumbTitle) thumbTitle.textContent = course.title;
 
         if (!currentCourseQuestions.length) {
-          questionsList.innerHTML = '<div style="padding: 1.5rem; color: var(--text-muted); text-align:center;">No questions added for this course track yet.</div>';
+          questionsList.innerHTML = `
+            <div class="empty-state">
+              <span class="empty-state__icon" aria-hidden="true"><i data-lucide="inbox"></i></span>
+              <h3>No curriculum tasks yet</h3>
+              <p>Your mentor hasn't added tasks to this track. They will appear here as soon as they are published.</p>
+              <a class="btn btn-secondary" href="/#viewCourses"><i data-lucide="compass"></i> Explore other tracks</a>
+            </div>`;
           updateSubmissionButtonState();
+          if (window.app && app.renderIcons) app.renderIcons();
           return;
         }
 
         renderQuestions(currentCourseQuestions);
         updateSubmissionButtonState();
       } catch (err) {
-        questionsList.innerHTML = `<div style="padding: 1.5rem; color: var(--rose);">Error loading questions: ${err.message}</div>`;
+        questionsList.innerHTML = `
+          <div class="error-state">
+            <span class="empty-state__icon" aria-hidden="true"><i data-lucide="alert-circle"></i></span>
+            <h3>Network error</h3>
+            <p>${err.message}</p>
+            <button class="btn btn-primary" type="button" onclick="selectCourse(${cleanCourseId})">
+              <i data-lucide="refresh-cw"></i> Retry
+            </button>
+          </div>`;
+        if (window.app && app.renderIcons) app.renderIcons();
       }
     }
 
@@ -893,11 +734,14 @@
 
       const status = String(submission.status || 'pending').toLowerCase();
       const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-      panel.style.display = 'block';
-      panel.style.background = status === 'approved' ? 'var(--emerald-subtle)' : (status === 'rejected' ? 'var(--rose-subtle)' : 'var(--amber-subtle)');
+      panel.style.display = 'flex';
+      panel.className = 'alert ' + (status === 'approved' ? 'alert-success' : status === 'rejected' ? 'alert-error' : 'alert-warning') + ' is-visible';
+      panel.style.maxWidth = '520px';
+      panel.style.margin = '0 auto 1.25rem';
+      panel.style.textAlign = 'left';
       badge.className = `badge ${status === 'approved' ? 'badge-emerald' : (status === 'rejected' ? 'badge-rose' : 'badge-amber')}`;
       badge.textContent = statusLabel;
-      date.textContent = `Submitted ${new Date(submission.submitted_at).toLocaleString()}${submission.reviewed_at ? ` | Reviewed ${new Date(submission.reviewed_at).toLocaleString()}` : ''}`;
+      date.textContent = `Submitted ${new Date(submission.submitted_at).toLocaleString()}${submission.reviewed_at ? ` · Reviewed ${new Date(submission.reviewed_at).toLocaleString()}` : ''}`;
       note.style.display = submission.review_note ? 'block' : 'none';
       note.textContent = submission.review_note ? `Mentor feedback: ${submission.review_note}` : '';
     }
@@ -924,10 +768,10 @@
               <div class="q-text">${q.question_text}</div>
               ${q.description ? `<div class="q-desc">${q.description}</div>` : ''}
               <div class="question-lock-overlay">
-                <div class="question-lock-icon">🔒</div>
+                <span class="question-lock-icon" aria-hidden="true">🔒</span>
                 <div>
-                  <strong style="display:block; margin-bottom:0.2rem;">Question Locked</strong>
-                  <span style="font-size:0.85rem; font-weight:500; color:var(--text-muted);">Complete Question #${prevQNum} (watch video, answer, and mark complete) to unlock this question.</span>
+                  <strong style="display:block; margin-bottom:0.2rem;">Question locked</strong>
+                  <span class="small muted" style="font-weight:500;">Complete question #${prevQNum} (watch video, answer, and mark complete) to unlock this question.</span>
                 </div>
               </div>
             </div>
@@ -938,8 +782,8 @@
           <div class="question-item ${isCompleted ? 'completed-q' : ''}" id="q-box-${q.id}">
             <div class="q-header">
               <span class="q-num">Question #${q.question_number || (idx + 1)}</span>
-              <div style="display:flex; gap:0.5rem; align-items:center;">
-                ${hasVideo ? `<span id="q-video-badge-${q.id}" class="timer-badge ${canAnswer ? 'badge-done' : (q.video_started ? 'badge-running' : 'badge-waiting')}">${canAnswer ? '✅ Video Lecture Done' : (q.video_started ? `⏳ Timer: ${formatTime(remaining)}` : '⚠️ 10-Min Video Required')}</span>` : ''}
+              <div class="row" style="gap:0.5rem;">
+                ${hasVideo ? `<span id="q-video-badge-${q.id}" class="timer-badge ${canAnswer ? 'badge-done' : (q.video_started ? 'badge-running' : 'badge-waiting')}">${canAnswer ? '✅ Video lecture done' : (q.video_started ? `⏳ Timer: ${formatTime(remaining)}` : '⚠️ 10-min video required')}</span>` : ''}
                 <span class="badge ${isCompleted ? 'badge-emerald' : 'badge-amber'}" id="q-status-${q.id}">
                   ${isCompleted ? 'Completed' : 'Pending'}
                 </span>
@@ -952,28 +796,28 @@
             ${hasVideo ? `
               <div class="video-req-box ${canAnswer ? 'timer-unlocked' : (q.video_started ? 'timer-active' : '')}" id="video-box-${q.id}">
                 <div>
-                  <strong style="font-size:0.9rem; display:block;">Mandatory 10-Minute Video Lecture</strong>
-                  <span id="video-instruction-${q.id}" style="font-size:0.82rem; color:var(--text-muted);">
+                  <strong>Mandatory 10-minute video lecture</strong>
+                  <span id="video-instruction-${q.id}">
                     ${canAnswer
                       ? '✅ 10-minute study time fulfilled. You may now submit your written answer.'
                       : (q.video_started
-                          ? `⏳ Video lesson in progress. Answer field and completion button will automatically unlock in <span id="timer-text-${q.id}" style="font-weight:800; color:var(--amber);">${formatTime(remaining)}</span>.`
+                          ? `⏳ Video lesson in progress. The answer field and completion button unlock automatically in <span id="timer-text-${q.id}" style="font-weight:800; color:var(--amber-text);">${formatTime(remaining)}</span>.`
                           : 'Students must watch the attached video for at least 10 minutes before the answer field unlocks.')
                     }
                   </span>
                 </div>
                 <button type="button" class="video-btn" id="video-action-btn-${q.id}" onclick="startVideoTimer(${q.id}, '${q.youtube_url}', ${Boolean(q.video_started)})">
                   <i data-lucide="play-circle"></i>
-                  <span>${canAnswer ? 'Re-watch Video Lesson' : (q.video_started ? 'Continue Watching Video' : 'Watch Reference Lecture')}</span>
+                  <span>${canAnswer ? 'Re-watch video lesson' : (q.video_started ? 'Continue watching video' : 'Watch reference lecture')}</span>
                 </button>
               </div>
             ` : ''}
 
             ${(() => {
-              let labelText = 'Your Answer / Solution Notes:';
-              if (q.response_type === 'image_upload') labelText = 'Upload Image Response:';
-              else if (q.response_type === 'video_upload') labelText = 'Upload Video Response:';
-              else if (q.response_type === 'file_upload') labelText = 'File Upload Assignment:';
+              let labelText = 'Your answer / solution notes';
+              if (q.response_type === 'image_upload') labelText = 'Upload image response';
+              else if (q.response_type === 'video_upload') labelText = 'Upload video response';
+              else if (q.response_type === 'file_upload') labelText = 'File upload assignment';
 
               let inputHtml = '';
               let previewHtml = '';
@@ -981,7 +825,7 @@
 
               if (q.response_type === 'image_upload') {
                 if (currentAnswer && currentAnswer.startsWith('data:image/')) {
-                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><img src="${currentAnswer}" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block;" /></div>`;
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><img src="${currentAnswer}" alt="Uploaded image response" style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border); display:block;" /></div>`;
                 } else {
                   previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"></div>`;
                 }
@@ -991,7 +835,7 @@
                 `;
               } else if (q.response_type === 'video_upload') {
                 if (currentAnswer && currentAnswer.startsWith('data:video/')) {
-                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><video src="${currentAnswer}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border-color); display:block;"></video></div>`;
+                  previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"><video src="${currentAnswer}" controls style="max-width:100%; max-height:150px; border-radius:8px; border:1px solid var(--border); display:block;"></video></div>`;
                 } else {
                   previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;"></div>`;
                 }
@@ -1000,17 +844,17 @@
                   ${previewHtml}
                 `;
               } else if (q.response_type === 'file_upload') {
-                // Issue 3 Fix: Display retained file upload status if completed or already recorded
+                // Show any retained file-upload status for completed/recorded work
                 let fileStatusDisplay = '';
                 if (currentAnswer) {
-                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-top:0.5rem;">📎 ${currentAnswer}</div>`;
+                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); margin-top:0.5rem;">📎 ${currentAnswer}</div>`;
                 } else if (isCompleted) {
-                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--emerald); margin-top:0.5rem;">✅ Document file uploaded & recorded for submission.</div>`;
+                  fileStatusDisplay = `<div style="font-size:0.85rem; font-weight:600; color:var(--emerald-text); margin-top:0.5rem;">✅ Document file uploaded and recorded for submission.</div>`;
                 }
                 previewHtml = `<div id="preview-${q.id}" style="margin-top:0.5rem;">${fileStatusDisplay}</div>`;
                 inputHtml = `
                   <input type="file" id="file-input-${q.id}" data-response-type="file_upload" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.pptx" class="form-control" ${!canAnswer ? 'disabled' : ''} onchange="handleQuestionFileUpload(${q.id}, this)" />
-                  <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Accepted: PDF, DOCX, ZIP, PNG, JPG, PPTX (Max 10MB)</div>
+                  <div class="tiny subtle mt-1">Accepted: PDF, DOCX, ZIP, PNG, JPG, PPTX (max 10MB)</div>
                   ${previewHtml}
                 `;
               } else {
@@ -1018,7 +862,7 @@
                   <textarea
                     class="answer-textarea"
                     id="ans-${q.id}"
-                    placeholder="${canAnswer ? 'Type your complete answer or implementation steps here...' : '🔒 Locked: Please watch the 10-minute video lesson first to unlock this answer field.'}"
+                    placeholder="${canAnswer ? 'Type your complete answer or implementation steps here...' : '🔒 Locked: watch the 10-minute video lesson first to unlock this answer field.'}"
                     ${!canAnswer ? 'disabled' : ''}
                     oninput="handleAnswerInput(${q.id}, this.value)"
                   >${currentAnswer}</textarea>
@@ -1026,8 +870,8 @@
               }
 
               return `
-                <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.35rem;">
-                  ${labelText} <span style="color:var(--rose);">*</span>
+                <label style="display:block; font-size:0.85rem; font-weight:700; margin-bottom:0.4rem;">
+                  ${labelText} <span style="color:var(--danger);">*</span>
                 </label>
                 ${inputHtml}
               `;
@@ -1039,10 +883,10 @@
               id="btn-complete-${q.id}"
               ${!canAnswer ? 'disabled' : ''}
               onclick="saveQuestionComplete(${q.id})"
-              style="margin-top: 0.75rem;"
+              style="margin-top: 0.85rem;"
             >
               <i data-lucide="check-circle-2"></i>
-              <span>${canAnswer ? 'Mark Question as Complete' : '🔒 Complete 10-Min Video First'}</span>
+              <span>${canAnswer ? 'Mark question as complete' : '🔒 Complete the 10-min video first'}</span>
             </button>
           </div>
         `;
@@ -1050,12 +894,14 @@
 
       if (window.app && app.renderIcons) app.renderIcons();
 
-      // Launch real-time timers for questions actively running countdown
+      // Launch real-time timers for questions actively counting down
       questions.forEach(q => {
         if (q.has_video && !q.can_answer && q.video_started && q.video_timer_remaining_seconds > 0 && q.sequentially_unlocked) {
           runCountdown(q.id, q.video_timer_remaining_seconds);
         }
       });
+
+      if (window.MentorUI && typeof window.MentorUI.refresh === 'function') window.MentorUI.refresh();
     }
 
     async function startVideoTimer(questionId, videoUrl, videoStarted = false) {
@@ -1090,7 +936,6 @@
       let remaining = Math.max(0, Math.ceil(seconds));
       const badge = document.getElementById(`q-video-badge-${questionId}`);
       const timerSpan = document.getElementById(`timer-text-${questionId}`);
-      const instruction = document.getElementById(`video-instruction-${questionId}`);
       const videoBox = document.getElementById(`video-box-${questionId}`);
 
       if (badge) {
@@ -1129,12 +974,13 @@
       const qBox = document.getElementById(`q-box-${questionId}`);
       if (qBox) {
         qBox.classList.remove('locked-q');
+        qBox.classList.add('check-pop');
       }
 
       const badge = document.getElementById(`q-video-badge-${questionId}`);
       if (badge) {
         badge.className = 'timer-badge badge-done';
-        badge.textContent = '✅ Video Lecture Done';
+        badge.textContent = '✅ Video lecture done';
       }
 
       const videoBox = document.getElementById(`video-box-${questionId}`);
@@ -1161,12 +1007,12 @@
       const btnComplete = document.getElementById(`btn-complete-${questionId}`);
       if (btnComplete) {
         btnComplete.disabled = false;
-        btnComplete.innerHTML = '<i data-lucide="check-circle-2"></i> <span>Mark Question as Complete</span>';
+        btnComplete.innerHTML = '<i data-lucide="check-circle-2"></i> <span>Mark question as complete</span>';
       }
 
       const videoBtn = document.getElementById(`video-action-btn-${questionId}`);
       if (videoBtn) {
-        videoBtn.innerHTML = '<i data-lucide="play-circle"></i> <span>Re-watch Video Lesson</span>';
+        videoBtn.innerHTML = '<i data-lucide="play-circle"></i> <span>Re-watch video lesson</span>';
       }
 
       if (window.app && app.renderIcons) app.renderIcons();
@@ -1186,7 +1032,7 @@
       const totalQuestions = currentCourseQuestions.length;
       if (totalQuestions === 0) return;
 
-      // Only count non-locked questions
+      // Only count unlocked questions
       let answeredCount = 0;
       currentCourseQuestions.forEach(q => {
         if (!q.sequentially_unlocked) return;
@@ -1201,21 +1047,21 @@
       const hasFile = isFileUploadSatisfied();
       const allQuestionsAnswered = (answeredCount === totalQuestions);
 
-      // Check all per-question video requirements
+      // Check every per-question video requirement
       const allVideosCompleted = currentCourseQuestions.every(q => !q.has_video || q.can_answer || !q.sequentially_unlocked);
 
-      // Update Checklist Item 1: Questions Answered
+      // Checklist item 1: questions answered
       const rowQuestions = document.getElementById('checkRowQuestions');
       const badgeQuestions = document.getElementById('checkBadgeQuestions');
       if (rowQuestions && badgeQuestions) {
         if (allQuestionsAnswered && allVideosCompleted) {
           rowQuestions.className = 'checklist-row item-ready';
           badgeQuestions.className = 'badge badge-emerald';
-          badgeQuestions.textContent = `✅ All Answered (${answeredCount}/${totalQuestions})`;
+          badgeQuestions.textContent = `✅ All answered (${answeredCount}/${totalQuestions})`;
         } else {
           rowQuestions.className = 'checklist-row item-pending';
           badgeQuestions.className = 'badge badge-amber';
-          badgeQuestions.textContent = `⚠️ ${answeredCount} / ${totalQuestions} Answered`;
+          badgeQuestions.textContent = `⚠️ ${answeredCount} / ${totalQuestions} answered`;
         }
       }
 
@@ -1225,15 +1071,15 @@
       if (!allQuestionsAnswered || !allVideosCompleted) {
         submitBtn.disabled = true;
         submitBtn.className = 'btn btn-secondary btn-block btn-lg';
-        submitBtn.innerHTML = `<i data-lucide="lock"></i> <span>Answer all ${totalQuestions} questions to unlock submit (${answeredCount}/${totalQuestions})</span>`;
+        submitBtn.innerHTML = `<i data-lucide="lock"></i> <span id="submitBtnText">Answer all ${totalQuestions} questions to unlock submit (${answeredCount}/${totalQuestions})</span>`;
       } else if (hasFileUpload && !hasFile) {
         submitBtn.disabled = true;
         submitBtn.className = 'btn btn-secondary btn-block btn-lg';
-        submitBtn.innerHTML = '<i data-lucide="file-up"></i> <span>Please select your assignment work file</span>';
+        submitBtn.innerHTML = '<i data-lucide="file-up"></i> <span id="submitBtnText">Please select your assignment work file</span>';
       } else {
         submitBtn.disabled = false;
         submitBtn.className = 'btn btn-primary btn-block btn-lg';
-        submitBtn.innerHTML = '<i data-lucide="upload"></i> <span>Submit Final Practical Assignment for Mentor Review</span>';
+        submitBtn.innerHTML = '<i data-lucide="upload"></i> <span id="submitBtnText">Submit final practical assignment for mentor review</span>';
       }
 
       if (window.app && app.renderIcons) app.renderIcons();
@@ -1248,7 +1094,7 @@
         const assignmentFile = getAssignmentFile();
         const existingAns = answersState[questionId];
         if (!assignmentFile && !existingAns && !q.completed) {
-          alert('Please attach your assignment file in the File Upload question first.');
+          alert('Please attach your assignment file in the file upload question first.');
           return;
         }
         if (assignmentFile) {
@@ -1272,15 +1118,19 @@
         if (!res.ok) throw new Error(data.error || 'Failed');
         const box = document.getElementById(`q-box-${questionId}`);
         const statusBadge = document.getElementById(`q-status-${questionId}`);
-        if (box) box.classList.add('completed-q');
+        if (box) {
+          box.classList.add('completed-q');
+          box.classList.add('check-pop');
+        }
         if (statusBadge) {
           statusBadge.className = 'badge badge-emerald';
           statusBadge.textContent = 'Completed';
         }
         if (q) q.completed = true;
 
-        // Issue 1 Fix: Explicitly reload dashboard preserving the current course ID
+        // Reload the dashboard while preserving the current course id
         await loadDashboard(currentCourseIdToPreserve);
+        if (window.MentorUI && typeof window.MentorUI.refresh === 'function') window.MentorUI.refresh();
       } catch (e) {
         alert(e.message);
       }
@@ -1297,7 +1147,7 @@
         return;
       }
 
-      // 1. Check all questions
+      // 1. Check every unlocked question
       let firstMissingQuestion = null;
       currentCourseQuestions.forEach(q => {
         if (!q.sequentially_unlocked) return; // skip locked questions
@@ -1313,36 +1163,36 @@
       });
 
       if (firstMissingQuestion) {
-        alertBox.style.display = 'block';
-        alertBox.style.background = 'var(--rose-subtle)';
-        alertBox.style.color = 'var(--rose)';
-        alertBox.textContent = `All questions must be answered before you can submit. Please provide an answer for Question #${firstMissingQuestion.question_number}.`;
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-error is-visible';
+        alertBox.style.marginBottom = '1rem';
+        alertBox.textContent = `All questions must be answered before you can submit. Please provide an answer for question #${firstMissingQuestion.question_number}.`;
         const missingEl = document.getElementById(`q-box-${firstMissingQuestion.id}`);
         if (missingEl) missingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
-      // 2. Check 10-minute video requirements (skip locked questions)
+      // 2. Check 10-minute video requirements (skipping locked questions)
       for (const q of currentCourseQuestions) {
         if (!q.sequentially_unlocked) continue;
         if (q.has_video && !q.can_answer) {
-          alertBox.style.display = 'block';
-          alertBox.style.background = 'var(--rose-subtle)';
-          alertBox.style.color = 'var(--rose)';
+          alertBox.style.display = 'flex';
+          alertBox.className = 'alert alert-error is-visible';
+          alertBox.style.marginBottom = '1rem';
           alertBox.textContent = `Question #${q.question_number} requires completing the 10-minute video lesson before submitting.`;
           return;
         }
       }
 
-      // Issue 3 Fix: Check file upload with retained completion state support
+      // 3. Check the file upload, honouring retained completion state
       const hasFileUpload = currentCourseQuestions.some(q => q.response_type === 'file_upload');
       const assignmentFile = getAssignmentFile();
       const fileUploadSatisfied = isFileUploadSatisfied();
 
       if (hasFileUpload && !fileUploadSatisfied) {
-        alertBox.style.display = 'block';
-        alertBox.style.background = 'var(--rose-subtle)';
-        alertBox.style.color = 'var(--rose)';
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-error is-visible';
+        alertBox.style.marginBottom = '1rem';
         alertBox.textContent = 'Please choose an assignment file to upload.';
         return;
       }
@@ -1360,7 +1210,7 @@
         return [questionId, value.trimStart().startsWith('data:') ? '[Uploaded response]' : value.slice(0, 10000)];
       }));
 
-      // Ensure completed questions are marked in submission payload even if cleared from DOM
+      // Ensure completed questions are marked in the payload even if cleared from the DOM
       currentCourseQuestions.forEach(q => {
         if (q.completed && !submissionAnswers[q.id]) {
           submissionAnswers[q.id] = q.response_type === 'file_upload' ? 'Uploaded file (completed)' : 'Completed';
@@ -1370,7 +1220,8 @@
       formData.append('answers', JSON.stringify(submissionAnswers));
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span>Uploading and submitting...</span>';
+      submitBtn.classList.add('is-loading');
+      alertBox.classList.remove('is-visible');
       alertBox.style.display = 'none';
 
       const submittedCourseId = activeCourseId;
@@ -1389,12 +1240,12 @@
         }
         if (!res.ok) throw new Error(data.error || 'Submission failed.');
 
-        // Issue 2 Fix: Store submission notification specifically for this submitted course
+        // Store the notice specifically for the course that was submitted
         submissionNoticeByCourse[submittedCourseId] = 'Assignment submitted successfully! Mentor Ahmad Saleem will review your submission shortly.';
 
-        alertBox.style.display = 'block';
-        alertBox.style.background = 'var(--emerald-subtle)';
-        alertBox.style.color = 'var(--emerald)';
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-success is-visible';
+        alertBox.style.marginBottom = '1rem';
         alertBox.textContent = submissionNoticeByCourse[submittedCourseId];
 
         if (fileInput) fileInput.value = '';
@@ -1402,13 +1253,15 @@
         if (courseAssignmentFiles[submittedCourseId]) delete courseAssignmentFiles[submittedCourseId];
         Object.keys(responseFilesState).forEach(questionId => delete responseFilesState[questionId]);
 
+        if (window.app && app.showToast) app.showToast('Assignment submitted for mentor review.');
         await loadDashboard(submittedCourseId);
       } catch (err) {
-        alertBox.style.display = 'block';
-        alertBox.style.background = 'var(--rose-subtle)';
-        alertBox.style.color = 'var(--rose)';
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-error is-visible';
+        alertBox.style.marginBottom = '1rem';
         alertBox.textContent = err.message;
       } finally {
+        submitBtn.classList.remove('is-loading');
         updateSubmissionButtonState();
       }
     });
@@ -1417,6 +1270,36 @@
       await fetch('/api/logout', { method: 'POST' });
       window.location.href = '/login';
     }
+
+    /* Sidebar active-state tracking while scrolling the workspace */
+    (function initSidebarSpy() {
+      const links = Array.from(document.querySelectorAll('[data-sidebar-target]'));
+      if (!links.length || typeof IntersectionObserver === 'undefined') return;
+
+      const sections = links
+        .map(link => document.getElementById(link.getAttribute('data-sidebar-target')))
+        .filter(Boolean);
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          links.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('data-sidebar-target') === entry.target.id);
+          });
+        });
+      }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+
+      sections.forEach(section => observer.observe(section));
+    })();
+
+    /* Close the mobile drawer after an in-page jump */
+    document.querySelectorAll('#appSidebar a[href^="#"]').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.MentorUI && typeof window.MentorUI.closeSidebar === 'function') {
+          window.MentorUI.closeSidebar();
+        }
+      });
+    });
 
     checkSession();
   </script>

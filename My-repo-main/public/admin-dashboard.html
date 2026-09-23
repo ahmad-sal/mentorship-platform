@@ -4,16 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard | Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Mentor.css">
+  <link rel="stylesheet" href="/theme.css">
   <style>
-    .admin-container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 5rem;
-    }
     .admin-header {
       display: flex;
       justify-content: space-between;
@@ -131,40 +127,153 @@
       box-shadow: var(--shadow-xl);
     }
   </style>
-<link rel="stylesheet" href="/responsive.css">
+<style>
+    /* Page-level corrections layered on top of the shared design system. */
+    .table-container {
+      overflow-x: auto !important;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .admin-header.admin-header { align-items: flex-end; }
+    .stat-num { color: var(--text-heading); font-variant-numeric: tabular-nums; }
+    .data-table thead th { position: sticky; top: 0; z-index: 1; }
+    .tabs-bar { background: var(--surface-hover); border-bottom: none; padding: 0.3rem; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+    .tab-btn.active { background: var(--surface); box-shadow: var(--shadow-xs); }
+    .data-table td .btn[style] { transition: transform var(--motion-micro) var(--ease-out), filter var(--motion-micro) var(--ease-out); }
+    .data-table td .btn[style]:hover { transform: translateY(-1px); filter: brightness(0.96); }
+
+    /* Dashboard surfaces and tables need explicit contrast in dark mode. */
+    body.dark-theme .stat-card,
+    body.dark .stat-card,
+    body.dark-theme .table-container,
+    body.dark .table-container,
+    body.dark-theme .modal-card,
+    body.dark .modal-card {
+      background: #0d1628;
+      border-color: #2a3b59;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+    body.dark-theme .stat-label,
+    body.dark .stat-label,
+    body.dark-theme .data-table th,
+    body.dark .data-table th {
+      color: #aebed6;
+    }
+    body.dark-theme .stat-card > div[style],
+    body.dark .stat-card > div[style],
+    body.dark-theme .data-table td span[style],
+    body.dark .data-table td span[style] {
+      color: #aebed6 !important;
+    }
+    body.dark-theme .tabs-bar,
+    body.dark .tabs-bar {
+      background: #101c30;
+      border-color: #2a3b59;
+    }
+    body.dark-theme .tab-btn.active,
+    body.dark .tab-btn.active {
+      background: #182944;
+      color: #ffffff;
+    }
+    body.dark-theme .data-table th,
+    body.dark .data-table th {
+      background: #182944;
+      color: #ffffff;
+      border-bottom-color: #395173;
+    }
+    body.dark-theme .data-table td,
+    body.dark .data-table td {
+      color: #eef3fb;
+      border-bottom-color: #243754;
+      vertical-align: middle;
+    }
+    body.dark-theme .data-table tr:hover td,
+    body.dark .data-table tr:hover td {
+      background: #14243d;
+    }
+    body.dark-theme .data-table td .btn[style*="background:#fee2e2"],
+    body.dark .data-table td .btn[style*="background:#fee2e2"] {
+      background: #451a24 !important;
+      color: #fda4af !important;
+      border-color: #7f1d2d !important;
+    }
+    body.dark-theme .modal-card > div[style*="background:var(--bg-elevated)"],
+    body.dark .modal-card > div[style*="background:var(--bg-elevated)"] {
+      background: #14243d !important;
+      border-color: #395173 !important;
+    }
+  </style>
 </head>
 <body class="light-theme">
-  <header class="site-header">
-    <div class="nav-container">
-      <a class="brand-logo" href="/">
-        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
-        <span class="logo-text">Ahmad Saleem Mentorship</span>
+  <div class="app-shell">
+    <!-- ADMIN SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar" aria-label="Administration navigation">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
       </a>
-      <div class="nav-actions">
-        <a class="btn btn-text" href="/admin/progress"><i data-lucide="award"></i> Student Progress</a>
-        <button class="btn btn-secondary btn-sm" onclick="logout()"><i data-lucide="log-in"></i> Logout</button>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-          <span id="themeIcon"></span>
-          <span id="themeLabel">Dark Mode</span>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Administration</span>
+        <a class="sidebar-link active" href="/admin/dashboard">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a class="sidebar-link" href="/admin/progress">
+          <i data-lucide="bar-chart"></i><span>Student progress</span>
+        </a>
+      </nav>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Platform</span>
+        <a class="sidebar-link" href="/">
+          <i data-lucide="compass"></i><span>Public site</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="avatar avatar-sm" aria-hidden="true">AS</span>
+          <span class="sidebar-user__meta">
+            <span class="sidebar-user__name">Administrator</span>
+            <span class="sidebar-user__role">Mentor access</span>
+          </span>
+        </div>
+        <button class="sidebar-link mt-2" type="button" onclick="logout()" style="border:none; width:100%;">
+          <i data-lucide="log-out"></i><span>Log out</span>
         </button>
       </div>
-    </div>
-  </header>
+    </aside>
 
-  <main class="admin-container">
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <span class="app-topbar__title">Administration centre</span>
+        <span class="app-topbar__spacer"></span>
+        <a class="btn btn-secondary btn-sm" href="/admin/progress"><i data-lucide="bar-chart"></i> Progress</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </header>
+
+      <div class="app-content">
     <div class="admin-header">
       <div>
-        <span class="pill-badge" style="background:var(--amber-subtle); color:var(--amber); border-color:var(--amber-border);"><i data-lucide="shield"></i> Administrative Center</span>
-        <h1 style="font-size: 2rem; font-weight: 800; margin-top: 0.35rem;">Mentor Administration</h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Manage courses, review student assignment submissions, and track platform progress.</p>
+        <span class="pill-badge badge-admin"><i data-lucide="shield"></i><span>Administration centre</span></span>
+        <h1 style="font-size: clamp(1.5rem, 3.6vw, 2rem); font-weight: 800; letter-spacing: -0.03em; margin-top: 0.5rem;">Mentor administration</h1>
+        <p class="muted">Manage courses, review student assignment submissions, and track platform progress.</p>
       </div>
-      <div>
-        <button class="btn btn-primary" onclick="openAddCourseModal()"><i data-lucide="plus"></i> Add New Course</button>
+      <div class="row">
+        <button class="btn btn-primary" type="button" onclick="openAddCourseModal()"><i data-lucide="plus"></i> Add new course</button>
       </div>
     </div>
 
     <!-- Stats Summary -->
-    <div class="stats-grid">
+    <div class="stats-grid" id="adminStatsGrid">
       <div class="stat-card">
         <div class="stat-label">Registered Students</div>
         <div class="stat-num" id="statStudents">—</div>
@@ -206,7 +315,7 @@
             </tr>
           </thead>
           <tbody id="submissionsTableBody">
-            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading submissions...</td></tr>
+            <tr><td colspan="6"><div class="loading-inline"><span class="spinner" aria-hidden="true"></span><span>Loading submissions…</span></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -227,7 +336,7 @@
             </tr>
           </thead>
           <tbody id="coursesTableBody">
-            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading courses...</td></tr>
+            <tr><td colspan="6"><div class="loading-inline"><span class="spinner" aria-hidden="true"></span><span>Loading courses…</span></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -248,19 +357,24 @@
             </tr>
           </thead>
           <tbody id="studentsTableBody">
-            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading students...</td></tr>
+            <tr><td colspan="6"><div class="loading-inline"><span class="spinner" aria-hidden="true"></span><span>Loading students…</span></div></td></tr>
           </tbody>
         </table>
       </div>
     </section>
-  </main>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: Add Course -->
-  <div class="modal-overlay" id="addCourseModal">
+  <div class="modal-overlay" id="addCourseModal" role="dialog" aria-modal="true" aria-label="Add new course track">
     <div class="modal-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h3 style="font-size:1.35rem; font-weight:800;">Add New Course Track</h3>
-        <button class="btn btn-text" onclick="closeAddCourseModal()"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Course management</span>
+          <h3 style="font-size:1.3rem;">Add new course track</h3>
+        </div>
+        <button class="modal-close" type="button" aria-label="Close dialog" onclick="closeAddCourseModal()"><i data-lucide="x"></i></button>
       </div>
       <form id="addCourseForm">
         <div style="margin-bottom:1rem;">
@@ -277,14 +391,15 @@
   </div>
 
   <!-- MODAL: Question Manager -->
-  <div class="modal-overlay" id="questionModal">
+  <div class="modal-overlay" id="questionModal" role="dialog" aria-modal="true" aria-label="Course questions">
     <div class="modal-card" style="max-width: 700px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <div class="modal-header">
         <div>
-          <h3 id="qModalTitle" style="font-size:1.35rem; font-weight:800;">Course Questions</h3>
-          <p id="qModalSubtitle" style="color:var(--text-muted); font-size:0.85rem;"></p>
+          <span class="section-kicker">Curriculum</span>
+          <h3 id="qModalTitle" style="font-size:1.3rem;">Course questions</h3>
+          <p id="qModalSubtitle" class="muted small"></p>
         </div>
-        <button class="btn btn-text" onclick="closeQuestionModal()"><i data-lucide="x"></i></button>
+        <button class="modal-close" type="button" aria-label="Close dialog" onclick="closeQuestionModal()"><i data-lucide="x"></i></button>
       </div>
 
       <div style="background:var(--bg-elevated); padding:1rem; border-radius:var(--radius-md); margin-bottom:1.5rem; border:1px solid var(--border-color);">
@@ -324,11 +439,14 @@
   </div>
 
   <!-- MODAL: Review Submission -->
-  <div class="modal-overlay" id="reviewModal">
+  <div class="modal-overlay" id="reviewModal" role="dialog" aria-modal="true" aria-label="Review assignment">
     <div class="modal-card" style="max-width: 600px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h3 style="font-size:1.35rem; font-weight:800;">Review Assignment</h3>
-        <button class="btn btn-text" onclick="closeReviewModal()"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Submission review</span>
+          <h3 style="font-size:1.3rem;">Review assignment</h3>
+        </div>
+        <button class="modal-close" type="button" aria-label="Close dialog" onclick="closeReviewModal()"><i data-lucide="x"></i></button>
       </div>
       <div id="reviewDetails" style="margin-bottom:1.5rem; font-size:0.9rem; line-height:1.5;"></div>
       <div style="margin-bottom:1rem;">
@@ -343,6 +461,7 @@
   </div>
 
   <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
   <script>
     let activeSubmissionId = null;
     let currentQuestionsCourseId = null;
@@ -399,7 +518,15 @@
         const data = await res.json();
         const tbody = document.getElementById('submissionsTableBody');
         if (!data.submissions.length) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No student assignment submissions yet.</td></tr>';
+          tbody.innerHTML = `
+            <tr><td colspan="6">
+              <div class="empty-state" style="border:none;">
+                <span class="empty-state__icon" aria-hidden="true"><i data-lucide="inbox"></i></span>
+                <h3>No submissions yet</h3>
+                <p>When a student sends their final practical assignment it will appear here for review.</p>
+              </div>
+            </td></tr>`;
+          if (window.app && app.renderIcons) app.renderIcons();
           return;
         }
         tbody.innerHTML = data.submissions.map(s => `
@@ -425,6 +552,19 @@
         const res = await fetch('/api/admin/courses');
         const data = await res.json();
         const tbody = document.getElementById('coursesTableBody');
+        if (!data.courses.length) {
+          tbody.innerHTML = `
+            <tr><td colspan="6">
+              <div class="empty-state" style="border:none;">
+                <span class="empty-state__icon" aria-hidden="true"><i data-lucide="book-open"></i></span>
+                <h3>No course tracks yet</h3>
+                <p>Create your first course track to start adding curriculum questions.</p>
+                <button class="btn btn-primary" type="button" onclick="openAddCourseModal()"><i data-lucide="plus"></i> Add new course</button>
+              </div>
+            </td></tr>`;
+          if (window.app && app.renderIcons) app.renderIcons();
+          return;
+        }
         tbody.innerHTML = data.courses.map(c => `
           <tr>
             <td><strong>${c.title}</strong></td>
@@ -451,7 +591,15 @@
     function renderStudents(students) {
       const tbody = document.getElementById('studentsTableBody');
       if (!students || !students.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">No students registered yet.</td></tr>';
+        tbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state" style="border:none;">
+              <span class="empty-state__icon" aria-hidden="true"><i data-lucide="users"></i></span>
+              <h3>No students registered yet</h3>
+              <p>New student accounts will appear here as soon as they complete registration.</p>
+            </div>
+          </td></tr>`;
+        if (window.app && app.renderIcons) app.renderIcons();
         return;
       }
       tbody.innerHTML = students.map(s => `
@@ -680,7 +828,7 @@
 
           let displayHtml = '';
           if (typeof ans === 'string' && ans.startsWith('data:image/')) {
-            displayHtml = `<img src="${ans}" style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;" />`;
+            displayHtml = `<img src="${ans}" alt="Student image answer" style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;" />`;
           } else if (typeof ans === 'string' && ans.startsWith('data:video/')) {
             displayHtml = `<video src="${ans}" controls style="max-width:100%; max-height:220px; display:block; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.5rem;"></video>`;
           } else if (typeof ans === 'string' && ans.startsWith('data:') && ans.includes(';base64,')) {

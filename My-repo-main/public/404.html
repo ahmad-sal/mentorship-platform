@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page not found | Ahmad Saleem Mentorship</title>
+  <meta name="description" content="The page you were looking for could not be found. Head back to the Ahmad Saleem Mentorship homepage or browse the available course tracks." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: var(--background);
+    }
+
+    .nf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      max-width: 1180px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.25rem clamp(1rem, 4vw, 2.5rem);
+    }
+
+    .nf-main {
+      display: grid;
+      place-items: center;
+      padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 2.5rem);
+    }
+
+    .nf-card {
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      text-align: center;
+      padding: clamp(2rem, 6vw, 3.75rem) clamp(1.25rem, 4vw, 3rem);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    /* Soft, GPU-friendly light: two blurred gradient blobs behind the card. */
+    .nf-card::before,
+    .nf-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      border-radius: 50%;
+      filter: blur(46px);
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .nf-card::before {
+      width: 320px;
+      height: 320px;
+      top: -130px;
+      left: -90px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.42), transparent 68%);
+      animation: nf-drift-a 18s var(--ease-in-out, ease-in-out) infinite alternate;
+    }
+    .nf-card::after {
+      width: 300px;
+      height: 300px;
+      bottom: -140px;
+      right: -80px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.36), transparent 68%);
+      animation: nf-drift-b 22s var(--ease-in-out, ease-in-out) infinite alternate;
+    }
+
+    @keyframes nf-drift-a {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to   { transform: translate3d(46px, 26px, 0) scale(1.12); }
+    }
+    @keyframes nf-drift-b {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to   { transform: translate3d(-40px, -22px, 0) scale(1.1); }
+    }
+
+    .nf-code {
+      font-size: clamp(5.5rem, 20vw, 10rem);
+      font-weight: 800;
+      line-height: 0.85;
+      letter-spacing: -0.06em;
+      margin: 0.6rem 0 0.4rem;
+      background: linear-gradient(120deg, #0b1a3a 8%, #1e40af 46%, #0ea5e9 96%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nf-title {
+      font-size: clamp(1.35rem, 4.4vw, 1.9rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-heading);
+      margin: 0.25rem 0 0.5rem;
+    }
+
+    .nf-copy {
+      max-width: 46ch;
+      margin: 0 auto 1.75rem;
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+      line-height: 1.65;
+    }
+
+    .nf-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .nf-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+      gap: 0.6rem;
+      padding-top: 1.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .nf-link {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.875rem;
+      text-align: left;
+      transition: transform var(--motion-micro) var(--ease-out),
+        border-color var(--motion-micro) var(--ease-out),
+        box-shadow var(--motion-micro) var(--ease-out);
+    }
+    .nf-link svg { width: 18px; height: 18px; color: var(--primary); flex-shrink: 0; }
+    .nf-link:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nf-orb {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-xl);
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      animation: nf-float 6.5s var(--ease-in-out, ease-in-out) infinite alternate;
+    }
+    .nf-orb svg { width: 30px; height: 30px; }
+
+    @keyframes nf-float {
+      from { transform: translateY(-4px); }
+      to   { transform: translateY(6px); }
+    }
+
+    .nf-footer {
+      max-width: 1180px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+    .nf-footer a { color: var(--text-secondary); text-decoration: none; font-weight: 600; }
+    .nf-footer a:hover { color: var(--primary); }
+
+    @media (max-width: 520px) {
+      .nf-actions .btn { width: 100%; justify-content: center; }
+      .nf-card { border-radius: var(--radius-lg); }
+    }
+
+    /* Dark theme keeps the glow subtle and the digits readable. */
+    body.dark-theme .nf-code {
+      background: linear-gradient(120deg, #ffffff 6%, #93b4ff 52%, #67e8f9 96%);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    body.dark-theme .nf-card::before { opacity: 0.3; }
+    body.dark-theme .nf-card::after { opacity: 0.26; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .nf-card::before,
+      .nf-card::after,
+      .nf-orb { animation: none !important; }
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <header class="nf-header">
+    <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+      <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+      <span class="logo-text">Ahmad Saleem</span>
+    </a>
+    <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle colour theme">
+      <span id="themeIcon" aria-hidden="true"></span>
+      <span class="theme-label" id="themeLabel">Dark Mode</span>
+    </button>
+  </header>
+
+  <main class="nf-main">
+    <div class="nf-card">
+      <div class="nf-orb" aria-hidden="true"><i data-lucide="compass"></i></div>
+      <p class="nf-code" aria-hidden="true">404</p>
+      <h1 class="nf-title">Looks like this page took a wrong turn.</h1>
+      <p class="nf-copy">
+        The link may be broken, or the page may have been moved. Your account and progress are
+        untouched — head back to a safe place below.
+      </p>
+
+      <div class="nf-actions">
+        <a class="btn btn-primary btn-lg" href="/"><i data-lucide="home"></i> Back home</a>
+        <a class="btn btn-secondary btn-lg" href="/#courses"><i data-lucide="book-open"></i> Browse courses</a>
+      </div>
+
+      <nav class="nf-links" aria-label="Helpful destinations">
+        <a class="nf-link" href="/login"><i data-lucide="log-in"></i> Student login</a>
+        <a class="nf-link" href="/register"><i data-lucide="user-plus"></i> Create an account</a>
+        <a class="nf-link" href="/#faq"><i data-lucide="help-circle"></i> Read the FAQ</a>
+        <a class="nf-link" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer"><i data-lucide="phone"></i> Contact mentor</a>
+      </nav>
+    </div>
+  </main>
+
+  <footer class="nf-footer">
+    <span>&copy; <span id="nfYear">2026</span> Ahmad Saleem Mentorship. All rights reserved.</span>
+    <a href="/">ahmad-saleem-mentorship.onrender.com</a>
+  </footer>
+
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script>
+    document.getElementById('nfYear').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

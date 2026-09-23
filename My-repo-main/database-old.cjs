@@ -234,7 +234,7 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
 
   const capacity = await getPlatformCapacity();
   if (capacity.isFull) {
-    throw new Error('Enrollment is currently closed: Maximum capacity of 800 students has been reached.');
+    throw new Error('Enrollment is currently closed because the cohort is full.');
   }
 
   const passwordHash = await bcrypt.hash(password, 10);

@@ -1,32 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Submit Assignment | Ahmad Saleem Mentorship</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f7fbf9;--surface:#fff;--text:#142d25;--muted:#60786d;--line:#d7e8df;--primary:#138a5b;--soft:#e9f8f0;--shadow:0 18px 45px rgba(19,138,91,.12)}
-body.dark{--bg:#0d2118;--surface:#153125;--text:#effff5;--muted:#a8c9b6;--line:#2d5842;--soft:rgba(19,138,91,.2);--shadow:0 18px 45px rgba(0,0,0,.35)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;line-height:1.6}a{color:inherit;text-decoration:none}.top{max-width:1080px;margin:auto;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{font-weight:800;color:var(--primary)}button,.back,.submit{border:1px solid var(--line);border-radius:10px;padding:10px 15px;background:var(--surface);color:var(--text);font:inherit;font-weight:700;cursor:pointer}.wrap{max-width:780px;margin:48px auto;padding:0 22px}.back{display:inline-block;background:var(--primary);color:#fff;border:0;margin-bottom:30px}.eyebrow{display:inline-block;padding:7px 12px;border-radius:99px;background:var(--soft);color:var(--primary);font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.hero h1{font-size:clamp(2.2rem,6vw,4.2rem);line-height:1.05;margin:18px 0 14px;letter-spacing:-.04em}.hero p{color:var(--muted);font-size:1.08rem}.form-panel{margin-top:34px;padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.form-panel h2{margin-top:0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}label{display:grid;gap:7px;font-weight:700;font-size:.88rem}input,textarea,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}textarea{min-height:130px;resize:vertical}.full{grid-column:1/-1}.submit{margin-top:20px;background:var(--primary);border-color:var(--primary);color:#fff}.status{display:none;margin-top:18px;padding:14px;border-radius:10px;background:var(--soft);color:var(--primary);font-weight:700}.status.show{display:block}.note{color:var(--muted);font-size:.86rem}.footer{text-align:center;color:var(--muted);padding:35px 20px}@media(max-width:650px){.top{padding:14px 16px}.wrap{margin-top:28px;padding:0 16px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}}
-body.theme-youtube{--bg:#fff7f7;--text:#3a1115;--muted:#80565b;--line:#f0d5d8;--primary:#dc2626;--soft:#fff0f1;--shadow:0 18px 45px rgba(220,38,38,.14)}body.theme-canva{--bg:#f5fcf7;--text:#123222;--muted:#5f7969;--line:#d6eadb;--primary:#35a66a;--soft:#eaf8ee;--shadow:0 18px 45px rgba(53,166,106,.13)}body.theme-wordpress{--bg:#f2f9ff;--text:#10283f;--muted:#5d748d;--line:#d5e6f4;--primary:#2d8fd5;--soft:#e7f4ff;--shadow:0 18px 45px rgba(45,143,213,.13)}body.theme-ai{--bg:linear-gradient(135deg,#fff7ed,#f5f3ff 48%,#ecfeff);--text:#24163f;--muted:#706781;--line:#e4d9f1;--primary:#7c3aed;--soft:linear-gradient(135deg,#fce7f3,#ede9fe,#cffafe);--shadow:0 18px 45px rgba(100,65,150,.14)}body.dark{--bg:#0d2118;--surface:#153125;--text:#effff5;--muted:#a8c9b6;--line:#2d5842;--soft:rgba(19,138,91,.2);--shadow:0 18px 45px rgba(0,0,0,.35)}
-body{background-image:radial-gradient(circle at 0% 0%,rgba(19,138,91,.08),transparent 32%),linear-gradient(135deg,transparent 55%,rgba(19,138,91,.04))}.form-panel{border-color:color-mix(in srgb,var(--primary) 18%,var(--line));box-shadow:0 20px 45px rgba(19,138,91,.14)}.submit{box-shadow:0 8px 18px rgba(19,138,91,.2);transition:transform .2s ease,filter .2s ease,box-shadow .2s ease}.submit:hover{transform:translateY(-2px);filter:brightness(.97);box-shadow:0 12px 24px rgba(19,138,91,.28)}
-</style>
-<link rel="stylesheet" href="/responsive.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Assignment | Ahmad Saleem Mentorship</title>
+  <meta name="description" content="Share your course assignment with the mentorship team for review and feedback." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <style>
+    body.theme-youtube { --course-accent: #dc2626; }
+    body.theme-canva { --course-accent: #12a150; }
+    body.theme-wordpress { --course-accent: #2d8fd5; }
+    body.theme-ai { --course-accent: #7c3aed; }
+
+    .page-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      padding-block: clamp(2.25rem, 6vw, 4rem);
+      background: var(--navy-950);
+      color: #ffffff;
+    }
+    .page-hero h1 { color: #ffffff; }
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      right: -140px;
+      top: -120px;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--course-accent, #4f46e5) 55%, transparent), transparent 68%);
+      filter: blur(60px);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    body[class*='theme-'] .form-panel { border-color: color-mix(in srgb, var(--course-accent) 26%, var(--border)); }
+  </style>
 </head>
-<body>
-<header class="top"><a class="brand" href="Mentor.html">Ahmad Saleem Mentorship</a><button id="themeBtn"><span id="themeIcon">Dark Mode</span></button></header>
-<main class="wrap">
-<a class="back" href="javascript:history.back()">&larr; Back to course</a>
-<section class="hero"><span class="eyebrow">Submit Assignment</span><h1 id="pageTitle">Send your course assignment.</h1><p>Share your work with the course team for review and feedback.</p></section>
-<section class="form-panel"><h2>Assignment details</h2><p class="note">Complete the form and attach your assignment file.</p><form id="assignmentForm"><div class="form-grid"><label>Student name<input required name="student" type="text" placeholder="Your full name"></label><label>Email address<input required name="email" type="email" placeholder="you@example.com"></label><label>Course<select required name="course" id="courseSelect"><option>Artificial Intelligence</option><option>Canva</option><option>WordPress</option><option>YouTube Automation</option></select></label><label>Assignment title<input required name="title" type="text" placeholder="Project or assignment name"></label><label class="full">Notes<textarea name="notes" placeholder="Add a short note for your mentor"></textarea></label><label class="full">Assignment file<input required name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.png,.jpg,.jpeg"></label></div><button class="submit" type="submit">Submit assignment</button><div class="status" id="status" role="status"></div></form></section>
-</main><footer class="footer">&copy; 2026 Mentor Ahmad Saleem</footer>
-<script>
-const params=new URLSearchParams(location.search);const course=params.get('course');const select=document.getElementById('courseSelect');if(course){const label=decodeURIComponent(course);document.getElementById('pageTitle').textContent='Submit your '+label+' assignment.';[...select.options].forEach(option=>{if(option.text.toLowerCase()===label.toLowerCase())select.value=option.text});const theme=label.toLowerCase().includes('youtube')?'theme-youtube':label.toLowerCase().includes('artificial')?'theme-ai':label.toLowerCase().includes('canva')?'theme-canva':'theme-wordpress';document.body.classList.add(theme)}
-document.getElementById('assignmentForm').onsubmit=event=>{event.preventDefault();const status=document.getElementById('status');status.textContent='Your assignment is ready to be sent for review. Connect this form to your preferred storage or email service to receive uploads.';status.classList.add('show')};
-const body=document.body,button=document.getElementById('themeBtn'),saved=localStorage.getItem('themePreference');if(saved==='dark')body.classList.add('dark');function sync(){const dark=body.classList.contains('dark');document.getElementById('themeIcon').textContent=dark?'Light Mode':'Dark Mode'}sync();button.onclick=()=>{const dark=body.classList.toggle('dark');localStorage.setItem('themePreference',dark?'dark':'light');sync()};
-</script>
+<body class="light-theme">
+  <a class="skip-link" href="#submitMain">Skip to main content</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <a class="nav-link active" href="/student/dashboard">My workspace</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <button type="button" class="btn btn-secondary" onclick="history.back()"><i data-lucide="arrow-left"></i> Back</button>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="submitMain">
+    <div class="page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="hero-bg__grid"></span>
+      </div>
+      <div class="main-container">
+        <span class="pill-badge pill-glass"><i data-lucide="file-up"></i><span>Submit assignment</span></span>
+        <h1 class="display-2 mt-2" id="pageTitle">Send your course assignment.</h1>
+        <p class="lead mt-2" style="color:#b3c1dc; max-width:58ch;">
+          Share your work with the course team for review and feedback.
+        </p>
+      </div>
+    </div>
+
+    <div class="main-container" style="max-width:820px;">
+      <div class="card form-panel mt-4">
+        <h2>Assignment details</h2>
+        <p class="muted small mt-1">Complete the form and attach your assignment file.</p>
+
+        <div class="alert alert-info mt-3 is-visible" role="note">
+          <i data-lucide="info"></i>
+          <span>
+            Enrolled students can submit directly from the learning workspace, where submissions are
+            stored against your account. This standalone form is for general enquiries.
+          </span>
+        </div>
+
+        <form id="assignmentForm" class="mt-3" novalidate>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="studentName">Student name</label>
+              <input required id="studentName" name="student" type="text" placeholder="Your full name" autocomplete="name" />
+            </div>
+            <div class="form-group">
+              <label for="studentEmail">Email address</label>
+              <input required id="studentEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label for="courseSelect">Course</label>
+              <select required name="course" id="courseSelect">
+                <option>Artificial Intelligence</option>
+                <option>Canva</option>
+                <option>WordPress</option>
+                <option>YouTube Automation</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="assignmentTitle">Assignment title</label>
+              <input required id="assignmentTitle" name="title" type="text" placeholder="Project or assignment name" />
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label for="assignmentNotes">Notes</label>
+              <textarea id="assignmentNotes" name="notes" placeholder="Add a short note for your mentor"></textarea>
+              <p class="form-hint">Optional — anything your mentor should know before reviewing.</p>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label for="assignmentFile">Assignment file</label>
+              <input required id="assignmentFile" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.png,.jpg,.jpeg" />
+              <p class="form-hint">Accepted: PDF, DOC, DOCX, PPT, PPTX, ZIP, PNG, JPG (max 10&nbsp;MB).</p>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg btn-block mt-3" type="submit">
+            <i data-lucide="send"></i> Submit assignment
+          </button>
+
+          <div class="alert alert-success mt-3" id="status" role="status" aria-live="polite"></div>
+        </form>
+
+        <div class="row mt-4" style="justify-content:center;">
+          <a class="btn btn-secondary" href="/student/dashboard"><i data-lucide="layout-dashboard"></i> Open learning workspace</a>
+          <a class="btn btn-ghost" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer">
+            <i data-lucide="phone"></i> WhatsApp mentor
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <div class="brand-logo">
+          <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </div>
+        <p class="footer-desc">Practical, project-based mentorship across YouTube Automation, Canva, WordPress and Artificial Intelligence.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span>
+        <h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links">
+          <li><a href="/student/dashboard"><span>Learning workspace</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/student/profile"><span>Profile &amp; certificate</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/#viewCourses"><span>All courses</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p>
+      <p><a href="/">Back to homepage</a></p>
+    </div>
+  </footer>
+
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script>
+    /* Course accent + page copy from the ?course= query parameter. */
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const course = params.get('course');
+      if (!course) return;
+
+      const select = document.getElementById('courseSelect');
+      const label = decodeURIComponent(course);
+
+      document.getElementById('pageTitle').textContent = 'Submit your ' + label + ' assignment.';
+      Array.from(select.options).forEach(option => {
+        if (option.text.toLowerCase() === label.toLowerCase()) select.value = option.text;
+      });
+
+      const lower = label.toLowerCase();
+      const theme = lower.includes('youtube') ? 'theme-youtube'
+        : lower.includes('artificial') ? 'theme-ai'
+        : lower.includes('canva') ? 'theme-canva'
+        : 'theme-wordpress';
+      document.body.classList.add(theme);
+    })();
+
+    document.getElementById('assignmentForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const status = document.getElementById('status');
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      status.classList.add('is-visible');
+      status.innerHTML = '<span>Your assignment is ready to be sent for review. Connect this form to your preferred storage or email service to receive uploads.</span>';
+      if (window.app && typeof window.app.renderIcons === 'function') window.app.renderIcons();
+    });
+  </script>
 </body>
 </html>

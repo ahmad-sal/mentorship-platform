@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Progress Overview | Admin Portal</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,9 +49,6 @@
       color: var(--text-main);
       font: inherit;
     }
-    .matrix-filter-field select[multiple] {
-      min-height: 5.5rem;
-    }
     @media (max-width: 800px) {
       .matrix-filters {
         grid-template-columns: 1fr 1fr;
@@ -60,6 +58,91 @@
         grid-column: 1 / -1;
       }
     }
+
+    /* ---- Multi-select course filter (checkbox dropdown) ---- */
+    .course-multiselect {
+      position: relative;
+    }
+    .course-multiselect-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      min-height: 2.55rem;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .course-multiselect-toggle:hover {
+      border-color: var(--border-strong, var(--border-color));
+    }
+    .course-multiselect-toggle span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .course-multiselect-toggle svg {
+      flex: 0 0 auto;
+      width: 1rem;
+      height: 1rem;
+      transition: transform 0.2s;
+    }
+    .course-multiselect.open .course-multiselect-toggle svg {
+      transform: rotate(180deg);
+    }
+    .course-multiselect-panel {
+      display: none;
+      position: absolute;
+      z-index: 30;
+      top: calc(100% + 0.35rem);
+      left: 0;
+      right: 0;
+      max-height: 15rem;
+      overflow-y: auto;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    }
+    .course-multiselect.open .course-multiselect-panel {
+      display: block;
+    }
+    .course-option {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.45rem 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+    .course-option:hover {
+      background: var(--bg-surface);
+    }
+    .course-option input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      min-height: 0;
+      padding: 0;
+      margin: 0;
+      accent-color: #0d9488;
+      cursor: pointer;
+    }
+    .course-option-all {
+      margin-bottom: 0.35rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
     .print-matrix-btn {
       display: inline-flex;
       align-items: center;
@@ -83,6 +166,82 @@
     .print-report {
       display: none;
     }
+
+    .matrix-table-card {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      -webkit-overflow-scrolling: touch;
+    }
+    .progress-table {
+      width: 100%;
+      min-width: 1240px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      text-align: left;
+    }
+    .progress-table th,
+    .progress-table td {
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    .progress-table th {
+      background: var(--bg-elevated);
+      color: var(--text-heading);
+      font-size: 0.8rem;
+      font-weight: 800;
+      white-space: normal;
+    }
+    .progress-table td {
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+    .progress-table tbody tr:hover {
+      background: var(--bg-elevated);
+    }
+    .progress-table th:nth-child(1),
+    .progress-table td:nth-child(1) { width: 13%; }
+    .progress-table th:nth-child(2),
+    .progress-table td:nth-child(2) { width: 21%; }
+    .progress-table th:nth-child(3),
+    .progress-table td:nth-child(3) { width: 13%; }
+    .progress-table th:nth-child(4),
+    .progress-table td:nth-child(4) { width: 21%; }
+    .progress-table th:nth-child(5),
+    .progress-table td:nth-child(5) { width: 18%; }
+    .progress-table th:nth-child(6),
+    .progress-table td:nth-child(6) { width: 9%; }
+    .progress-table th:nth-child(7),
+    .progress-table td:nth-child(7) { width: 11%; }
+    .progress-table td strong {
+      display: block;
+      font-weight: 800;
+    }
+    .progress-table .btn {
+      white-space: nowrap;
+    }
+    .progress-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    @media (max-width: 767px) {
+      .matrix-table-card {
+        border-radius: var(--radius-md);
+      }
+      .progress-table th,
+      .progress-table td {
+        padding: 0.85rem 0.9rem;
+      }
+    }
+
     @media print {
       body {
         background: #fff !important;
@@ -117,8 +276,120 @@
         color: #115e59;
       }
     }
+    /* ---- Additive polish on top of the shared design system ---- */
+    .matrix-table-card { scrollbar-width: thin; }
+    .matrix-table-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+    .matrix-scroll-hint {
+      display: none;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 900px) {
+      .matrix-scroll-hint { display: inline-flex; }
+    }
+    .matrix-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 2.5rem 1rem;
+      text-align: center;
+    }
+    .matrix-empty svg { width: 28px; height: 28px; color: var(--text-secondary); }
+    .matrix-empty strong { font-size: 1rem; color: var(--text-heading); }
+    .matrix-empty span { font-size: 0.875rem; color: var(--text-secondary); max-width: 46ch; }
+    .course-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .course-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+    }
+    .course-chip.is-done {
+      background: var(--success-subtle);
+      border-color: var(--success-border);
+      color: var(--emerald-text);
+    }
+    .course-chip.is-none {
+      background: var(--surface-hover);
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* Keep the matrix readable when the shared theme switches to dark mode. */
+    body.dark-theme .matrix-filters,
+    body.dark .matrix-filters {
+      background: #101c30;
+      border-color: #2a3b59;
+    }
+    body.dark-theme .matrix-filter-field select,
+    body.dark-theme .matrix-filter-field input,
+    body.dark-theme .course-multiselect-toggle,
+    body.dark .matrix-filter-field select,
+    body.dark .matrix-filter-field input,
+    body.dark .course-multiselect-toggle {
+      background: #0d1628;
+      border-color: #2a3b59;
+      color: #eef3fb;
+    }
+    body.dark-theme .course-multiselect-panel,
+    body.dark .course-multiselect-panel {
+      background: #101c30;
+      border-color: #2a3b59;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+    }
+    body.dark-theme .course-option:hover,
+    body.dark .course-option:hover {
+      background: #182944;
+    }
+    body.dark-theme .matrix-table-card,
+    body.dark .matrix-table-card {
+      background: #0d1628;
+      border-color: #2a3b59;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+    body.dark-theme .progress-table th,
+    body.dark .progress-table th {
+      background: #182944;
+      color: #ffffff;
+      border-bottom-color: #395173;
+    }
+    body.dark-theme .progress-table td,
+    body.dark .progress-table td {
+      color: #eef3fb;
+      border-bottom-color: #243754;
+      vertical-align: middle;
+    }
+    body.dark-theme .progress-table tbody tr:hover,
+    body.dark .progress-table tbody tr:hover {
+      background: #14243d;
+    }
+    body.dark-theme .course-chip.is-none,
+    body.dark .course-chip.is-none {
+      background: #182944;
+      border-color: #395173;
+      color: #c3d0e5;
+    }
+    body.dark-theme .matrix-scroll-hint,
+    body.dark .matrix-scroll-hint,
+    body.dark-theme #courseFilterHint,
+    body.dark #courseFilterHint {
+      color: #aebed6 !important;
+    }
   </style>
-<link rel="stylesheet" href="/responsive.css">
 </head>
 <body class="light-theme">
   <header class="site-header">
@@ -146,10 +417,17 @@
 
     <div class="matrix-filters" aria-label="Student matrix filters">
       <div class="matrix-filter-field">
-        <label for="courseFilter">Course</label>
-        <select id="courseFilter" multiple size="3" aria-describedby="courseFilterHint">
-          <option value="__all__" selected>All Courses</option>
-        </select>
+        <label id="courseFilterLabel">Course</label>
+        <div class="course-multiselect" id="courseMultiselect">
+          <button type="button" class="course-multiselect-toggle" id="courseFilterToggle"
+                  aria-haspopup="true" aria-expanded="false" aria-labelledby="courseFilterLabel">
+            <span id="courseFilterSummary">All Courses</span>
+            <i data-lucide="chevron-down"></i>
+          </button>
+          <div class="course-multiselect-panel" id="courseFilterPanel" role="group" aria-labelledby="courseFilterLabel">
+            <!-- Course checkboxes are injected here -->
+          </div>
+        </div>
         <small id="courseFilterHint" style="color:var(--text-muted);">Select one or more courses.</small>
       </div>
       <div class="matrix-filter-field">
@@ -170,7 +448,11 @@
       </button>
     </div>
 
-    <div class="table-card">
+    <p class="matrix-scroll-hint" aria-hidden="true">
+      <i data-lucide="move-horizontal"></i> Swipe the table sideways to see every column.
+    </p>
+
+    <div class="matrix-table-card" tabindex="0" aria-label="Student progress table. Scroll horizontally to view all columns.">
       <table class="progress-table">
         <thead>
           <tr>
@@ -184,7 +466,7 @@
           </tr>
         </thead>
         <tbody id="cohortTableBody">
-          <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Loading student matrix...</td></tr>
+          <tr><td colspan="7"><div class="loading-inline"><span class="spinner" aria-hidden="true"></span><span>Loading student matrix…</span></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -193,6 +475,7 @@
   <section class="print-report" id="printReport" aria-hidden="true"></section>
 
   <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
   <script>
     function syncThemeUI() {
       const saved = localStorage.getItem('themePreference') || 'light';
@@ -212,7 +495,23 @@
 
     let matrixStudents = [];
     let matrixCourses = [];
-    let previousCourseSelection = ['__all__'];
+
+    /* ------------------------------------------------------------------ */
+    /* Helpers                                                             */
+    /* ------------------------------------------------------------------ */
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value);
+    }
 
     function normalizeCourseTitles(courses) {
       if (!Array.isArray(courses)) return [];
@@ -235,21 +534,128 @@
       }
     }
 
-    function populateCourseFilter() {
-      const courseFilter = document.getElementById('courseFilter');
-      const titles = [...new Set(matrixCourses.map(course => course.title).filter(Boolean))];
-      courseFilter.innerHTML = '<option value="__all__">All Courses</option>' + titles
-        .map(title => `<option value="${title.replace(/"/g, '&quot;')}">${title}</option>`)
-        .join('');
-      courseFilter.options[0].selected = true;
-      previousCourseSelection = ['__all__'];
+    /**
+     * Detects entries that are not real courses but "nothing completed" placeholders,
+     * e.g. "—", "N/A", "None", "No course completed yet", "Not completed".
+     */
+    function isCompletionPlaceholder(value) {
+      const text = String(value == null ? '' : value).trim().toLowerCase().replace(/\s+/g, ' ');
+      if (!text) return true;
+      if (/^[-—–_.]+$/.test(text)) return true;
+      if (/^(n\/?a|none|null|nil|no|not applicable|incomplete|pending|not started|not completed|not complete)$/.test(text)) return true;
+      if (/\bno\b[^.]*\b(completed|complete|completion)\b/.test(text)) return true;
+      if (/\b(not|never|hasn't|haven't|has not|have not|didn't|did not)\b[^.]*\b(completed|complete|completion|course)\b/.test(text)) return true;
+      if (/\byet to\b/.test(text)) return true;
+      return false;
     }
 
-    function getSelectedCourses() {
-      return Array.from(document.getElementById('courseFilter').selectedOptions)
-        .map(option => option.value)
-        .filter(value => value !== '__all__');
+    /** Returns only the genuine completed-course names for a student. */
+    function getCompletedCourses(student) {
+      const raw = Array.isArray(student && student.completedCourses) ? student.completedCourses : [];
+      return raw
+        .map(course => (typeof course === 'string' ? course.trim() : ''))
+        .filter(course => course && !isCompletionPlaceholder(course));
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Course filter (multi-select checkboxes)                             */
+    /* ------------------------------------------------------------------ */
+
+    function populateCourseFilter() {
+      const panel = document.getElementById('courseFilterPanel');
+      const titles = [...new Set(matrixCourses.map(course => course.title).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+
+      panel.innerHTML = `
+        <label class="course-option course-option-all">
+          <input type="checkbox" id="courseAllCheckbox" value="__all__" checked />
+          <span>All Courses</span>
+        </label>
+        ${titles.map(title => `
+          <label class="course-option">
+            <input type="checkbox" class="course-checkbox" value="${escapeAttribute(title)}" checked />
+            <span>${escapeHtml(title)}</span>
+          </label>
+        `).join('')}
+      `;
+
+      updateCourseFilterSummary();
+      if (window.app && app.renderIcons) app.renderIcons();
+    }
+
+    /** Empty array means "no course restriction" (i.e. all courses). */
+    function getSelectedCourses() {
+      const boxes = Array.from(document.querySelectorAll('.course-checkbox'));
+      const checked = boxes.filter(box => box.checked).map(box => box.value);
+      if (!boxes.length || !checked.length) return [];
+      if (checked.length === boxes.length) return []; // everything selected === no filter
+      return checked;
+    }
+
+    function updateCourseFilterSummary() {
+      const summary = document.getElementById('courseFilterSummary');
+      if (!summary) return;
+      const boxes = Array.from(document.querySelectorAll('.course-checkbox'));
+      const checked = boxes.filter(box => box.checked).map(box => box.value);
+
+      if (!boxes.length || !checked.length || checked.length === boxes.length) {
+        summary.textContent = 'All Courses';
+      } else if (checked.length <= 2) {
+        summary.textContent = checked.join(', ');
+      } else {
+        summary.textContent = `${checked.length} courses selected`;
+      }
+    }
+
+    function handleCourseFilterChange(event) {
+      const target = event.target;
+      if (!target || target.type !== 'checkbox') return;
+
+      const allCheckbox = document.getElementById('courseAllCheckbox');
+      const courseBoxes = Array.from(document.querySelectorAll('.course-checkbox'));
+
+      if (target === allCheckbox) {
+        courseBoxes.forEach(box => { box.checked = allCheckbox.checked; });
+      } else if (target.classList.contains('course-checkbox')) {
+        if (allCheckbox) {
+          allCheckbox.checked = courseBoxes.length > 0 && courseBoxes.every(box => box.checked);
+        }
+      }
+
+      updateCourseFilterSummary();
+      renderStudentMatrix();
+    }
+
+    function setCourseFilterOpen(isOpen) {
+      const wrapper = document.getElementById('courseMultiselect');
+      const toggle = document.getElementById('courseFilterToggle');
+      if (!wrapper || !toggle) return;
+      wrapper.classList.toggle('open', isOpen);
+      toggle.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    function initCourseFilterEvents() {
+      const wrapper = document.getElementById('courseMultiselect');
+      const toggle = document.getElementById('courseFilterToggle');
+      const panel = document.getElementById('courseFilterPanel');
+
+      toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setCourseFilterOpen(!wrapper.classList.contains('open'));
+      });
+
+      panel.addEventListener('change', handleCourseFilterChange);
+      panel.addEventListener('click', (event) => event.stopPropagation());
+
+      document.addEventListener('click', () => setCourseFilterOpen(false));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setCourseFilterOpen(false);
+      });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Filtering + rendering                                               */
+    /* ------------------------------------------------------------------ */
 
     function getFilteredStudents() {
       const selectedCourses = getSelectedCourses().map(course => course.toLowerCase());
@@ -272,23 +678,36 @@
       const tbody = document.getElementById('cohortTableBody');
 
       if (!students.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No student records match the selected filters.</td></tr>';
+        tbody.innerHTML = `
+          <tr><td colspan="7">
+            <div class="matrix-empty">
+              <i data-lucide="search-x"></i>
+              <strong>No student records match these filters</strong>
+              <span>Try widening the date range or re-selecting the course filters to see the full cohort.</span>
+            </div>
+          </td></tr>`;
+        if (window.app && app.renderIcons) app.renderIcons();
         return;
       }
 
+      const chipList = (courses, done) => {
+        if (!courses.length) return '<span class="course-chip is-none">None</span>';
+        return `<span class="course-chip-list">${courses
+          .map(course => `<span class="course-chip${done ? ' is-done' : ''}">${escapeHtml(course)}</span>`)
+          .join('')}</span>`;
+      };
+
       tbody.innerHTML = students.map(student => {
-        const enrolledText = student.enrolledCourses.length ? student.enrolledCourses.join(', ') : '—';
-        const completedText = student.completedCourses.length ? student.completedCourses.join(', ') : '—';
         return `
           <tr>
-            <td><strong>${student.full_name || 'Student'}</strong></td>
-            <td>${student.email}</td>
-            <td>${student.whatsapp_number || '—'}</td>
-            <td>${enrolledText}</td>
-            <td>${completedText}</td>
+            <td><strong>${escapeHtml(student.full_name || 'Student')}</strong></td>
+            <td>${escapeHtml(student.email)}</td>
+            <td>${escapeHtml(student.whatsapp_number || '—')}</td>
+            <td>${chipList(student.enrolledCourses, false)}</td>
+            <td>${chipList(student.completedCourses, true)}</td>
             <td>${new Date(student.created_at).toLocaleDateString()}</td>
             <td>
-              <a href="/admin/students/${student.id}" class="btn btn-outline btn-sm">Full Report</a>
+              <a href="/admin/students/${student.id}" class="btn btn-outline btn-sm">Full report</a>
             </td>
           </tr>
         `;
@@ -297,30 +716,19 @@
       if (window.app && app.renderIcons) app.renderIcons();
     }
 
-    function handleCourseFilterChange() {
-      const courseFilter = document.getElementById('courseFilter');
-      const selected = Array.from(courseFilter.selectedOptions).map(option => option.value);
-      const hadAll = previousCourseSelection.includes('__all__');
-      const hasAll = selected.includes('__all__');
-
-      if (hasAll && (!hadAll || selected.length === 1)) {
-        Array.from(courseFilter.options).forEach(option => { option.selected = option.value === '__all__'; });
-      } else if (hasAll && hadAll && selected.length > 1) {
-        Array.from(courseFilter.options).forEach(option => { if (option.value === '__all__') option.selected = false; });
-      }
-
-      previousCourseSelection = Array.from(courseFilter.selectedOptions).map(option => option.value);
-      renderStudentMatrix();
-    }
-
     function clearMatrixFilters() {
-      const courseFilter = document.getElementById('courseFilter');
-      Array.from(courseFilter.options).forEach(option => { option.selected = option.value === '__all__'; });
+      const allCheckbox = document.getElementById('courseAllCheckbox');
+      if (allCheckbox) allCheckbox.checked = true;
+      document.querySelectorAll('.course-checkbox').forEach(box => { box.checked = true; });
       document.getElementById('startDateFilter').value = '';
       document.getElementById('endDateFilter').value = '';
-      previousCourseSelection = ['__all__'];
+      updateCourseFilterSummary();
       renderStudentMatrix();
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Data loading                                                        */
+    /* ------------------------------------------------------------------ */
 
     async function loadProgress() {
       try {
@@ -333,41 +741,50 @@
         matrixCourses = Array.isArray(data.courses) ? data.courses : [];
         populateCourseFilter();
 
-        matrixStudents = await Promise.all((data.students || []).map(async (student) => {
-          let enrolledCourses = parseCourseTitles(student.enrolled_course_titles);
-          let completedCourses = parseCourseTitles(student.completed_course_titles);
-
-          try {
-            const profileRes = await fetch(`/api/admin/students/${student.id}`);
-            if (profileRes.ok) {
-              const profileData = await profileRes.json();
-              const profile = profileData.student || {};
-              const fetchedEnrolled = normalizeCourseTitles(profile.enrolledCourseTitles || profile.enrolledCourses || []);
-              const fetchedCompleted = normalizeCourseTitles(profile.completedCourseTitles || profile.completedCourses || []);
-              if (fetchedEnrolled.length) enrolledCourses = fetchedEnrolled;
-              if (fetchedCompleted.length) completedCourses = fetchedCompleted;
-            }
-          } catch (err) {
-            console.warn(`Could not fetch profile for student ${student.id}:`, err);
-          }
-
-          return { ...student, enrolledCourses, completedCourses };
+        matrixStudents = (data.students || []).map(student => ({
+          ...student,
+          enrolledCourses: parseCourseTitles(student.enrolled_course_titles),
+          completedCourses: parseCourseTitles(student.completed_course_titles)
         }));
 
         renderStudentMatrix();
       } catch (err) {
         console.error('Error loading progress:', err);
-        document.getElementById('cohortTableBody').innerHTML =
-          '<tr><td colspan="7" style="text-align:center; color:var(--rose);">Failed to load student data.</td></tr>';
+        document.getElementById('cohortTableBody').innerHTML = `
+          <tr><td colspan="7">
+            <div class="matrix-empty">
+              <i data-lucide="alert-triangle"></i>
+              <strong>Unable to load the student matrix</strong>
+              <span>Check your connection and reload this page to try again.</span>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="loadProgress()">Retry</button>
+            </div>
+          </td></tr>`;
+        if (window.app && app.renderIcons) app.renderIcons();
       }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Print (completed students only, respecting course filters)          */
+    /* ------------------------------------------------------------------ */
+
+    function getPrintableStudents() {
+      const selectedCourses = getSelectedCourses().map(course => course.toLowerCase());
+
+      return getFilteredStudents()
+        .map(student => ({ ...student, completedCourses: getCompletedCourses(student) }))
+        // Must have at least one genuinely completed course.
+        .filter(student => student.completedCourses.length > 0)
+        // And at least one of those completed courses must match the selected filter(s).
+        .filter(student => !selectedCourses.length ||
+          student.completedCourses.some(course => selectedCourses.includes(course.toLowerCase())));
     }
 
     function printStudentMatrix() {
       const report = document.getElementById('printReport');
-      const students = getFilteredStudents();
+      const students = getPrintableStudents();
 
       if (!students.length) {
-        alert('There are no student records to print.');
+        alert('There are no students with completed courses matching the selected filters.');
         return;
       }
 
@@ -387,7 +804,7 @@
             <tr>
               <td><strong>${student.full_name || 'Student'}</strong></td>
               <td>${student.whatsapp_number || '—'}</td>
-              <td>${student.completedCourses.length ? student.completedCourses.join(', ') : '—'}</td>
+              <td>${student.completedCourses.join(', ')}</td>
               <td>${new Date(student.created_at).toLocaleDateString()}</td>
             </tr>
           `).join('')}</tbody>
@@ -396,7 +813,11 @@
       window.print();
     }
 
-    document.getElementById('courseFilter').addEventListener('change', handleCourseFilterChange);
+    /* ------------------------------------------------------------------ */
+    /* Boot                                                                */
+    /* ------------------------------------------------------------------ */
+
+    initCourseFilterEvents();
     document.getElementById('startDateFilter').addEventListener('change', renderStudentMatrix);
     document.getElementById('endDateFilter').addEventListener('change', renderStudentMatrix);
     loadProgress();

@@ -3,172 +3,151 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login | Ahmad Saleem Mentorship</title>
+  <title>Admin Portal | Ahmad Saleem Mentorship</title>
+  <meta name="description" content="Administrator access to course management, student records and assignment review." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Mentor.css">
-  <style>
-    .auth-wrap {
-      max-width: 440px;
-      margin: 40px auto;
-      padding: 0 1rem;
-    }
-    .auth-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-xl);
-      padding: 2.25rem 2rem;
-      box-shadow: var(--shadow-lg);
-    }
-    .auth-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .auth-header h1 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 0.5rem 0 0.25rem;
-    }
-    .auth-header p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-      color: var(--text-main);
-    }
-    .form-control {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background: var(--bg-elevated);
-      color: var(--text-main);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-subtle);
-    }
-    .auth-footer {
-      margin-top: 1.75rem;
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--text-muted);
-    }
-    .alert-error {
-      background: var(--rose-subtle);
-      border: 1px solid var(--rose-border);
-      color: var(--rose);
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-md);
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 1.25rem;
-      display: none;
-    }
-    .badge-admin {
-      background: var(--amber-subtle);
-      color: var(--amber);
-      border: 1px solid var(--amber-border);
-    }
-  </style>
-<link rel="stylesheet" href="/responsive.css">
+  <link rel="stylesheet" href="/theme.css">
 </head>
-<body class="light-theme">
-  <header class="site-header">
+<body class="light-theme auth-page">
+  <a class="skip-link" href="#authMain">Skip to main content</a>
+
+  <header class="site-header" id="siteHeader">
     <div class="nav-container">
-      <a class="brand-logo" href="/">
-        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
         <span class="logo-text">Ahmad Saleem</span>
       </a>
       <div class="nav-actions">
-        <a class="btn btn-text" href="/">Back to Home</a>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-          <span id="themeIcon"></span>
-          <span id="themeLabel">Dark Mode</span>
+        <a class="btn btn-ghost" href="/">Back to home</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <div class="auth-header">
-        <span class="pill-badge badge-admin"><i data-lucide="shield"></i> Mentor & Admin</span>
-        <h1>Admin Portal</h1>
-        <p>Sign in to manage curriculum, review submissions, and view students</p>
+  <main class="auth-shell" id="authMain">
+    <aside class="auth-aside" aria-hidden="true">
+      <div class="hero-bg">
+        <span class="hero-bg__mesh"></span>
+        <span class="hero-bg__grid"></span>
+        <span class="hero-bg__glow hero-bg__glow--a"></span>
+        <span class="hero-bg__glow hero-bg__glow--b"></span>
       </div>
 
-      <div id="errorAlert" class="alert-error"></div>
+      <div style="position:relative; z-index:1;">
+        <span class="pill-badge pill-admin" style="background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:#ffd9a8;">
+          <i data-lucide="shield"></i><span>Restricted area</span>
+        </span>
+        <h2 class="mt-3">Mentor administration centre.</h2>
+        <p class="mt-2">
+          Manage the curriculum, review student submissions, and monitor cohort progress from a
+          single console.
+        </p>
+      </div>
 
-      <form id="adminLoginForm">
-        <div class="form-group">
-          <label for="email">Admin Email</label>
-          <input type="email" id="email" class="form-control"   required autocomplete="email" />
+      <div class="auth-aside__points" style="position:relative; z-index:1;">
+        <div class="auth-aside__point">
+          <i data-lucide="book-open"></i>
+          <div><strong>Course management</strong><span>Create courses and curriculum questions.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="inbox"></i>
+          <div><strong>Submission review queue</strong><span>Approve, reject and leave feedback.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="bar-chart"></i>
+          <div><strong>Cohort progress matrix</strong><span>Filter by course and date range.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="users"></i>
+          <div><strong>Student records</strong><span>Browse individual student dossiers.</span></div>
+        </div>
+      </div>
+
+      <p class="small" style="position:relative; z-index:1; color:#8fa2c4;">
+        © 2026 Mentor Ahmad Saleem
+      </p>
+    </aside>
+
+    <div class="auth-main">
+      <div class="auth-card">
+        <div class="auth-header">
+          <span class="pill-badge badge-admin"><i data-lucide="shield"></i><span>Mentor &amp; admin</span></span>
+          <h1>Admin portal</h1>
+          <p>Sign in to manage curriculum, review submissions, and view students.</p>
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="form-control" required autocomplete="current-password" />
+        <div class="alert alert-error" id="errorAlert" role="alert" aria-live="assertive"></div>
+
+        <form id="adminLoginForm" novalidate>
+          <div class="form-group">
+            <label for="email">Admin email</label>
+            <div class="input-wrap">
+              <span class="input-icon" aria-hidden="true"><i data-lucide="mail"></i></span>
+              <input type="email" id="email" name="email" class="form-control" placeholder="admin@example.com"
+                     required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon" aria-hidden="true"><i data-lucide="key"></i></span>
+              <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
+                     required autocomplete="current-password" />
+              <button class="input-trailing" type="button" data-password-toggle="password"
+                      aria-label="Show password" aria-pressed="false">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+            <span>Access dashboard</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p><a href="/login">← Return to student login</a></p>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
-          <span>Access Dashboard</span>
-          <i data-lucide="arrow-right"></i>
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p><a href="/login">&larr; Return to Student Login</a></p>
       </div>
     </div>
   </main>
 
   <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
   <script>
-    function syncThemeUI() {
-      const saved = localStorage.getItem('themePreference') || 'light';
-      document.body.classList.toggle('dark-theme', saved === 'dark');
-      document.body.classList.toggle('light-theme', saved !== 'dark');
-      const label = document.getElementById('themeLabel');
-      const icon = document.getElementById('themeIcon');
-      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
-      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
-    }
-    function toggleTheme() {
-      const isDark = document.body.classList.contains('dark-theme');
-      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
-      syncThemeUI();
-    }
-    syncThemeUI();
-
     document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errBox = document.getElementById('errorAlert');
       const btn = document.getElementById('submitBtn');
-      errBox.style.display = 'none';
-      btn.disabled = true;
-      btn.innerHTML = '<span>Verifying Admin...</span>';
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      errBox.classList.remove('is-visible');
+      errBox.textContent = '';
+
+      if (!emailInput.checkValidity() || !passwordInput.value) {
+        errBox.textContent = 'Please enter your admin email and password.';
+        errBox.classList.add('is-visible');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('is-loading');
 
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email: emailInput.value.trim(), password: passwordInput.value })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Admin verification failed.');
@@ -176,10 +155,9 @@
         window.location.href = '/admin/dashboard';
       } catch (err) {
         errBox.textContent = err.message;
-        errBox.style.display = 'block';
-      } finally {
+        errBox.classList.add('is-visible');
         btn.disabled = false;
-        btn.innerHTML = '<span>Access Dashboard</span>' + getIcon('arrow-right');
+        btn.classList.remove('is-loading');
       }
     });
   </script>

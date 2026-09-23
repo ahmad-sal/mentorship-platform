@@ -4,161 +4,170 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Login | Ahmad Saleem Mentorship</title>
+  <meta name="description" content="Log in to your student account to access your enrolled courses, curriculum tasks and assignment submissions." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Mentor.css">
-  <style>
-    .auth-wrap {
-      max-width: 440px;
-      margin: 40px auto;
-      padding: 0 1rem;
-    }
-    .auth-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-xl);
-      padding: 2.25rem 2rem;
-      box-shadow: var(--shadow-lg);
-    }
-    .auth-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .auth-header h1 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 0.5rem 0 0.25rem;
-    }
-    .auth-header p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-      color: var(--text-main);
-    }
-    .form-control {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background: var(--bg-elevated);
-      color: var(--text-main);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-subtle);
-    }
-    .auth-footer {
-      margin-top: 1.75rem;
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--text-muted);
-    }
-    .alert-error {
-      background: var(--rose-subtle);
-      border: 1px solid var(--rose-border);
-      color: var(--rose);
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-md);
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 1.25rem;
-      display: none;
-    }
-  </style>
-<link rel="stylesheet" href="/responsive.css">
+  <link rel="stylesheet" href="/theme.css">
 </head>
-<body class="light-theme">
-  <header class="site-header">
+<body class="light-theme auth-page">
+  <a class="skip-link" href="#authMain">Skip to main content</a>
+
+  <header class="site-header" id="siteHeader">
     <div class="nav-container">
-      <a class="brand-logo" href="/">
-        <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
         <span class="logo-text">Ahmad Saleem</span>
       </a>
       <div class="nav-actions">
-        <a class="btn btn-text" href="/">Back to Home</a>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-          <span id="themeIcon"></span>
-          <span id="themeLabel">Dark Mode</span>
+        <a class="btn btn-ghost" href="/">Back to home</a>
+        <button class="btn btn-ghost" id="loginLogoutBtn" type="button" hidden>
+          <i data-lucide="log-out"></i> Log out
+        </button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <div class="auth-header">
-        <span class="pill-badge"><i data-lucide="log-in"></i> Student Portal</span>
-        <h1>Welcome Back</h1>
-        <p>Log in to access your enrolled courses and tasks</p>
+  <main class="auth-shell" id="authMain">
+    <!-- Storytelling panel -->
+    <aside class="auth-aside" aria-hidden="true">
+      <div class="hero-bg">
+        <span class="hero-bg__mesh"></span>
+        <span class="hero-bg__grid"></span>
+        <span class="hero-bg__glow hero-bg__glow--a"></span>
+        <span class="hero-bg__glow hero-bg__glow--b"></span>
       </div>
 
-      <div id="errorAlert" class="alert-error"></div>
+      <div style="position:relative; z-index:1;">
+        <span class="pill-badge pill-glass"><i data-lucide="graduation-cap"></i><span>Student portal</span></span>
+        <h2 class="mt-3">Welcome back to your learning workspace.</h2>
+        <p class="mt-2">
+          Pick up exactly where you left off — your course track, curriculum tasks and submitted work
+          are all waiting for you.
+        </p>
+      </div>
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+      <div class="auth-aside__points" style="position:relative; z-index:1;">
+        <div class="auth-aside__point">
+          <i data-lucide="layers"></i>
+          <div><strong>4 course tracks</strong><span>YouTube Automation, Canva, WordPress and AI.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="message-square"></i>
+          <div><strong>Mentor-reviewed work</strong><span>Your submissions reach a real review queue.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="pie-chart"></i>
+          <div><strong>Live progress</strong><span>Completion tracked per task and per course.</span></div>
+        </div>
+        <div class="auth-aside__point">
+          <i data-lucide="award"></i>
+          <div><strong>E-certificate</strong><span>Issued when the course requirements are met.</span></div>
+        </div>
+      </div>
+
+      <p class="small" style="position:relative; z-index:1; color:#8fa2c4;">
+        © 2026 Mentor Ahmad Saleem
+      </p>
+    </aside>
+
+    <!-- Form panel -->
+    <div class="auth-main">
+      <div class="auth-card">
+        <div class="auth-header">
+          <span class="pill-badge"><i data-lucide="log-in"></i><span>Student portal</span></span>
+          <h1>Welcome back</h1>
+          <p>Log in to access your enrolled courses and tasks.</p>
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password" />
+        <div class="alert alert-error" id="errorAlert" role="alert" aria-live="assertive"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <div class="input-wrap">
+              <span class="input-icon" aria-hidden="true"><i data-lucide="mail"></i></span>
+              <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com"
+                     required autocomplete="email" autofocus />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon" aria-hidden="true"><i data-lucide="lock"></i></span>
+              <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
+                     required autocomplete="current-password" />
+              <button class="input-trailing" type="button" data-password-toggle="password"
+                      aria-label="Show password" aria-pressed="false">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+            <span>Log in</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="/register">Create one here</a></p>
+          <p class="tiny mt-2"><a href="/admin/login" style="color:var(--text-tertiary);">Are you an administrator? Admin login →</a></p>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
-          <span>Log In</span>
-          <i data-lucide="arrow-right"></i>
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>Don't have an account? <a href="/register">Register here</a></p>
-        <p style="margin-top: 0.5rem;"><a href="/admin/login" style="color: var(--text-muted); font-size: 0.8125rem;">Are you an administrator? Admin Login &rarr;</a></p>
       </div>
     </div>
   </main>
 
   <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
   <script>
-    function syncThemeUI() {
-      const saved = localStorage.getItem('themePreference') || 'light';
-      document.body.classList.toggle('dark-theme', saved === 'dark');
-      document.body.classList.toggle('light-theme', saved !== 'dark');
-      const label = document.getElementById('themeLabel');
-      const icon = document.getElementById('themeIcon');
-      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
-      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    async function showSessionLogout() {
+      try {
+        const res = await fetch('/api/session');
+        const data = await res.json();
+        const button = document.getElementById('loginLogoutBtn');
+        if (!button || !data.user || data.user.role !== 'student') return;
+        button.hidden = false;
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          await fetch('/api/logout', { method: 'POST' });
+          window.location.reload();
+        });
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (error) {
+        console.error('Unable to check the current session:', error);
+      }
     }
-    function toggleTheme() {
-      const isDark = document.body.classList.contains('dark-theme');
-      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
-      syncThemeUI();
-    }
-    syncThemeUI();
+    showSessionLogout();
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errBox = document.getElementById('errorAlert');
       const btn = document.getElementById('submitBtn');
-      errBox.style.display = 'none';
-      btn.disabled = true;
-      btn.innerHTML = '<span>Verifying...</span>';
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      errBox.classList.remove('is-visible');
+      errBox.textContent = '';
+
+      if (!emailInput.checkValidity() || !passwordInput.value) {
+        errBox.textContent = 'Please enter your email address and password.';
+        errBox.classList.add('is-visible');
+        (emailInput.checkValidity() ? passwordInput : emailInput).focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
 
       try {
         const res = await fetch('/api/login', {
@@ -168,16 +177,15 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Login failed.');
-        
+
         const params = new URLSearchParams(location.search);
         const next = params.get('next') || '/student/dashboard';
         window.location.href = next;
       } catch (err) {
         errBox.textContent = err.message;
-        errBox.style.display = 'block';
-      } finally {
+        errBox.classList.add('is-visible');
         btn.disabled = false;
-        btn.innerHTML = '<span>Log In</span>' + getIcon('arrow-right');
+        btn.classList.remove('is-loading');
       }
     });
   </script>

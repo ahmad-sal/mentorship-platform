@@ -87,7 +87,7 @@ async function createUser({ fullName, cnic, whatsappNumber, email, password }) {
   // Check capacity (max 800 students)
   const capacity = await getPlatformCapacity();
   if (capacity.isFull) {
-    throw new Error('Enrollment is currently closed: Maximum capacity of 800 students has been reached.');
+    throw new Error('Enrollment is currently closed because the cohort is full.');
   }
 
   // Sign up with Supabase Auth

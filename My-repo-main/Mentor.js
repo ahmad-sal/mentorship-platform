@@ -152,7 +152,7 @@ const INITIAL_COURSES = [
     badge: 'Advanced',
     duration: '2 Months',
     level: 'Advanced',
-    image: 'public/images/ai.png',
+    image: 'public/images/Ai.png',
     thumb: 'images/thumb-ai.jpeg',
     page: 'course-artificial-intelligence.html',
     topics: ['Prompt engineering', 'Image & video AI', 'AI automation'],

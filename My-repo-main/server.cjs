@@ -174,6 +174,10 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.get('/meet-developer', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'meet-developer.html'));
+});
+
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });

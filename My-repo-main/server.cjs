@@ -196,10 +196,15 @@ app.get('/supabase-auth.js', (req, res) => {
 });
 
 app.get('/api/auth/public-config', (req, res) => {
+  const configuredAppUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL;
+  const appUrl = configuredAppUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/i.test(configuredAppUrl)
+    ? configuredAppUrl
+    : process.env.NODE_ENV === 'production' || process.env.RENDER_EXTERNAL_URL
+      ? 'https://mentorship-platform-6ult.onrender.com'
+      : `${req.protocol}://${req.get('host')}`;
+
   res.json({
-    appUrl: process.env.APP_URL ||
-      process.env.RENDER_EXTERNAL_URL ||
-      (process.env.NODE_ENV !== 'production' ? `${req.protocol}://${req.get('host')}` : ''),
+    appUrl,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY
   });

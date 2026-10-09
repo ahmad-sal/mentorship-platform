@@ -197,6 +197,9 @@ app.get('/supabase-auth.js', (req, res) => {
 
 app.get('/api/auth/public-config', (req, res) => {
   res.json({
+    appUrl: process.env.APP_URL ||
+      process.env.RENDER_EXTERNAL_URL ||
+      (process.env.NODE_ENV !== 'production' ? `${req.protocol}://${req.get('host')}` : ''),
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY
   });

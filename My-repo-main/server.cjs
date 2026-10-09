@@ -286,7 +286,7 @@ app.post('/api/student/password-reset/complete', async (req, res) => {
     const { data: student, error: lookupError } = await supabase.supabaseAdmin
       .from('users')
       .select('id')
-      .eq('id', user.id)
+      .eq('email', String(user.email || '').trim().toLowerCase())
       .eq('role', 'student')
       .maybeSingle();
     if (lookupError) throw lookupError;

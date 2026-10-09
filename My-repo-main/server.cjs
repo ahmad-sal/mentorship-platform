@@ -237,9 +237,11 @@ app.post('/api/student/password-reset', async (req, res) => {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
 
-  const appUrl = process.env.APP_URL;
+  const appUrl = process.env.APP_URL ||
+    process.env.RENDER_EXTERNAL_URL ||
+    (process.env.NODE_ENV !== 'production' ? `${req.protocol}://${req.get('host')}` : '');
   if (!appUrl) {
-    console.error('Student password reset is unavailable: APP_URL is not configured.');
+    console.error('Student password reset is unavailable: APP_URL and RENDER_EXTERNAL_URL are not configured.');
     return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
   }
 

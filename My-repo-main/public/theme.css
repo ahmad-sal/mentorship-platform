@@ -2371,6 +2371,12 @@ body.auth-page.dark .site-header .theme-toggle-btn {
   margin: 0.7rem 0 0.35rem;
 }
 .auth-header p { color: var(--text-secondary); font-size: 0.9rem; }
+.login-recovery-link {
+  margin: -0.35rem 0 1.15rem;
+  text-align: right;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
 .auth-footer {
   margin-top: 1.6rem;
   padding-top: 1.35rem;

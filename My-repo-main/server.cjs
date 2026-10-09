@@ -5,6 +5,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const supabase = require('./supabase.cjs');
+const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
 
 const {
@@ -182,6 +183,14 @@ app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+app.get('/forgot-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
+});
+
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
+});
+
 app.get(['/register', '/register.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
@@ -221,6 +230,78 @@ app.get('/student/submit-assignment', protectStudentPage('/student/dashboard'), 
 // ============================================================
 // AUTH ENDPOINTS (Supabase Auth)
 // ============================================================
+
+app.post('/api/student/password-reset', async (req, res) => {
+  const email = String(req.body && req.body.email || '').trim().toLowerCase();
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  try {
+    const { data: student, error: lookupError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .eq('role', 'student')
+      .maybeSingle();
+
+    if (lookupError) {
+      console.error('Password reset student lookup error:', lookupError);
+      return res.status(500).json({ error: 'Unable to process your request right now. Please try again.' });
+    }
+
+    if (student) {
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectTo = new URL('/reset-password', appUrl).toString();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throw error;
+    }
+
+    return res.json({
+      message: 'If an account exists for that student email, a password reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('Student password reset request error:', error);
+    return res.status(500).json({ error: 'Unable to send a reset link right now. Please try again.' });
+  }
+});
+
+app.post('/api/student/password-reset/complete', async (req, res) => {
+  const { accessToken, refreshToken, password } = req.body || {};
+  if (typeof accessToken !== 'string' || !accessToken ||
+      typeof refreshToken !== 'string' || !refreshToken) {
+    return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+  }
+  if (typeof password !== 'string' || password.length < 8) {
+    return res.status(400).json({ error: 'Your new password must be at least 8 characters long.' });
+  }
+
+  try {
+    const recoveryClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { error: sessionError } = await recoveryClient.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+    if (sessionError) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+    }
+
+    const { error: updateError } = await recoveryClient.auth.updateUser({ password });
+    if (updateError) {
+      if (updateError.status === 400 || updateError.status === 401) {
+        return res.status(400).json({ error: updateError.message });
+      }
+      throw updateError;
+    }
+
+    return res.json({ message: 'Your password has been updated. You can now log in with your new password.' });
+  } catch (error) {
+    console.error('Student password reset completion error:', error);
+    return res.status(500).json({ error: 'Unable to update your password right now. Please request a new reset link.' });
+  }
+});
 
 app.post('/api/register', async (req, res) => {
   const { fullName, cnic, whatsappNumber, email, password, confirmPassword } = req.body || {};

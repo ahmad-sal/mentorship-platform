@@ -283,14 +283,29 @@ app.post('/api/student/password-reset/complete', async (req, res) => {
       return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
     }
 
-    const { data: student, error: lookupError } = await supabase.supabaseAdmin
+    const { data: studentById, error: idLookupError } = await supabase.supabaseAdmin
       .from('users')
       .select('id')
-      .eq('email', String(user.email || '').trim().toLowerCase())
+      .eq('id', user.id)
       .eq('role', 'student')
       .maybeSingle();
-    if (lookupError) throw lookupError;
+    if (idLookupError) throw idLookupError;
+
+    let student = studentById;
+    if (!student && user.email) {
+      const emailPattern = String(user.email).trim().replace(/[\\%_]/g, '\\$&');
+      const { data: studentByEmail, error: emailLookupError } = await supabase.supabaseAdmin
+        .from('users')
+        .select('id')
+        .ilike('email', emailPattern)
+        .eq('role', 'student')
+        .maybeSingle();
+      if (emailLookupError) throw emailLookupError;
+      student = studentByEmail;
+    }
+
     if (!student) {
+      console.warn('Password reset rejected: authenticated account has no matching student profile.');
       return res.status(403).json({ error: 'This reset link is not for a student account.' });
     }
 

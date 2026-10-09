@@ -237,8 +237,36 @@ app.post('/api/student/password-reset', async (req, res) => {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
 
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    console.error('Student password reset is unavailable: APP_URL is not configured.');
+    return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
+  }
+
+  let redirectTo;
   try {
-    const { data: student, error: lookupError } = await supabase
+    const configuredUrl = new URL(appUrl);
+    const isLocalHttp = configuredUrl.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(configuredUrl.hostname);
+    if ((configuredUrl.protocol !== 'https:' && !isLocalHttp) ||
+        configuredUrl.username || configuredUrl.password ||
+        (configuredUrl.pathname !== '/' && configuredUrl.pathname !== '') ||
+        configuredUrl.search || configuredUrl.hash) {
+      throw new Error('APP_URL must be an HTTPS origin (HTTP is allowed only for localhost).');
+    }
+    redirectTo = new URL('/reset-password', configuredUrl.origin).toString();
+  } catch (error) {
+    console.error('Student password reset has an invalid APP_URL:', error.message);
+    return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
+  }
+
+  try {
+    if (!supabase.supabaseAdmin) {
+      console.error('Student password reset is unavailable: SUPABASE_SERVICE_ROLE_KEY is not configured.');
+      return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
+    }
+
+    const { data: student, error: lookupError } = await supabase.supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', email)
@@ -251,14 +279,28 @@ app.post('/api/student/password-reset', async (req, res) => {
     }
 
     if (student) {
-      const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-      const redirectTo = new URL('/reset-password', appUrl).toString();
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase password reset email error:', {
+          status: error.status,
+          code: error.code,
+          message: error.message
+        });
+        if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
+          return res.status(429).json({ error: 'Too many reset requests were sent recently. Please wait before trying again.' });
+        }
+        if (error.code === 'email_address_not_authorized') {
+          return res.status(503).json({ error: 'Password reset email delivery is not enabled for this address yet. Please contact support.' });
+        }
+        if (error.code === 'redirect_to_not_allowed' || /redirect.*not allowed|redirect URL/i.test(error.message || '')) {
+          return res.status(503).json({ error: 'Password recovery is not configured for this website. Please contact support.' });
+        }
+        return res.status(503).json({ error: 'We could not send a password reset email right now. Please try again later or contact support.' });
+      }
     }
 
     return res.json({
-      message: 'If an account exists for that student email, a password reset link has been sent.'
+      message: 'If an account exists for that student email, you will receive a reset email shortly. Check your spam folder too.'
     });
   } catch (error) {
     console.error('Student password reset request error:', error);

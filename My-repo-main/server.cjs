@@ -187,6 +187,21 @@ app.get('/forgot-password', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'forgot-password.html'));
 });
 
+app.get('/vendor/supabase.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'node_modules', '@supabase', 'supabase-js', 'dist', 'umd', 'supabase.js'));
+});
+
+app.get('/supabase-auth.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'supabase-auth.js'));
+});
+
+app.get('/api/auth/public-config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY
+  });
+});
+
 app.get('/reset-password', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
 });
@@ -227,103 +242,26 @@ app.get('/student/submit-assignment', protectStudentPage('/student/dashboard'), 
   res.redirect('/student/dashboard');
 });
 
-// ============================================================
-// AUTH ENDPOINTS (Supabase Auth)
-// ============================================================
-
-app.post('/api/student/password-reset', async (req, res) => {
-  const email = String(req.body && req.body.email || '').trim().toLowerCase();
-  if (!isValidEmail(email)) {
-    return res.status(400).json({ error: 'Please enter a valid email address.' });
-  }
-
-  const appUrl = process.env.APP_URL ||
-    process.env.RENDER_EXTERNAL_URL ||
-    (process.env.NODE_ENV !== 'production' ? `${req.protocol}://${req.get('host')}` : '');
-  if (!appUrl) {
-    console.error('Student password reset is unavailable: APP_URL and RENDER_EXTERNAL_URL are not configured.');
-    return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
-  }
-
-  let redirectTo;
-  try {
-    const configuredUrl = new URL(appUrl);
-    const isLocalHttp = configuredUrl.protocol === 'http:' &&
-      ['localhost', '127.0.0.1', '[::1]'].includes(configuredUrl.hostname);
-    if ((configuredUrl.protocol !== 'https:' && !isLocalHttp) ||
-        configuredUrl.username || configuredUrl.password ||
-        (configuredUrl.pathname !== '/' && configuredUrl.pathname !== '') ||
-        configuredUrl.search || configuredUrl.hash) {
-      throw new Error('APP_URL must be an HTTPS origin (HTTP is allowed only for localhost).');
-    }
-    redirectTo = new URL('/reset-password', configuredUrl.origin).toString();
-  } catch (error) {
-    console.error('Student password reset has an invalid APP_URL:', error.message);
-    return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
-  }
-
-  try {
-    if (!supabase.supabaseAdmin) {
-      console.error('Student password reset is unavailable: SUPABASE_SERVICE_ROLE_KEY is not configured.');
-      return res.status(503).json({ error: 'Password recovery is temporarily unavailable. Please contact support.' });
-    }
-
-    const { data: student, error: lookupError } = await supabase.supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .eq('role', 'student')
-      .maybeSingle();
-
-    if (lookupError) {
-      console.error('Password reset student lookup error:', lookupError);
-      return res.status(500).json({ error: 'Unable to process your request right now. Please try again.' });
-    }
-
-    if (student) {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) {
-        console.error('Supabase password reset email error:', {
-          status: error.status,
-          code: error.code,
-          message: error.message
-        });
-        if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
-          return res.status(429).json({ error: 'Too many reset requests were sent recently. Please wait before trying again.' });
-        }
-        if (error.code === 'email_address_not_authorized') {
-          return res.status(503).json({ error: 'Password reset email delivery is not enabled for this address yet. Please contact support.' });
-        }
-        if (error.code === 'redirect_to_not_allowed' || /redirect.*not allowed|redirect URL/i.test(error.message || '')) {
-          return res.status(503).json({ error: 'Password recovery is not configured for this website. Please contact support.' });
-        }
-        return res.status(503).json({ error: 'We could not send a password reset email right now. Please try again later or contact support.' });
-      }
-    }
-
-    return res.json({
-      message: 'If an account exists for that student email, you will receive a reset email shortly. Check your spam folder too.'
-    });
-  } catch (error) {
-    console.error('Student password reset request error:', error);
-    return res.status(500).json({ error: 'Unable to send a reset link right now. Please try again.' });
-  }
-});
-
 app.post('/api/student/password-reset/complete', async (req, res) => {
   const { accessToken, refreshToken, password } = req.body || {};
+  if (typeof password !== 'string' || password.length < 8) {
+    return res.status(400).json({ error: 'Your new password must be at least 8 characters long.' });
+  }
   if (typeof accessToken !== 'string' || !accessToken ||
       typeof refreshToken !== 'string' || !refreshToken) {
     return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
   }
-  if (typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ error: 'Your new password must be at least 8 characters long.' });
-  }
 
   try {
-    const recoveryClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
+    const recoveryClient = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    if (!supabase.supabaseAdmin) {
+      console.error('Student password reset completion is unavailable: SUPABASE_SERVICE_ROLE_KEY is not configured.');
+      return res.status(503).json({ error: 'Password recovery is not configured on this server. Please try again later.' });
+    }
     const { error: sessionError } = await recoveryClient.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken
@@ -332,9 +270,25 @@ app.post('/api/student/password-reset/complete', async (req, res) => {
       return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
     }
 
+    const { data: { user }, error: userError } = await recoveryClient.auth.getUser();
+    if (userError || !user) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+    }
+
+    const { data: student, error: lookupError } = await supabase.supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .eq('role', 'student')
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    if (!student) {
+      return res.status(403).json({ error: 'This reset link is not for a student account.' });
+    }
+
     const { error: updateError } = await recoveryClient.auth.updateUser({ password });
     if (updateError) {
-      if (updateError.status === 400 || updateError.status === 401) {
+      if (updateError.status >= 400 && updateError.status < 500) {
         return res.status(400).json({ error: updateError.message });
       }
       throw updateError;

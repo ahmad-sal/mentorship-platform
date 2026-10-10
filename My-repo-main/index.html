@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
 </head>
 <body class="light-theme home-page">
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -28,6 +29,16 @@
       <nav class="desktop-nav" id="desktopNav" aria-label="Primary">
         <button class="nav-link active" type="button" onclick="app.navigate('home')" id="navHomeBtn">Home</button>
         <button class="nav-link" type="button" onclick="app.navigate('courses')" id="navCoursesBtn">Courses</button>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
         <a class="nav-link" href="/meet-developer">Developer Team</a>
       </nav>
 
@@ -57,6 +68,13 @@
       <div class="mobile-drawer-inner">
         <button class="mobile-nav-item" type="button" onclick="app.navigate('home')"><i data-lucide="graduation-cap"></i> Home</button>
         <button class="mobile-nav-item" type="button" onclick="app.navigate('courses')"><i data-lucide="book-open"></i> Courses</button>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
         <a class="mobile-nav-item" href="/meet-developer"><i data-lucide="user"></i> Developer Team</a>
         <div class="mobile-auth-links">
           <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
@@ -536,6 +554,7 @@
         <ul class="footer-links">
           <li><a href="/"><span>Home</span><i data-lucide="arrow-right"></i></a></li>
           <li><a href="#viewCourses" onclick="app.navigate('courses')"><span>All courses</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/tools"><span>Tools</span><i data-lucide="arrow-right"></i></a></li>
           <li><a href="#howItWorks"><span>How it works</span><i data-lucide="arrow-right"></i></a></li>
           <li><a href="#faq"><span>FAQ</span><i data-lucide="arrow-right"></i></a></li>
         </ul>
@@ -572,5 +591,6 @@
 
   <script src="/Mentor.js"></script>
   <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
 </body>
 </html>

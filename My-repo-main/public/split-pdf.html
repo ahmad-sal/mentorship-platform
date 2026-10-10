@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Extract selected pages or page ranges from a PDF privately in your browser, with no account required." />
+  <title>Split PDF — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme split-pdf-public-page" data-current-tool="split-pdf">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="split-pdf-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="split-pdf-heading">
+      <span class="section-kicker">Private, right in your browser</span>
+      <h1>Split PDF</h1>
+      <p>Extract specific pages or page ranges from a PDF.</p>
+    </header>
+
+    <section class="split-pdf-workspace" aria-label="Split PDF pages">
+      <div class="split-upload-area" data-upload-area role="button" tabindex="0" aria-label="Select a PDF or drop it here">
+        <input class="split-file-input" data-file-input type="file" accept="application/pdf,.pdf" tabindex="-1" aria-label="Choose a PDF file">
+        <span class="split-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 7.5h15l9 9V36a4.5 4.5 0 0 1-4.5 4.5h-15A4.5 4.5 0 0 1 12 36V12a4.5 4.5 0 0 1 4.5-4.5Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M27 8v10h9M19 22h10M19 27h7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M32 22v4m0 0-3-3m3 3 3-3M32 26v4m0 0-3 3m3-3 3 3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <strong data-upload-title>Select PDF</strong>
+        <span class="split-upload-hint" data-upload-hint>Drop a PDF here or click to browse</span>
+        <span class="split-upload-limit">Processed locally · Up to 100 MB</span>
+      </div>
+
+      <section class="split-document-info" data-document-info aria-labelledby="splitDocumentTitle" hidden>
+        <div>
+          <span class="section-kicker">Document Information</span>
+          <h2 id="splitDocumentTitle" data-document-name></h2>
+        </div>
+        <p><strong data-page-count>0</strong> total pages</p>
+      </section>
+
+      <section class="split-range-panel" data-range-panel aria-labelledby="splitRangeTitle" hidden>
+        <div class="split-section-heading">
+          <div>
+            <h2 id="splitRangeTitle">Custom Page Range</h2>
+            <p>Choose an inclusive range of pages to select.</p>
+          </div>
+        </div>
+        <form class="split-range-form" data-range-form novalidate>
+          <label>From Page
+            <input type="number" inputmode="numeric" min="1" step="1" data-range-from aria-label="From Page">
+          </label>
+          <span class="split-range-separator" aria-hidden="true">to</span>
+          <label>To Page
+            <input type="number" inputmode="numeric" min="1" step="1" data-range-to aria-label="To Page">
+          </label>
+          <button class="btn btn-secondary" type="submit" data-action="apply-range">Apply Range</button>
+        </form>
+        <p class="split-range-error" data-range-error role="alert" hidden></p>
+      </section>
+
+      <section class="split-pages-section" data-pages-section aria-labelledby="splitPagesTitle" hidden>
+        <div class="split-section-heading split-pages-heading">
+          <div>
+            <h2 id="splitPagesTitle">Select Pages</h2>
+            <p data-selection-summary aria-live="polite">0 pages selected out of 0</p>
+          </div>
+          <div class="split-selection-actions">
+            <button class="btn btn-secondary" type="button" data-action="select-all">Select All</button>
+            <button class="btn btn-ghost" type="button" data-action="deselect-all">Deselect All</button>
+          </div>
+        </div>
+        <div class="split-page-grid" data-page-grid aria-label="PDF pages"></div>
+      </section>
+
+      <div class="split-actions">
+        <button class="btn btn-primary btn-lg split-submit" type="button" data-action="split" disabled hidden>
+          <span data-split-label>Split PDF</span>
+        </button>
+        <a class="btn btn-primary btn-lg split-download" data-action="download" href="#" download="split-pages.pdf" hidden>
+          <span aria-hidden="true">↓</span> Download Split PDF
+        </a>
+      </div>
+
+      <div class="split-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p class="split-status-message" data-status-message>Select a PDF to see its pages.</p>
+        <div class="split-progress-wrap" data-progress-wrap hidden>
+          <span class="split-spinner" aria-hidden="true"></span>
+          <span data-progress-message>Loading your PDF…</span>
+        </div>
+      </div>
+      <p class="split-privacy-note">
+        Your file is processed locally in this browser and is never uploaded. Selected page content and sizes are preserved; forms, bookmarks, attachments, and digital signatures may not be retained.
+      </p>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="splitMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="splitMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/vendor/pdf-lib.min.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/split-pdf-engine.js"></script>
+  <script type="module" src="/split-pdf.js"></script>
+</body>
+</html>

@@ -175,6 +175,22 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.get('/tools', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tools.html'));
+});
+
+app.get('/tools/calculator', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'calculator.html'));
+});
+
+app.get('/tools/merge-pdf', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'merge-pdf.html'));
+});
+
+app.get('/tools/split-pdf', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'split-pdf.html'));
+});
+
 app.get('/meet-developer', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'meet-developer.html'));
 });
@@ -189,6 +205,18 @@ app.get('/forgot-password', (req, res) => {
 
 app.get('/vendor/supabase.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'node_modules', '@supabase', 'supabase-js', 'dist', 'umd', 'supabase.js'));
+});
+
+app.get('/vendor/pdf-lib.min.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'node_modules', 'pdf-lib', 'dist', 'pdf-lib.min.js'));
+});
+
+app.get('/vendor/pdfjs.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'node_modules', 'pdfjs-dist', 'build', 'pdf.min.mjs'));
+});
+
+app.get('/vendor/pdfjs.worker.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs'));
 });
 
 app.get('/supabase-auth.js', (req, res) => {

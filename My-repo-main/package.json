@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.cjs",
-    "dev": "node server.cjs"
+    "dev": "node server.cjs",
+    "test": "node --test scripts/calculator-engine.test.cjs scripts/merge-pdf-engine.test.cjs scripts/split-pdf-engine.test.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.6",
@@ -14,7 +15,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "4.2.67"
   },
   "engines": {
     "node": ">=18.0.0"

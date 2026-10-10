@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Combine multiple PDF files into one document privately in your browser, with no account required." />
+  <title>Merge PDF — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme merge-pdf-public-page" data-current-tool="merge-pdf">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="merge-pdf-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="merge-pdf-heading">
+      <span class="section-kicker">Private, right in your browser</span>
+      <h1>Merge PDF</h1>
+      <p>Combine multiple PDF files into one document.</p>
+    </header>
+
+    <section class="merge-pdf-workspace" aria-label="Merge PDF files">
+      <div class="merge-upload-area" data-upload-area role="button" tabindex="0" aria-label="Select PDF files or drop them here">
+        <input class="merge-file-input" data-file-input type="file" accept="application/pdf,.pdf" multiple tabindex="-1" aria-label="Choose PDF files">
+        <span class="merge-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 7.5h15l9 9V36a4.5 4.5 0 0 1-4.5 4.5h-15A4.5 4.5 0 0 1 12 36V12a4.5 4.5 0 0 1 4.5-4.5Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M27 8v10h9M19 26h10M19 31h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M8 18v-2a4 4 0 0 1 4-4M39 26h4m-2-2v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </span>
+        <strong>Select PDF Files</strong>
+        <span class="merge-upload-hint">Drop PDF files here or click to browse</span>
+        <span class="merge-upload-limit">Up to 20 files · 100 MB combined</span>
+      </div>
+      <p class="merge-empty-state" data-empty-state>No files selected yet. Choose or drop PDFs above to start your merge.</p>
+
+      <div class="merge-file-section" data-file-section hidden>
+        <div class="merge-file-heading">
+          <div>
+            <h2>Selected files <span class="merge-file-count" data-file-count>0</span></h2>
+            <p>Files will be merged in the order shown. Use the arrows to reorder.</p>
+          </div>
+          <button class="btn btn-secondary merge-add-button" type="button" data-action="add-more">＋ Add More Files</button>
+        </div>
+        <ol class="merge-file-list" data-file-list aria-label="Selected PDFs in merge order"></ol>
+      </div>
+
+      <div class="merge-actions">
+        <button class="btn btn-primary btn-lg merge-submit" type="button" data-action="merge" disabled hidden>
+          <span data-merge-label>Merge PDF</span>
+        </button>
+        <a class="btn btn-primary btn-lg merge-download" data-action="download" href="#" download="merged-document.pdf" hidden>
+          <span aria-hidden="true">↓</span> Download Merged PDF
+        </a>
+      </div>
+
+      <div class="merge-status" data-merge-status role="status" aria-live="polite" aria-atomic="true">
+        <p class="merge-status-message" data-status-message>Select at least two PDF files to get started.</p>
+        <div class="merge-progress-wrap" data-progress-wrap hidden>
+          <span class="merge-spinner" aria-hidden="true"></span>
+          <span data-progress-message>Preparing your documents…</span>
+        </div>
+      </div>
+      <p class="merge-privacy-note">
+        Your files are processed locally in this browser and are never uploaded. Page content and page sizes are preserved; interactive forms, bookmarks, attachments, and digital signatures may not be retained.
+      </p>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="mergeMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="mergeMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/vendor/pdf-lib.min.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/merge-pdf-engine.js"></script>
+  <script src="/merge-pdf.js"></script>
+</body>
+</html>

@@ -35,6 +35,14 @@
       available: true
     },
     {
+      id: 'additive-pdf',
+      name: 'Additive PDF',
+      description: 'Add text, images, drawings, and shapes to your PDF documents.',
+      icon: '<svg class="additive-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 6.5h14l6 6v8M22 7v7h6M11 18h7M11 22h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m20 29 8.9-8.9a2.5 2.5 0 0 1 3.5 3.5L23.5 33.5l-5 1.5 1.5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 13v18a3 3 0 0 0 3 3h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      route: '/tools/additive-pdf',
+      available: true
+    },
+    {
       id: 'converter-suite',
       name: 'Converter Suite',
       description: 'Convert documents and images between multiple formats in one place.',
@@ -206,7 +214,8 @@
         !document.body.classList.contains('calculator-public-page') &&
         !document.body.classList.contains('merge-pdf-public-page') &&
         !document.body.classList.contains('split-pdf-public-page') &&
-        !document.body.classList.contains('compress-pdf-public-page')) return;
+        !document.body.classList.contains('compress-pdf-public-page') &&
+        !document.body.classList.contains('additive-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';
     }
     if (themeButton && themeButton.dataset.toolsThemeReady !== 'true') {

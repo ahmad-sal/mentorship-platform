@@ -203,6 +203,10 @@ app.get('/tools/compress-pdf', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'compress-pdf.html'));
 });
 
+app.get('/tools/additive-pdf', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'additive-pdf.html'));
+});
+
 app.get('/tools/converter-suite', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'converter-suite.html'));
 });

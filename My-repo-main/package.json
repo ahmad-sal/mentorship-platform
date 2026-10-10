@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.cjs",
     "dev": "node server.cjs",
-    "test": "node --test scripts/calculator-engine.test.cjs scripts/merge-pdf-engine.test.cjs scripts/split-pdf-engine.test.cjs scripts/compress-pdf-engine.test.cjs scripts/converter-suite.test.cjs"
+    "test": "node --test scripts/calculator-engine.test.cjs scripts/merge-pdf-engine.test.cjs scripts/split-pdf-engine.test.cjs scripts/compress-pdf-engine.test.cjs scripts/converter-suite.test.cjs scripts/additive-pdf-engine.test.cjs"
   },
   "dependencies": {
     "@e965/xlsx": "^0.20.3",

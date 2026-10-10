@@ -25,6 +25,30 @@
       icon: '<svg class="pdf-split-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5.5h14l6 6v8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 6v7h6M11 18h9M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M25 22v-3m0 3-3-3m3 3 3-3M25 22v4m0 0-3 3m3-3 3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 13v17a3 3 0 0 0 3 3h7m7-8h1.5a3 3 0 0 1 3 3v2.5h-9V31a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
       route: '/tools/split-pdf',
       available: true
+    },
+    {
+      id: 'compress-pdf',
+      name: 'Compress PDF',
+      description: 'Reduce PDF file size while choosing your preferred compression level.',
+      icon: '<svg class="pdf-compress-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5.5h14l6 6v8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 6v7h6M11 18h9M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M25 22v-5m0 0-3 3m3-3 3 3M25 22v5m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 13v17a3 3 0 0 0 3 3h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      route: '/tools/compress-pdf',
+      available: true
+    },
+    {
+      id: 'excel-to-pdf',
+      name: 'Excel to PDF',
+      description: 'Turn Excel worksheets into a clear, printable PDF document.',
+      icon: '<svg class="excel-to-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5.5h14l6 6v8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 6v7h6M11 18h9M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M24 24h11v10H24zM24 29h11M29.5 24v10" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m18 27 4 4m0-4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      route: '/tools/excel-to-pdf',
+      available: true
+    },
+    {
+      id: 'powerpoint-to-pdf',
+      name: 'PowerPoint to PDF',
+      description: 'Convert PowerPoint presentations into downloadable PDF documents.',
+      icon: '<svg class="powerpoint-to-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.5 5.5h14l6 6v7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M21.5 6v7h6M11 18h8M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 23h12v11H22zM22 28.5h12M28 23v11" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M17 27h4m-1.5-1.5L17 27l2.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      route: '/tools/powerpoint-to-pdf',
+      available: true
     }
   ];
   window.PUBLIC_TOOLS = tools;
@@ -125,7 +149,10 @@
       if (!themeIcon || !document.body.classList.contains('tools-public-page') &&
         !document.body.classList.contains('calculator-public-page') &&
         !document.body.classList.contains('merge-pdf-public-page') &&
-        !document.body.classList.contains('split-pdf-public-page')) return;
+        !document.body.classList.contains('split-pdf-public-page') &&
+        !document.body.classList.contains('compress-pdf-public-page') &&
+        !document.body.classList.contains('excel-to-pdf-public-page') &&
+        !document.body.classList.contains('powerpoint-to-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';
     }
     if (themeButton && themeButton.dataset.toolsThemeReady !== 'true') {
@@ -169,7 +196,7 @@
         if (!wrapper.contains(event.relatedTarget)) setOpen(false);
       });
       toggle.addEventListener('click', function () {
-        setOpen(panel.hidden);
+        setOpen(true);
       });
       wrapper.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {

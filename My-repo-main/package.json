@@ -7,17 +7,21 @@
   "scripts": {
     "start": "node server.cjs",
     "dev": "node server.cjs",
-    "test": "node --test scripts/calculator-engine.test.cjs scripts/merge-pdf-engine.test.cjs scripts/split-pdf-engine.test.cjs"
+    "test": "node --test scripts/calculator-engine.test.cjs scripts/merge-pdf-engine.test.cjs scripts/split-pdf-engine.test.cjs scripts/compress-pdf-engine.test.cjs scripts/excel-to-pdf-engine.test.cjs scripts/powerpoint-to-pdf.test.cjs"
   },
   "dependencies": {
+    "@e965/xlsx": "^0.20.3",
     "@supabase/supabase-js": "^2.45.6",
     "cloudinary": "^2.5.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "multer": "^1.4.5-lts.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "4.2.67"
+    "pdfjs-dist": "4.2.67",
+    "yauzl": "^3.4.0"
   },
   "engines": {
     "node": ">=18.0.0"

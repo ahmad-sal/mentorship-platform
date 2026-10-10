@@ -1103,3 +1103,588 @@
     .split-upload-area,
     .split-page-card { transition: none; }
   }
+
+  .compress-pdf-page {
+    width: 100%;
+    max-width: 920px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 4.25rem) clamp(1rem, 4vw, 1.75rem) clamp(3rem, 6vw, 4.5rem);
+  }
+  .compress-pdf-heading { margin-bottom: 1.5rem; }
+  .compress-pdf-heading .section-kicker { margin-bottom: 0.65rem; }
+  .compress-pdf-heading h1 {
+    margin-bottom: 0.45rem;
+    font-size: clamp(1.9rem, 4.5vw, 2.55rem);
+    letter-spacing: -0.04em;
+  }
+  .compress-pdf-heading p { max-width: 65ch; color: var(--text-secondary); font-size: 0.96rem; }
+  .compress-pdf-workspace {
+    min-width: 0;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .compress-upload-area {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1.5rem;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out),
+      box-shadow var(--motion-ui) var(--ease-out);
+  }
+  .compress-upload-area:hover,
+  .compress-upload-area:focus-visible,
+  .compress-upload-area.is-dragging {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: inset 0 0 0 1px var(--primary-border);
+    outline: none;
+  }
+  .compress-upload-area.is-dragging { border-style: solid; }
+  .compress-upload-area[aria-disabled="true"] { cursor: wait; opacity: 0.75; }
+  .compress-file-input { display: none; }
+  .compress-upload-icon {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 0.2rem;
+    place-items: center;
+    border: 1px solid var(--primary-border);
+    border-radius: var(--radius-lg);
+    color: var(--primary);
+    background: var(--surface);
+  }
+  .compress-upload-icon svg { width: 2rem; height: 2rem; }
+  .compress-upload-area > strong { color: var(--text-heading); font-size: 1rem; }
+  .compress-upload-hint { color: var(--text-secondary); font-size: 0.85rem; }
+  .compress-upload-limit { color: var(--text-tertiary); font-size: 0.74rem; }
+  .compress-file-info {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--background);
+  }
+  .compress-file-info[hidden],
+  .compress-level-section[hidden],
+  .compress-privacy-note[hidden],
+  .compress-submit[hidden],
+  .compress-download[hidden],
+  .compress-results[hidden],
+  .compress-progress-wrap[hidden] { display: none; }
+  .compress-file-badge {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    color: var(--danger);
+    background: var(--danger-subtle);
+    font-size: 0.62rem;
+    font-weight: 900;
+  }
+  .compress-file-copy { display: block; min-width: 0; flex: 1; }
+  .compress-file-copy strong,
+  .compress-file-copy small { display: block; overflow-wrap: anywhere; }
+  .compress-file-copy strong { color: var(--text-primary); font-size: 0.82rem; }
+  .compress-file-copy small { margin-top: 0.15rem; color: var(--text-tertiary); font-size: 0.72rem; }
+  .compress-replace-button { flex: 0 0 auto; }
+  .compress-level-section {
+    min-width: 0;
+    margin: 1.35rem 0 0;
+    padding: 0;
+    border: 0;
+  }
+  .compress-level-section legend { color: var(--text-heading); font-size: 1rem; font-weight: 800; }
+  .compress-level-intro { margin-top: 0.25rem; color: var(--text-tertiary); font-size: 0.75rem; }
+  .compress-level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+  }
+  .compress-level-card {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    min-height: 100px;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color var(--motion-micro) var(--ease-out), box-shadow var(--motion-micro) var(--ease-out),
+      background-color var(--motion-micro) var(--ease-out), transform var(--motion-micro) var(--ease-out);
+  }
+  .compress-level-card:hover { transform: translateY(-1px); border-color: var(--primary-border); }
+  .compress-level-card:has(input:checked) {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: inset 0 0 0 1px var(--primary-border);
+  }
+  .compress-level-card:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .compress-level-card input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .compress-level-radio {
+    display: grid;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+    margin-top: 0.08rem;
+    place-items: center;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .compress-level-card input:checked + .compress-level-radio { border-color: var(--primary); }
+  .compress-level-card input:checked + .compress-level-radio::after {
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 50%;
+    background: var(--primary);
+    content: "";
+  }
+  .compress-level-copy { display: grid; min-width: 0; gap: 0.32rem; padding-right: 0.2rem; }
+  .compress-level-copy strong { color: var(--text-heading); font-size: 0.78rem; line-height: 1.35; }
+  .compress-level-copy small { color: var(--text-tertiary); font-size: 0.68rem; line-height: 1.45; }
+  .compress-level-card.is-recommended { padding-top: 1.55rem; }
+  .compress-recommended-badge {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.8rem;
+    color: var(--primary);
+    font-size: 0.59rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .compress-privacy-note {
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    background: var(--background);
+    font-size: 0.72rem;
+    line-height: 1.6;
+  }
+  .compress-actions { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.2rem; }
+  .compress-submit { min-width: 200px; }
+  .compress-submit:disabled { cursor: wait; }
+  .compress-results {
+    margin-top: 1.25rem;
+    padding: clamp(1rem, 3vw, 1.35rem);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+    animation: compress-results-in 280ms var(--ease-out) both;
+  }
+  @keyframes compress-results-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  .compress-results-heading { text-align: center; }
+  .compress-results-heading .section-kicker { margin-bottom: 0.3rem; }
+  .compress-results-heading h2 { color: var(--text-heading); font-size: clamp(1.05rem, 3vw, 1.35rem); }
+  .compress-results-heading p { margin-top: 0.3rem; color: var(--text-secondary); font-size: 0.76rem; }
+  .compress-result-body { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 1.5rem; max-width: 540px; margin: 1.2rem auto 0; }
+  .compress-donut {
+    position: relative;
+    display: grid;
+    width: 138px;
+    aspect-ratio: 1;
+    place-items: center;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .compress-donut svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+  .compress-donut circle { fill: none; stroke-width: 3.3; }
+  .compress-donut-track { stroke: var(--border); }
+  .compress-donut-saved {
+    stroke: var(--success);
+    stroke-dasharray: 0 100;
+    transition: stroke-dasharray 650ms var(--ease-out);
+  }
+  .compress-donut-value { z-index: 1; align-self: end; color: var(--text-heading); font-size: 1.7rem; font-weight: 900; letter-spacing: -0.05em; line-height: 1.1; }
+  .compress-donut-label { z-index: 1; align-self: start; color: var(--text-tertiary); font-size: 0.68rem; font-weight: 700; }
+  .compress-size-comparison { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 0.8rem; min-width: 0; }
+  .compress-size-comparison > div { min-width: 0; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+  .compress-size-comparison dt { color: var(--text-tertiary); font-size: 0.68rem; }
+  .compress-size-comparison dd { margin-top: 0.25rem; color: var(--text-heading); font-size: 0.92rem; font-weight: 800; overflow-wrap: anywhere; }
+  .compress-size-arrow { color: var(--primary); font-size: 1.1rem; font-weight: 900; }
+  .compress-size-comparison .compress-size-saved { grid-column: 1 / -1; padding: 0.55rem 0.75rem; background: transparent; }
+  .compress-size-saved dd { font-size: 0.78rem; }
+  .compress-status-message { margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.81rem; text-align: center; overflow-wrap: anywhere; }
+  .compress-status.is-error .compress-status-message { color: var(--danger); }
+  .compress-status.is-success .compress-status-message { color: var(--success); }
+  .compress-progress-wrap { display: flex; align-items: center; justify-content: center; gap: 0.55rem; margin-top: 0.8rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center; overflow-wrap: anywhere; }
+  .compress-spinner { width: 1rem; height: 1rem; flex: 0 0 auto; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: compress-spinner 0.8s linear infinite; }
+  @keyframes compress-spinner { to { transform: rotate(360deg); } }
+  .pdf-compress-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
+
+  @media (max-width: 767px) {
+    .compress-level-grid { grid-template-columns: minmax(0, 1fr); }
+    .compress-level-card { min-height: 76px; }
+  }
+  @media (max-width: 560px) {
+    .compress-pdf-workspace { padding: 0.8rem; }
+    .compress-upload-area { min-height: 195px; padding: 1rem; }
+    .compress-file-info { flex-wrap: wrap; }
+    .compress-replace-button { width: 100%; justify-content: center; }
+    .compress-level-card.is-recommended { padding-top: 1.45rem; }
+    .compress-actions { align-items: stretch; flex-direction: column; }
+    .compress-submit,
+    .compress-download { width: 100%; justify-content: center; }
+    .compress-result-body { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+    .compress-donut { width: 122px; }
+    .compress-size-comparison { gap: 0.4rem; }
+    .compress-size-comparison > div { padding: 0.6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .compress-spinner { animation: none; }
+    .compress-results { animation: none; }
+    .compress-upload-area,
+    .compress-level-card,
+    .compress-donut-saved { transition: none; }
+  }
+
+  .excel-to-pdf-page {
+    width: 100%;
+    max-width: 920px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 4.25rem) clamp(1rem, 4vw, 1.75rem) clamp(3rem, 6vw, 4.5rem);
+  }
+  .excel-to-pdf-heading { margin-bottom: 1.5rem; }
+  .excel-to-pdf-heading .section-kicker { margin-bottom: 0.65rem; }
+  .excel-to-pdf-heading h1 {
+    margin-bottom: 0.45rem;
+    font-size: clamp(1.9rem, 4.5vw, 2.55rem);
+    letter-spacing: -0.04em;
+  }
+  .excel-to-pdf-heading p { max-width: 65ch; color: var(--text-secondary); font-size: 0.96rem; }
+  .excel-to-pdf-workspace {
+    min-width: 0;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .excel-upload-area {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1.5rem;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out),
+      box-shadow var(--motion-ui) var(--ease-out);
+  }
+  .excel-upload-area:hover,
+  .excel-upload-area:focus-visible,
+  .excel-upload-area.is-dragging {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: inset 0 0 0 1px var(--primary-border);
+    outline: none;
+  }
+  .excel-upload-area.is-dragging { border-style: solid; }
+  .excel-upload-area[aria-disabled="true"] { cursor: wait; opacity: 0.75; }
+  .excel-file-input { display: none; }
+  .excel-upload-icon {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 0.2rem;
+    place-items: center;
+    border: 1px solid var(--primary-border);
+    border-radius: var(--radius-lg);
+    color: var(--primary);
+    background: var(--surface);
+  }
+  .excel-upload-icon svg { width: 2rem; height: 2rem; }
+  .excel-upload-area > strong { color: var(--text-heading); font-size: 1rem; }
+  .excel-upload-hint { color: var(--text-secondary); font-size: 0.85rem; }
+  .excel-upload-limit { color: var(--text-tertiary); font-size: 0.74rem; }
+  .excel-file-info {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--background);
+  }
+  .excel-file-info[hidden],
+  .excel-submit[hidden],
+  .excel-download[hidden],
+  .excel-results[hidden],
+  .excel-progress-wrap[hidden],
+  [data-tools-recommendations][hidden] { display: none; }
+  .excel-file-badge {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-sm);
+    color: var(--success);
+    background: var(--success-subtle);
+    font-size: 0.62rem;
+    font-weight: 900;
+  }
+  .excel-file-copy { display: block; min-width: 0; flex: 1; }
+  .excel-file-copy strong,
+  .excel-file-copy small { display: block; overflow-wrap: anywhere; }
+  .excel-file-copy strong { color: var(--text-primary); font-size: 0.82rem; }
+  .excel-file-copy small { margin-top: 0.15rem; color: var(--text-tertiary); font-size: 0.72rem; }
+  .excel-replace-button { flex: 0 0 auto; }
+  .excel-conversion-note {
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    background: var(--background);
+    font-size: 0.73rem;
+    line-height: 1.65;
+  }
+  .excel-actions { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.2rem; }
+  .excel-submit { min-width: 190px; }
+  .excel-submit:disabled { cursor: wait; }
+  .excel-results {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    max-width: 540px;
+    margin: 1.25rem auto 0;
+    padding: 0.85rem;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-lg);
+    background: var(--success-subtle);
+  }
+  .excel-results-icon {
+    display: grid;
+    width: 2.4rem;
+    height: 2.4rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--success);
+    background: var(--surface);
+    font-weight: 900;
+  }
+  .excel-results h2 { color: var(--text-heading); font-size: 0.9rem; }
+  .excel-results p { margin-top: 0.2rem; color: var(--text-secondary); font-size: 0.72rem; overflow-wrap: anywhere; }
+  .excel-status-message { margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.81rem; text-align: center; overflow-wrap: anywhere; }
+  .excel-status.is-error .excel-status-message { color: var(--danger); }
+  .excel-status.is-success .excel-status-message { color: var(--success); }
+  .excel-progress-wrap { display: flex; align-items: center; justify-content: center; gap: 0.55rem; margin-top: 0.8rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center; overflow-wrap: anywhere; }
+  .excel-spinner { width: 1rem; height: 1rem; flex: 0 0 auto; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: excel-spinner 0.8s linear infinite; }
+  @keyframes excel-spinner { to { transform: rotate(360deg); } }
+  .excel-to-pdf-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
+
+  @media (max-width: 560px) {
+    .excel-to-pdf-workspace { padding: 0.8rem; }
+    .excel-upload-area { min-height: 195px; padding: 1rem; }
+    .excel-file-info { flex-wrap: wrap; }
+    .excel-replace-button { width: 100%; justify-content: center; }
+    .excel-actions { align-items: stretch; flex-direction: column; }
+    .excel-submit,
+    .excel-download { width: 100%; justify-content: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .excel-spinner { animation: none; }
+    .excel-upload-area { transition: none; }
+  }
+
+  .powerpoint-to-pdf-page {
+    width: 100%;
+    max-width: 920px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 4.25rem) clamp(1rem, 4vw, 1.75rem) clamp(3rem, 6vw, 4.5rem);
+  }
+  .powerpoint-to-pdf-heading { margin-bottom: 1.5rem; }
+  .powerpoint-to-pdf-heading .section-kicker { margin-bottom: 0.65rem; }
+  .powerpoint-to-pdf-heading h1 {
+    margin-bottom: 0.45rem;
+    font-size: clamp(1.9rem, 4.5vw, 2.55rem);
+    letter-spacing: -0.04em;
+  }
+  .powerpoint-to-pdf-heading p { max-width: 65ch; color: var(--text-secondary); font-size: 0.96rem; }
+  .powerpoint-to-pdf-workspace {
+    min-width: 0;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .powerpoint-upload-area {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1.5rem;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out),
+      box-shadow var(--motion-ui) var(--ease-out);
+  }
+  .powerpoint-upload-area:hover,
+  .powerpoint-upload-area:focus-visible,
+  .powerpoint-upload-area.is-dragging {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: inset 0 0 0 1px var(--primary-border);
+    outline: none;
+  }
+  .powerpoint-upload-area.is-dragging { border-style: solid; }
+  .powerpoint-upload-area[aria-disabled="true"] { cursor: wait; opacity: 0.75; }
+  .powerpoint-file-input { display: none; }
+  .powerpoint-upload-icon {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 0.2rem;
+    place-items: center;
+    border: 1px solid var(--primary-border);
+    border-radius: var(--radius-lg);
+    color: var(--primary);
+    background: var(--surface);
+  }
+  .powerpoint-upload-icon svg { width: 2rem; height: 2rem; }
+  .powerpoint-upload-area > strong { color: var(--text-heading); font-size: 1rem; }
+  .powerpoint-upload-hint { color: var(--text-secondary); font-size: 0.85rem; }
+  .powerpoint-upload-limit { color: var(--text-tertiary); font-size: 0.74rem; }
+  .powerpoint-file-info {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--background);
+  }
+  .powerpoint-file-info[hidden],
+  .powerpoint-submit[hidden],
+  .powerpoint-download[hidden],
+  .powerpoint-results[hidden],
+  .powerpoint-progress-wrap[hidden],
+  [data-tools-recommendations][hidden] { display: none; }
+  .powerpoint-file-badge {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    color: var(--danger);
+    background: var(--danger-subtle);
+    font-size: 0.62rem;
+    font-weight: 900;
+  }
+  .powerpoint-file-copy { display: block; min-width: 0; flex: 1; }
+  .powerpoint-file-copy strong,
+  .powerpoint-file-copy small { display: block; overflow-wrap: anywhere; }
+  .powerpoint-file-copy strong { color: var(--text-primary); font-size: 0.82rem; }
+  .powerpoint-file-copy small { margin-top: 0.15rem; color: var(--text-tertiary); font-size: 0.72rem; }
+  .powerpoint-replace-button { flex: 0 0 auto; }
+  .powerpoint-conversion-note {
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    background: var(--background);
+    font-size: 0.73rem;
+    line-height: 1.65;
+  }
+  .powerpoint-actions { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.2rem; }
+  .powerpoint-submit { min-width: 190px; }
+  .powerpoint-submit:disabled { cursor: wait; }
+  .powerpoint-results {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    max-width: 540px;
+    margin: 1.25rem auto 0;
+    padding: 0.85rem;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-lg);
+    background: var(--success-subtle);
+  }
+  .powerpoint-results-icon {
+    display: grid;
+    width: 2.4rem;
+    height: 2.4rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--success);
+    background: var(--surface);
+    font-weight: 900;
+  }
+  .powerpoint-results h2 { color: var(--text-heading); font-size: 0.9rem; }
+  .powerpoint-results p { margin-top: 0.2rem; color: var(--text-secondary); font-size: 0.72rem; overflow-wrap: anywhere; }
+  .powerpoint-status-message { margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.81rem; text-align: center; overflow-wrap: anywhere; }
+  .powerpoint-status.is-error .powerpoint-status-message { color: var(--danger); }
+  .powerpoint-status.is-success .powerpoint-status-message { color: var(--success); }
+  .powerpoint-progress-wrap { display: flex; align-items: center; justify-content: center; gap: 0.55rem; margin-top: 0.8rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center; overflow-wrap: anywhere; }
+  .powerpoint-spinner { width: 1rem; height: 1rem; flex: 0 0 auto; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: powerpoint-spinner 0.8s linear infinite; }
+  @keyframes powerpoint-spinner { to { transform: rotate(360deg); } }
+  .powerpoint-to-pdf-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
+
+  @media (max-width: 560px) {
+    .powerpoint-to-pdf-workspace { padding: 0.8rem; }
+    .powerpoint-upload-area { min-height: 195px; padding: 1rem; }
+    .powerpoint-file-info { flex-wrap: wrap; }
+    .powerpoint-replace-button { width: 100%; justify-content: center; }
+    .powerpoint-actions { align-items: stretch; flex-direction: column; }
+    .powerpoint-submit,
+    .powerpoint-download { width: 100%; justify-content: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .powerpoint-spinner { animation: none; }
+    .powerpoint-upload-area { transition: none; }
+  }

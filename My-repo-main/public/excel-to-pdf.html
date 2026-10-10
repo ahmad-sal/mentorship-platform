@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Convert Excel worksheets into a clear, printable PDF in your browser, without uploading your workbook." />
+  <title>Excel to PDF — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme excel-to-pdf-public-page" data-current-tool="excel-to-pdf">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="excel-to-pdf-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="excel-to-pdf-heading">
+      <span class="section-kicker">Private, right in your browser</span>
+      <h1>Excel to PDF</h1>
+      <p>Convert visible Excel worksheets into a clear, printable PDF document.</p>
+    </header>
+
+    <section class="excel-to-pdf-workspace" aria-label="Convert an Excel workbook to PDF">
+      <div class="excel-upload-area" data-upload-area role="button" tabindex="0" aria-label="Select an Excel workbook or drop it here">
+        <input class="excel-file-input" data-file-input type="file" accept=".xlsx,.xls,.xlsm,.xlsb,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12" tabindex="-1" aria-label="Choose an Excel workbook">
+        <span class="excel-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 6.5h17l10 10V38a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V10.5a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M27 7v11h10M16 24h10M16 29h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M27 28h11v11H27zM27 33.5h11M32.5 28v11" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m21 30 4 4m0-4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        <strong data-upload-title>Select Excel File</strong>
+        <span class="excel-upload-hint" data-upload-hint>Drop Excel file here or click to browse</span>
+        <span class="excel-upload-limit">XLSX, XLS, XLSM, XLSB · Processed locally · Up to 50 MB</span>
+      </div>
+
+      <section class="excel-file-info" data-file-info aria-label="Selected Excel workbook" hidden>
+        <span class="excel-file-badge" aria-hidden="true">XLS</span>
+        <span class="excel-file-copy"><strong data-file-name></strong><small data-file-size></small></span>
+        <button class="btn btn-secondary excel-replace-button" type="button" data-action="replace">Replace file</button>
+      </section>
+
+      <div class="excel-conversion-note">
+        Cell values and visible worksheet rows and columns are placed in printable tables. Original formatting, formulas, charts, macros, and embedded objects are not reproduced; formula cells use their saved values when available. Text must use characters supported by the built-in Western PDF font.
+      </div>
+
+      <div class="excel-actions">
+        <button class="btn btn-primary btn-lg excel-submit" type="button" data-action="convert" disabled hidden>
+          <span data-convert-label>Convert to PDF</span>
+        </button>
+        <a class="btn btn-primary btn-lg excel-download" data-action="download" href="#" download="converted-workbook.pdf" hidden>
+          <span aria-hidden="true">↓</span> Download PDF
+        </a>
+      </div>
+
+      <section class="excel-results" data-results aria-labelledby="excelResultsTitle" hidden>
+        <div class="excel-results-icon" aria-hidden="true">✓</div>
+        <div>
+          <h2 id="excelResultsTitle">PDF ready to download</h2>
+          <p data-result-detail></p>
+        </div>
+      </section>
+
+      <div class="excel-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p class="excel-status-message" data-status-message>Select an Excel workbook to get started.</p>
+        <div class="excel-progress-wrap" data-progress-wrap hidden>
+          <span class="excel-spinner" aria-hidden="true"></span>
+          <span data-progress-message>Checking your workbook…</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="excelMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="excelMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/excel-to-pdf-engine.js"></script>
+  <script src="/excel-to-pdf.js"></script>
+</body>
+</html>

@@ -1369,322 +1369,214 @@
     .compress-donut-saved { transition: none; }
   }
 
-  .excel-to-pdf-page {
+  .converter-suite-page {
     width: 100%;
-    max-width: 920px;
+    max-width: 1460px;
     min-width: 0;
     margin: 0 auto;
-    padding: clamp(2.5rem, 6vw, 4.25rem) clamp(1rem, 4vw, 1.75rem) clamp(3rem, 6vw, 4.5rem);
+    padding: clamp(2rem, 5vw, 3.75rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 6vw, 4.5rem);
   }
-  .excel-to-pdf-heading { margin-bottom: 1.5rem; }
-  .excel-to-pdf-heading .section-kicker { margin-bottom: 0.65rem; }
-  .excel-to-pdf-heading h1 {
-    margin-bottom: 0.45rem;
-    font-size: clamp(1.9rem, 4.5vw, 2.55rem);
-    letter-spacing: -0.04em;
+  .converter-suite-page > .tools-breadcrumb { margin-bottom: 1.4rem; }
+  .converter-suite-heading { margin-bottom: 1.8rem; }
+  .converter-suite-heading h1 {
+    margin: 0.35rem 0 0.55rem;
+    color: var(--text-heading);
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    letter-spacing: -0.045em;
   }
-  .excel-to-pdf-heading p { max-width: 65ch; color: var(--text-secondary); font-size: 0.96rem; }
-  .excel-to-pdf-workspace {
+  .converter-suite-heading p { max-width: 75ch; color: var(--text-secondary); font-size: 0.93rem; line-height: 1.7; }
+  .converter-panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+  .converter-panel {
+    display: flex;
     min-width: 0;
-    padding: clamp(1rem, 3vw, 1.5rem);
+    flex-direction: column;
+    padding: clamp(1rem, 2.2vw, 1.55rem);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     background: var(--surface);
     box-shadow: var(--shadow-sm);
   }
-  .excel-upload-area {
-    display: flex;
-    min-height: 220px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    padding: 1.5rem;
-    border: 1.5px dashed var(--border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--background);
-    text-align: center;
-    cursor: pointer;
-    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out),
-      box-shadow var(--motion-ui) var(--ease-out);
-  }
-  .excel-upload-area:hover,
-  .excel-upload-area:focus-visible,
-  .excel-upload-area.is-dragging {
-    border-color: var(--primary);
-    background: var(--primary-subtle);
-    box-shadow: inset 0 0 0 1px var(--primary-border);
-    outline: none;
-  }
-  .excel-upload-area.is-dragging { border-style: solid; }
-  .excel-upload-area[aria-disabled="true"] { cursor: wait; opacity: 0.75; }
-  .excel-file-input { display: none; }
-  .excel-upload-icon {
+  .converter-panel-heading { display: flex; min-width: 0; align-items: flex-start; gap: 0.9rem; }
+  .converter-panel-heading > div { min-width: 0; }
+  .converter-panel-icon {
     display: grid;
-    width: 3.5rem;
-    height: 3.5rem;
-    margin-bottom: 0.2rem;
+    width: 3.15rem;
+    height: 3.15rem;
+    flex: 0 0 auto;
     place-items: center;
     border: 1px solid var(--primary-border);
     border-radius: var(--radius-lg);
     color: var(--primary);
-    background: var(--surface);
+    background: var(--primary-subtle);
   }
-  .excel-upload-icon svg { width: 2rem; height: 2rem; }
-  .excel-upload-area > strong { color: var(--text-heading); font-size: 1rem; }
-  .excel-upload-hint { color: var(--text-secondary); font-size: 0.85rem; }
-  .excel-upload-limit { color: var(--text-tertiary); font-size: 0.74rem; }
-  .excel-file-info {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.9rem;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--background);
-  }
-  .excel-file-info[hidden],
-  .excel-submit[hidden],
-  .excel-download[hidden],
-  .excel-results[hidden],
-  .excel-progress-wrap[hidden],
-  [data-tools-recommendations][hidden] { display: none; }
-  .excel-file-badge {
+  .converter-panel-icon svg { width: 2rem; height: 2rem; }
+  .image-converter-icon { color: var(--secondary); border-color: var(--secondary-border); background: var(--secondary-subtle); }
+  .converter-panel-heading .section-kicker { margin-bottom: 0.2rem; font-size: 0.67rem; }
+  .converter-panel-heading h2 { margin: 0; color: var(--text-heading); font-size: clamp(1.2rem, 2vw, 1.45rem); letter-spacing: -0.035em; }
+  .converter-panel-heading p { margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.77rem; line-height: 1.55; }
+  .converter-format-fields {
     display: grid;
-    width: 2.5rem;
-    height: 2.5rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid var(--success-border);
-    border-radius: var(--radius-sm);
-    color: var(--success);
-    background: var(--success-subtle);
-    font-size: 0.62rem;
-    font-weight: 900;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    gap: 0.65rem;
+    margin-top: 1.2rem;
   }
-  .excel-file-copy { display: block; min-width: 0; flex: 1; }
-  .excel-file-copy strong,
-  .excel-file-copy small { display: block; overflow-wrap: anywhere; }
-  .excel-file-copy strong { color: var(--text-primary); font-size: 0.82rem; }
-  .excel-file-copy small { margin-top: 0.15rem; color: var(--text-tertiary); font-size: 0.72rem; }
-  .excel-replace-button { flex: 0 0 auto; }
-  .excel-conversion-note {
-    margin-top: 0.9rem;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    color: var(--text-tertiary);
-    background: var(--background);
-    font-size: 0.73rem;
-    line-height: 1.65;
-  }
-  .excel-actions { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.2rem; }
-  .excel-submit { min-width: 190px; }
-  .excel-submit:disabled { cursor: wait; }
-  .excel-results {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    max-width: 540px;
-    margin: 1.25rem auto 0;
-    padding: 0.85rem;
-    border: 1px solid var(--success-border);
-    border-radius: var(--radius-lg);
-    background: var(--success-subtle);
-  }
-  .excel-results-icon {
-    display: grid;
-    width: 2.4rem;
-    height: 2.4rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 50%;
-    color: var(--success);
-    background: var(--surface);
-    font-weight: 900;
-  }
-  .excel-results h2 { color: var(--text-heading); font-size: 0.9rem; }
-  .excel-results p { margin-top: 0.2rem; color: var(--text-secondary); font-size: 0.72rem; overflow-wrap: anywhere; }
-  .excel-status-message { margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.81rem; text-align: center; overflow-wrap: anywhere; }
-  .excel-status.is-error .excel-status-message { color: var(--danger); }
-  .excel-status.is-success .excel-status-message { color: var(--success); }
-  .excel-progress-wrap { display: flex; align-items: center; justify-content: center; gap: 0.55rem; margin-top: 0.8rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center; overflow-wrap: anywhere; }
-  .excel-spinner { width: 1rem; height: 1rem; flex: 0 0 auto; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: excel-spinner 0.8s linear infinite; }
-  @keyframes excel-spinner { to { transform: rotate(360deg); } }
-  .excel-to-pdf-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
-
-  @media (max-width: 560px) {
-    .excel-to-pdf-workspace { padding: 0.8rem; }
-    .excel-upload-area { min-height: 195px; padding: 1rem; }
-    .excel-file-info { flex-wrap: wrap; }
-    .excel-replace-button { width: 100%; justify-content: center; }
-    .excel-actions { align-items: stretch; flex-direction: column; }
-    .excel-submit,
-    .excel-download { width: 100%; justify-content: center; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .excel-spinner { animation: none; }
-    .excel-upload-area { transition: none; }
-  }
-
-  .powerpoint-to-pdf-page {
+  .converter-field { display: grid; min-width: 0; gap: 0.4rem; color: var(--text-secondary); font-size: 0.74rem; font-weight: 700; }
+  .converter-field select {
     width: 100%;
-    max-width: 920px;
     min-width: 0;
-    margin: 0 auto;
-    padding: clamp(2.5rem, 6vw, 4.25rem) clamp(1rem, 4vw, 1.75rem) clamp(3rem, 6vw, 4.5rem);
-  }
-  .powerpoint-to-pdf-heading { margin-bottom: 1.5rem; }
-  .powerpoint-to-pdf-heading .section-kicker { margin-bottom: 0.65rem; }
-  .powerpoint-to-pdf-heading h1 {
-    margin-bottom: 0.45rem;
-    font-size: clamp(1.9rem, 4.5vw, 2.55rem);
-    letter-spacing: -0.04em;
-  }
-  .powerpoint-to-pdf-heading p { max-width: 65ch; color: var(--text-secondary); font-size: 0.96rem; }
-  .powerpoint-to-pdf-workspace {
-    min-width: 0;
-    padding: clamp(1rem, 3vw, 1.5rem);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
+    height: 2.75rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
+    font: inherit;
+    font-size: 0.83rem;
   }
-  .powerpoint-upload-area {
+  .converter-field select:focus-visible { border-color: var(--primary); outline: none; box-shadow: var(--ring); }
+  .converter-field select:disabled { cursor: wait; opacity: 0.7; }
+  .converter-format-arrow { padding-bottom: 0.78rem; color: var(--text-tertiary); font-size: 1.1rem; }
+  .converter-selection {
+    min-height: 2.5rem;
+    margin-top: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--primary);
+    background: var(--background);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .converter-upload {
+    position: relative;
     display: flex;
-    min-height: 220px;
+    min-height: 156px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    padding: 1.5rem;
+    gap: 0.42rem;
+    margin-top: 0.75rem;
+    padding: 1rem;
     border: 1.5px dashed var(--border-strong);
     border-radius: var(--radius-lg);
+    color: var(--text-secondary);
     background: var(--background);
     text-align: center;
     cursor: pointer;
-    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out),
-      box-shadow var(--motion-ui) var(--ease-out);
+    transition: border-color var(--motion-ui) var(--ease-out), background-color var(--motion-ui) var(--ease-out), box-shadow var(--motion-ui) var(--ease-out);
   }
-  .powerpoint-upload-area:hover,
-  .powerpoint-upload-area:focus-visible,
-  .powerpoint-upload-area.is-dragging {
+  .converter-upload:hover,
+  .converter-upload:focus-visible,
+  .converter-upload.is-dragging {
     border-color: var(--primary);
     background: var(--primary-subtle);
     box-shadow: inset 0 0 0 1px var(--primary-border);
     outline: none;
   }
-  .powerpoint-upload-area.is-dragging { border-style: solid; }
-  .powerpoint-upload-area[aria-disabled="true"] { cursor: wait; opacity: 0.75; }
-  .powerpoint-file-input { display: none; }
-  .powerpoint-upload-icon {
+  .converter-upload[aria-disabled="true"] { cursor: wait; opacity: 0.7; }
+  .converter-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .converter-upload-icon {
     display: grid;
-    width: 3.5rem;
-    height: 3.5rem;
-    margin-bottom: 0.2rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    margin-bottom: 0.1rem;
     place-items: center;
     border: 1px solid var(--primary-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     color: var(--primary);
     background: var(--surface);
+    font-size: 1.3rem;
+    font-weight: 700;
   }
-  .powerpoint-upload-icon svg { width: 2rem; height: 2rem; }
-  .powerpoint-upload-area > strong { color: var(--text-heading); font-size: 1rem; }
-  .powerpoint-upload-hint { color: var(--text-secondary); font-size: 0.85rem; }
-  .powerpoint-upload-limit { color: var(--text-tertiary); font-size: 0.74rem; }
-  .powerpoint-file-info {
+  .converter-upload > strong { color: var(--text-heading); font-size: 0.85rem; }
+  .converter-upload > span:not(.converter-upload-icon) { font-size: 0.74rem; }
+  .converter-upload > small { color: var(--text-tertiary); font-size: 0.67rem; }
+  .converter-file {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.9rem;
-    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+    margin-top: 0.7rem;
+    padding: 0.6rem 0.7rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--background);
+    background: var(--surface);
   }
-  .powerpoint-file-info[hidden],
-  .powerpoint-submit[hidden],
-  .powerpoint-download[hidden],
-  .powerpoint-results[hidden],
-  .powerpoint-progress-wrap[hidden],
-  [data-tools-recommendations][hidden] { display: none; }
-  .powerpoint-file-badge {
+  .converter-file[hidden],
+  .converter-download[hidden],
+  .converter-spinner[hidden] { display: none; }
+  .converter-file-type {
     display: grid;
-    width: 2.5rem;
-    height: 2.5rem;
+    min-width: 2.2rem;
+    height: 2.2rem;
     flex: 0 0 auto;
     place-items: center;
-    border: 1px solid var(--danger-border);
     border-radius: var(--radius-sm);
-    color: var(--danger);
-    background: var(--danger-subtle);
-    font-size: 0.62rem;
+    color: var(--primary);
+    background: var(--primary-subtle);
+    font-size: 0.55rem;
     font-weight: 900;
   }
-  .powerpoint-file-copy { display: block; min-width: 0; flex: 1; }
-  .powerpoint-file-copy strong,
-  .powerpoint-file-copy small { display: block; overflow-wrap: anywhere; }
-  .powerpoint-file-copy strong { color: var(--text-primary); font-size: 0.82rem; }
-  .powerpoint-file-copy small { margin-top: 0.15rem; color: var(--text-tertiary); font-size: 0.72rem; }
-  .powerpoint-replace-button { flex: 0 0 auto; }
-  .powerpoint-conversion-note {
-    margin-top: 0.9rem;
-    padding: 0.75rem 0.85rem;
+  .converter-file-copy { display: block; min-width: 0; flex: 1; }
+  .converter-file-copy strong,
+  .converter-file-copy small { display: block; overflow-wrap: anywhere; }
+  .converter-file-copy strong { color: var(--text-primary); font-size: 0.73rem; }
+  .converter-file-copy small { margin-top: 0.1rem; color: var(--text-tertiary); font-size: 0.66rem; }
+  .converter-remove { min-height: 2rem; padding: 0.3rem 0.5rem; font-size: 0.68rem; }
+  .converter-remove:disabled { cursor: wait; opacity: 0.5; }
+  .converter-note {
+    min-height: 4rem;
+    margin-top: 0.7rem;
+    padding: 0.6rem 0.7rem;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     background: var(--background);
-    font-size: 0.73rem;
-    line-height: 1.65;
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
-  .powerpoint-actions { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.2rem; }
-  .powerpoint-submit { min-width: 190px; }
-  .powerpoint-submit:disabled { cursor: wait; }
-  .powerpoint-results {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    max-width: 540px;
-    margin: 1.25rem auto 0;
-    padding: 0.85rem;
-    border: 1px solid var(--success-border);
-    border-radius: var(--radius-lg);
-    background: var(--success-subtle);
-  }
-  .powerpoint-results-icon {
-    display: grid;
-    width: 2.4rem;
-    height: 2.4rem;
-    flex: 0 0 auto;
-    place-items: center;
+  .converter-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: auto; padding-top: 0.95rem; }
+  .converter-submit,
+  .converter-download { min-width: 140px; justify-content: center; }
+  .converter-submit:disabled { cursor: not-allowed; opacity: 0.58; }
+  .converter-spinner {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-right: 0.45rem;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
     border-radius: 50%;
-    color: var(--success);
-    background: var(--surface);
-    font-weight: 900;
+    animation: converter-spin 0.8s linear infinite;
   }
-  .powerpoint-results h2 { color: var(--text-heading); font-size: 0.9rem; }
-  .powerpoint-results p { margin-top: 0.2rem; color: var(--text-secondary); font-size: 0.72rem; overflow-wrap: anywhere; }
-  .powerpoint-status-message { margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.81rem; text-align: center; overflow-wrap: anywhere; }
-  .powerpoint-status.is-error .powerpoint-status-message { color: var(--danger); }
-  .powerpoint-status.is-success .powerpoint-status-message { color: var(--success); }
-  .powerpoint-progress-wrap { display: flex; align-items: center; justify-content: center; gap: 0.55rem; margin-top: 0.8rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center; overflow-wrap: anywhere; }
-  .powerpoint-spinner { width: 1rem; height: 1rem; flex: 0 0 auto; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; animation: powerpoint-spinner 0.8s linear infinite; }
-  @keyframes powerpoint-spinner { to { transform: rotate(360deg); } }
-  .powerpoint-to-pdf-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
-
+  @keyframes converter-spin { to { transform: rotate(360deg); } }
+  .converter-status { min-height: 2.5rem; margin-top: 0.65rem; color: var(--text-secondary); font-size: 0.7rem; line-height: 1.5; text-align: center; overflow-wrap: anywhere; }
+  .converter-status.is-error { color: var(--danger); }
+  .converter-status.is-success { color: var(--success); }
+  .converter-suite-icon { display: block; width: 1.7rem; height: 1.7rem; color: var(--primary); }
+  @media (max-width: 900px) {
+    .converter-panels { grid-template-columns: minmax(0, 1fr); max-width: 700px; margin: 0 auto; }
+  }
   @media (max-width: 560px) {
-    .powerpoint-to-pdf-workspace { padding: 0.8rem; }
-    .powerpoint-upload-area { min-height: 195px; padding: 1rem; }
-    .powerpoint-file-info { flex-wrap: wrap; }
-    .powerpoint-replace-button { width: 100%; justify-content: center; }
-    .powerpoint-actions { align-items: stretch; flex-direction: column; }
-    .powerpoint-submit,
-    .powerpoint-download { width: 100%; justify-content: center; }
+    .converter-suite-page { padding-top: 1.8rem; }
+    .converter-panel { padding: 0.9rem; }
+    .converter-panel-heading { gap: 0.65rem; }
+    .converter-panel-icon { width: 2.7rem; height: 2.7rem; }
+    .converter-panel-icon svg { width: 1.7rem; height: 1.7rem; }
+    .converter-upload { min-height: 145px; }
+    .converter-actions { align-items: stretch; flex-direction: column; }
+    .converter-submit,
+    .converter-download { width: 100%; }
+    .converter-note { min-height: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .powerpoint-spinner { animation: none; }
-    .powerpoint-upload-area { transition: none; }
+    .converter-spinner { animation: none; }
+    .converter-upload { transition: none; }
   }

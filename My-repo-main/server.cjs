@@ -4,7 +4,14 @@ const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { convertPresentation, validatePresentation, MAX_FILE_BYTES } = require('./powerpoint-to-pdf.cjs');
+const {
+  MAX_DOCUMENT_BYTES,
+  MAX_IMAGE_BYTES,
+  convertDocument,
+  convertImage,
+  inspectDocument,
+  inspectImage
+} = require('./converter-suite.cjs');
 const supabase = require('./supabase.cjs');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
@@ -66,27 +73,6 @@ const assignmentUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }
 });
-const powerpointUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_FILE_BYTES }
-}).single('file');
-let activePowerPointConversions = 0;
-const MAX_ACTIVE_POWERPOINT_CONVERSIONS = 2;
-
-function receivePowerPointFile(req, res, next) {
-  powerpointUpload(req, res, (error) => {
-    if (!error) {
-      next();
-      return;
-    }
-    if (req.path === '/api/tools/powerpoint-to-pdf') activePowerPointConversions -= 1;
-    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
-      res.status(413).json({ error: 'This presentation is larger than the 50 MB file limit.' });
-      return;
-    }
-    res.status(400).json({ error: 'Choose one PowerPoint presentation to continue.' });
-  });
-}
 
 function requireStudent(req, res, next) {
   if (!req.session.user || req.session.user.role !== 'student') {
@@ -217,56 +203,94 @@ app.get('/tools/compress-pdf', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'compress-pdf.html'));
 });
 
-app.get('/tools/excel-to-pdf', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'excel-to-pdf.html'));
-});
-
-app.get('/tools/powerpoint-to-pdf', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'powerpoint-to-pdf.html'));
-});
-
-app.post('/api/tools/powerpoint-to-pdf/inspect', receivePowerPointFile, async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'Choose a PowerPoint presentation to continue.' });
-    const presentation = await validatePresentation(req.file);
-    return res.json(presentation);
-  } catch (error) {
-    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 400;
-    return res.status(statusCode).json({ error: error.message || 'This presentation could not be read.' });
-  }
-});
-
-app.post('/api/tools/powerpoint-to-pdf', (req, res, next) => {
-  if (activePowerPointConversions >= MAX_ACTIVE_POWERPOINT_CONVERSIONS) {
-    return res.status(429).json({ error: 'The conversion service is busy. Wait a moment and try again.' });
-  }
-  activePowerPointConversions += 1;
-  next();
-}, receivePowerPointFile, async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'Choose a PowerPoint presentation to continue.' });
-    const result = await convertPresentation(req.file);
-    res.set({
-      'Cache-Control': 'no-store',
-      'Content-Disposition': 'attachment; filename="converted-presentation.pdf"',
-      'Content-Length': String(result.bytes.length),
-      'Content-Type': 'application/pdf',
-      'X-Converted-Slides': String(result.pageCount)
-    });
-    return res.send(result.bytes);
-  } catch (error) {
-    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
-    return res.status(statusCode).json({
-      error: error.message || 'The presentation could not be converted. Try another file.'
-    });
-  } finally {
-    activePowerPointConversions -= 1;
-  }
+app.get('/tools/converter-suite', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'converter-suite.html'));
 });
 
 app.get('/meet-developer', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'meet-developer.html'));
 });
+
+function registerConverterEndpoints(kind, fileLimit, concurrencyLimit, inspect, convert) {
+  let activeRequests = 0;
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: fileLimit, files: 1, fields: 2, fieldNameSize: 50, fieldSize: 32 }
+  }).single('file');
+
+  function limitConcurrency(req, res, next) {
+    if (activeRequests >= concurrencyLimit) {
+      return res.status(429).json({ error: 'This converter is busy. Wait a moment and try again.' });
+    }
+    activeRequests += 1;
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      activeRequests -= 1;
+    };
+    res.once('finish', release);
+    res.once('close', release);
+    next();
+  }
+
+  function receiveFile(req, res, next) {
+    upload(req, res, (error) => {
+      if (!error) {
+        next();
+        return;
+      }
+      if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+        res.status(413).json({ error: 'This file exceeds the ' + Math.round(fileLimit / (1024 * 1024)) + ' MB upload limit.' });
+        return;
+      }
+      res.status(400).json({ error: 'Choose exactly one file to continue.' });
+    });
+  }
+
+  function handleFailure(res, error) {
+    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+    if (statusCode === 500) {
+      console.error('Converter Suite internal processing error.', {
+        kind,
+        code: error.code || 'UNEXPECTED_ERROR'
+      });
+    }
+    return res.status(statusCode).json({
+      error: statusCode === 500 ? 'The conversion could not be completed. Try another file.' : error.message
+    });
+  }
+
+  app.post('/api/tools/converter-suite/' + kind + '/inspect', limitConcurrency, receiveFile, async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Choose a file to continue.' });
+      const result = await inspect(req.file, req.body.from, req.body.to);
+      return res.json(result);
+    } catch (error) {
+      return handleFailure(res, error);
+    }
+  });
+
+  app.post('/api/tools/converter-suite/' + kind, limitConcurrency, receiveFile, async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Choose a file to continue.' });
+      const result = await convert(req.file, req.body.from, req.body.to);
+      res.set({
+        'Cache-Control': 'no-store, private',
+        'Content-Disposition': 'attachment; filename="' + result.filename + '"',
+        'Content-Length': String(result.bytes.length),
+        'Content-Type': result.mime,
+        'X-Output-Filename': result.filename
+      });
+      return res.send(result.bytes);
+    } catch (error) {
+      return handleFailure(res, error);
+    }
+  });
+}
+
+registerConverterEndpoints('document', MAX_DOCUMENT_BYTES, 2, inspectDocument, convertDocument);
+registerConverterEndpoints('image', MAX_IMAGE_BYTES, 4, inspectImage, convertImage);
 
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -290,10 +314,6 @@ app.get('/vendor/pdfjs.js', (req, res) => {
 
 app.get('/vendor/pdfjs.worker.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs'));
-});
-
-app.get('/vendor/xlsx.full.min.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'node_modules', '@e965', 'xlsx', 'dist', 'xlsx.full.min.js'));
 });
 
 app.get('/vendor/jspdf.umd.min.js', (req, res) => {

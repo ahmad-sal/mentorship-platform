@@ -35,19 +35,11 @@
       available: true
     },
     {
-      id: 'excel-to-pdf',
-      name: 'Excel to PDF',
-      description: 'Turn Excel worksheets into a clear, printable PDF document.',
-      icon: '<svg class="excel-to-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5.5h14l6 6v8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 6v7h6M11 18h9M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M24 24h11v10H24zM24 29h11M29.5 24v10" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m18 27 4 4m0-4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-      route: '/tools/excel-to-pdf',
-      available: true
-    },
-    {
-      id: 'powerpoint-to-pdf',
-      name: 'PowerPoint to PDF',
-      description: 'Convert PowerPoint presentations into downloadable PDF documents.',
-      icon: '<svg class="powerpoint-to-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.5 5.5h14l6 6v7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M21.5 6v7h6M11 18h8M11 22h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 23h12v11H22zM22 28.5h12M28 23v11" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M17 27h4m-1.5-1.5L17 27l2.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      route: '/tools/powerpoint-to-pdf',
+      id: 'converter-suite',
+      name: 'Converter Suite',
+      description: 'Convert documents and images between multiple formats in one place.',
+      icon: '<svg class="converter-suite-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 12.5h17M19.5 8l4.5 4.5-4.5 4.5M33 27.5H16M20.5 23 16 27.5l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="5.5" width="29" height="29" rx="6" stroke="currentColor" stroke-width="2"/></svg>',
+      route: '/tools/converter-suite',
       available: true
     }
   ];
@@ -150,9 +142,7 @@
         !document.body.classList.contains('calculator-public-page') &&
         !document.body.classList.contains('merge-pdf-public-page') &&
         !document.body.classList.contains('split-pdf-public-page') &&
-        !document.body.classList.contains('compress-pdf-public-page') &&
-        !document.body.classList.contains('excel-to-pdf-public-page') &&
-        !document.body.classList.contains('powerpoint-to-pdf-public-page')) return;
+        !document.body.classList.contains('compress-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';
     }
     if (themeButton && themeButton.dataset.toolsThemeReady !== 'true') {

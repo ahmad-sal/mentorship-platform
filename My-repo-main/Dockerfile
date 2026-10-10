@@ -4,7 +4,7 @@ ENV NODE_ENV=production
 ENV SOFFICE_PATH=/usr/bin/soffice
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libreoffice-impress fonts-dejavu-core fonts-liberation \
+  && apt-get install -y --no-install-recommends libreoffice-writer libreoffice-calc libreoffice-impress fonts-dejavu-core fonts-liberation \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

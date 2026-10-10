@@ -1391,6 +1391,11 @@
     align-items: stretch;
     gap: 1.25rem;
   }
+  .converter-panels.is-single-panel {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 900px;
+    margin: 0 auto;
+  }
   .converter-panel {
     display: flex;
     min-width: 0;

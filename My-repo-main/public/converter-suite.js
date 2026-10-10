@@ -14,6 +14,19 @@
     webp: { label: 'WebP', extension: '.webp', mime: 'image/webp', limit: 20 * 1024 * 1024 }
   };
 
+  var mode = new URLSearchParams(window.location.search).get('mode');
+  if (mode !== 'pdf' && mode !== 'image') mode = 'all';
+
+  var panelsContainer = document.querySelector('.converter-panels');
+  if (mode !== 'all') {
+    panelsContainer.classList.add('is-single-panel');
+    panelsContainer.querySelectorAll('[data-converter]').forEach(function (panel) {
+      if (panel.getAttribute('data-converter') !== (mode === 'pdf' ? 'document' : 'image')) {
+        panel.remove();
+      }
+    });
+  }
+
   document.querySelectorAll('[data-converter]').forEach(function (panel) {
     var kind = panel.getAttribute('data-converter');
     var formats = kind === 'image' ? imageFormats : documentFormats;

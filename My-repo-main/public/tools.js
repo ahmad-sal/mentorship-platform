@@ -39,7 +39,7 @@
       name: 'Converter Suite',
       description: 'Convert documents and images between multiple formats in one place.',
       icon: '<svg class="converter-suite-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 12.5h17M19.5 8l4.5 4.5-4.5 4.5M33 27.5H16M20.5 23 16 27.5l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="5.5" width="29" height="29" rx="6" stroke="currentColor" stroke-width="2"/></svg>',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=all',
       available: true
     },
     {
@@ -47,7 +47,7 @@
       name: 'PDF to Other Converter',
       description: 'Convert PDF files into supported document formats using one unified converter.',
       icon: '📄',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=pdf',
       available: true
     },
     {
@@ -55,7 +55,7 @@
       name: 'Word to Other Converter',
       description: 'Convert Word documents into other supported document formats.',
       icon: '📝',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=pdf',
       available: true
     },
     {
@@ -63,7 +63,7 @@
       name: 'PowerPoint to Other Converter',
       description: 'Convert presentations into other supported document formats.',
       icon: '📊',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=pdf',
       available: true
     },
     {
@@ -71,7 +71,7 @@
       name: 'Excel to Other Converter',
       description: 'Convert spreadsheets into other supported document formats.',
       icon: '📈',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=pdf',
       available: true
     },
     {
@@ -79,7 +79,7 @@
       name: 'JPEG to Other Converter',
       description: 'Convert JPEG images into other supported image formats.',
       icon: '🖼️',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=image',
       available: true
     },
     {
@@ -87,7 +87,7 @@
       name: 'JPG to Other Converter',
       description: 'Convert JPG images into other supported image formats.',
       icon: '🌄',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=image',
       available: true
     },
     {
@@ -95,7 +95,7 @@
       name: 'PNG to Other Converter',
       description: 'Convert PNG images into other supported image formats.',
       icon: '🌆',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=image',
       available: true
     },
     {
@@ -103,7 +103,7 @@
       name: 'WebP to Other Converter',
       description: 'Convert WebP images into other supported image formats.',
       icon: '🌐',
-      route: '/tools/converter-suite',
+      route: '/tools/converter-suite?mode=image',
       available: true
     }
   ];

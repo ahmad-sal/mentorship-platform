@@ -4,28 +4,7 @@
   align-items: center;
 }
 
-.tools-nav-item > .nav-link {
-  padding-right: 0.35rem;
-}
-
-.tools-nav-toggle {
-  display: inline-grid;
-  place-items: center;
-  width: 1.6rem;
-  height: 2.35rem;
-  margin-left: -0.2rem;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  background: transparent;
-  transition: color var(--motion-micro) var(--ease-out), background-color var(--motion-micro) var(--ease-out);
-}
-
-.tools-nav-toggle:hover,
-.tools-nav-item.is-open .tools-nav-toggle {
-  color: var(--primary);
-  background: var(--primary-subtle);
-}
+.tools-nav-toggle { display: none; }
 
 .tools-dropdown {
   position: absolute;

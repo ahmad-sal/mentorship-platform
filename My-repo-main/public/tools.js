@@ -279,9 +279,9 @@
       var trigger = wrapper.querySelector('.nav-link');
       if (!panel || !trigger) return;
       wrapper.dataset.dropdownReady = 'true';
+      panel.hidden = false;
 
       function setOpen(open) {
-        panel.hidden = !open;
         wrapper.classList.toggle('is-open', open);
         trigger.setAttribute('aria-expanded', String(open));
       }

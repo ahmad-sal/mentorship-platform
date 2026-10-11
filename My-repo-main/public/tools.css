@@ -41,10 +41,19 @@
   border-radius: var(--radius-xl);
   background: var(--surface);
   box-shadow: var(--shadow-lg);
-  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -0.45rem);
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out), visibility 180ms;
 }
 
 .tools-dropdown[hidden] { display: none; }
+
+.tools-nav-item.is-open .tools-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
 
 .tools-dropdown-heading {
   padding: 0.2rem 0.4rem 0.55rem;
@@ -494,6 +503,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tools-dropdown { transition: none; }
   .tools-card,
   .tools-card-icon,
   .calculator-key { transition: none; }

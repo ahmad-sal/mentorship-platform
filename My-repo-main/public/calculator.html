@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Use a free, private basic and scientific calculator. No account or sign-in required." />
+  <title>Calculator — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme calculator-public-page">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="calculator-page" data-calculator>
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <div class="calculator-heading">
+      <div>
+        <h1>Calculator</h1>
+        <p>Basic arithmetic and scientific functions, calculated privately in your browser.</p>
+      </div>
+      <div class="calculator-mode" role="group" aria-label="Trigonometric angle mode">
+        <button type="button" data-angle-mode="DEG" aria-pressed="true">DEG</button>
+        <button type="button" data-angle-mode="RAD" aria-pressed="false">RAD</button>
+      </div>
+    </div>
+
+    <div class="calculator-layout">
+      <section class="calculator-panel" aria-label="Calculator workspace">
+        <div class="calculator-display" aria-live="polite" aria-atomic="false">
+          <div class="calculator-expression" data-expression aria-label="Current expression"></div>
+          <div class="calculator-result-line">
+            <output class="calculator-result" data-result aria-label="Calculation result">0</output>
+            <button class="calculator-copy" type="button" data-action="copy" aria-label="Copy result" title="Copy result">⧉</button>
+          </div>
+        </div>
+        <div class="calculator-keypad" aria-label="Basic calculator keys">
+          <button class="calculator-key is-utility" type="button" data-action="clear">AC</button>
+          <button class="calculator-key is-utility" type="button" data-action="clear-entry">CE</button>
+          <button class="calculator-key is-utility" type="button" data-action="backspace" aria-label="Backspace">⌫</button>
+          <button class="calculator-key is-operator" type="button" data-action="insert" data-value="/">÷</button>
+
+          <button class="calculator-key" type="button" data-action="insert" data-value="7">7</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="8">8</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="9">9</button>
+          <button class="calculator-key is-operator" type="button" data-action="insert" data-value="*">×</button>
+
+          <button class="calculator-key" type="button" data-action="insert" data-value="4">4</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="5">5</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="6">6</button>
+          <button class="calculator-key is-operator" type="button" data-action="insert" data-value="-">−</button>
+
+          <button class="calculator-key" type="button" data-action="insert" data-value="1">1</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="2">2</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="3">3</button>
+          <button class="calculator-key is-operator" type="button" data-action="insert" data-value="+">+</button>
+
+          <button class="calculator-key is-utility" type="button" data-action="sign" aria-label="Toggle positive or negative">±</button>
+          <button class="calculator-key" type="button" data-action="insert" data-value="0">0</button>
+          <button class="calculator-key" type="button" data-action="decimal">.</button>
+          <button class="calculator-key is-equals" type="button" data-action="equals" aria-label="Calculate">=</button>
+        </div>
+
+        <section class="scientific-section" aria-label="Scientific functions">
+          <button class="scientific-toggle" type="button" aria-expanded="false" aria-controls="scientificKeys" data-action="toggle-scientific">
+            <span>Scientific functions</span><span aria-hidden="true">＋</span>
+          </button>
+          <div class="scientific-grid" id="scientificKeys" hidden>
+            <button class="calculator-key is-utility" type="button" data-action="insert" data-value="(">(</button>
+            <button class="calculator-key is-utility" type="button" data-action="insert" data-value=")">)</button>
+            <button class="calculator-key is-utility" type="button" data-action="insert" data-value="%">%</button>
+            <button class="calculator-key is-utility" type="button" data-action="insert" data-value=" mod ">mod</button>
+            <button class="calculator-key is-utility" type="button" data-action="function" data-value="square">x²</button>
+
+            <button class="calculator-key" type="button" data-action="function" data-value="cube">x³</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="sqrt">√x</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="cbrt">∛x</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="power">xʸ</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="reciprocal">1/x</button>
+
+            <button class="calculator-key" type="button" data-action="function" data-value="abs">|x|</button>
+            <button class="calculator-key" type="button" data-action="insert" data-value="!">n!</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="exp">eˣ</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="ln">ln</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="log">log</button>
+
+            <button class="calculator-key" type="button" data-action="function" data-value="sin">sin</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="cos">cos</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="tan">tan</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="asin">sin⁻¹</button>
+            <button class="calculator-key" type="button" data-action="function" data-value="acos">cos⁻¹</button>
+
+            <button class="calculator-key" type="button" data-action="function" data-value="atan">tan⁻¹</button>
+            <button class="calculator-key" type="button" data-action="insert" data-value="pi">π</button>
+            <button class="calculator-key" type="button" data-action="insert" data-value="e">e</button>
+          </div>
+        </section>
+
+        <div class="memory-controls" role="group" aria-label="Calculator memory">
+          <button type="button" data-action="memory-clear">MC</button>
+          <button type="button" data-action="memory-recall">MR</button>
+          <button type="button" data-action="memory-add">M+</button>
+          <button type="button" data-action="memory-subtract">M−</button>
+        </div>
+        <p class="calculator-help">Keyboard: numbers, + − * /, parentheses, Enter, Backspace, Escape. Percent is entered as a postfix value (for example, 10% = 0.1).</p>
+        <p class="calculator-notice" data-notice role="status" aria-live="polite"></p>
+      </section>
+
+      <aside class="history-panel" aria-labelledby="historyTitle">
+        <div class="history-heading">
+          <h2 id="historyTitle">Calculation history</h2>
+          <button class="history-clear" type="button" data-action="clear-history">Clear history</button>
+        </div>
+        <div class="history-list" data-history>
+          <p class="history-empty">Your calculations will appear here.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/calculator-engine.js"></script>
+  <script src="/calculator.js"></script>
+</body>
+</html>

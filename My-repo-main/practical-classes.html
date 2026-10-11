@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Practical Live Classes | Ahmad Saleem Mentorship</title>
+  <meta name="description" content="Watch the guided video lessons for your course track, follow along with each lesson, and practice the workflow shown by your mentor." />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <style>
+    /* Per-course accent themes, applied by the page script below. */
+    body.theme-youtube { --course-accent: #dc2626; }
+    body.theme-canva { --course-accent: #12a150; }
+    body.theme-wordpress { --course-accent: #2d8fd5; }
+    body.theme-ai { --course-accent: #7c3aed; }
+
+    .page-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      padding-block: clamp(2.25rem, 6vw, 4rem);
+      background: var(--navy-950);
+      color: #ffffff;
+    }
+    .page-hero h1 { color: #ffffff; }
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      inset: auto auto -160px -120px;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--course-accent, #4f46e5) 55%, transparent), transparent 68%);
+      filter: blur(60px);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .tv-logo { background: var(--gradient-brand); }
+    body[class*='theme-'] .playlist-button {
+      background: var(--course-accent, var(--primary));
+      box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--course-accent, #1e40af) 60%, transparent);
+    }
+    body[class*='theme-'] .playlist-button:hover { background: var(--course-accent, var(--primary-dark)); filter: brightness(0.94); }
+  </style>
+</head>
+<body class="light-theme">
+  <a class="skip-link" href="#classesMain">Skip to main content</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <a class="nav-link active" href="practical-classes.html">Live classes</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/student/dashboard">Workspace</a>
+          <button class="btn btn-ghost" type="button" onclick="logout()"><i data-lucide="log-out"></i> Log out</button>
+          <a class="btn btn-primary" href="/register">Enrol now</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="classesMain">
+    <div class="page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="hero-bg__grid"></span>
+        <span class="hero-bg__glow hero-bg__glow--b"></span>
+      </div>
+
+      <div class="main-container">
+        <button type="button" class="btn btn-glass btn-sm mb-3" onclick="history.back()"><i data-lucide="arrow-left"></i> Back to course</button>
+
+        <span class="pill-badge pill-glass"><i data-lucide="play-circle"></i><span>Practical live classes</span></span>
+        <h1 class="display-2 mt-2" id="pageTitle">Learn through guided video lessons.</h1>
+        <p class="lead mt-2" style="color:#b3c1dc; max-width:62ch;">
+          Watch the selected course videos, follow along with each lesson, and practice the workflow
+          shown by your mentor.
+        </p>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div class="card" style="margin-top:clamp(1.5rem,4vw,2.5rem);">
+        <div class="playlist-heading">
+          <span class="tv-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m8 2 4 3 4-3"></path><path d="m10 10 4 2-4 2z"></path></svg>
+          </span>
+          <div>
+            <h2 id="playlistTitle">Course video playlist</h2>
+            <p class="muted small">Open the official playlist for this course.</p>
+          </div>
+        </div>
+
+        <div class="playlist-form mt-3">
+          <img class="playlist-thumbnail" id="playlistThumbnail" src="images/thumb-graphics.jpeg"
+               alt="Course playlist thumbnail" loading="lazy" decoding="async" onerror="this.style.display='none'">
+          <a class="playlist-button" id="playlistButton" href="#" target="_blank" rel="noopener noreferrer">
+            <i data-lucide="external-link"></i> Open video playlist
+          </a>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-header text-center">
+          <div>
+            <span class="section-kicker">How to use this page</span>
+            <h2 class="section-title mt-1">Get more out of every lesson</h2>
+          </div>
+        </div>
+
+        <div class="grid-3" data-reveal-group>
+          <div class="card card-hover" data-reveal-item>
+            <span class="feature-icon"><i data-lucide="target"></i></span>
+            <h3>Follow the list in order</h3>
+            <p class="muted small mt-1">The playlist is arranged so each lesson builds on the workflow covered in the previous one.</p>
+          </div>
+          <div class="card card-hover" data-reveal-item>
+            <span class="feature-icon"><i data-lucide="lightbulb"></i></span>
+            <h3>Practise while you watch</h3>
+            <p class="muted small mt-1">Keep your tool open next to the video and repeat each step yourself instead of only watching.</p>
+          </div>
+          <div class="card card-hover" data-reveal-item>
+            <span class="feature-icon"><i data-lucide="send"></i></span>
+            <h3>Submit your practice work</h3>
+            <p class="muted small mt-1">Send the result back from your student workspace so your mentor can review it.</p>
+          </div>
+        </div>
+
+        <div class="row mt-4" style="justify-content:center;">
+          <a class="btn btn-primary" href="/student/dashboard"><i data-lucide="layout-dashboard"></i> Open your workspace</a>
+          <a class="btn btn-secondary" href="/register">Create student account</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <div class="brand-logo">
+          <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </div>
+        <p class="footer-desc">Practical, project-based mentorship across YouTube Automation, Canva, WordPress and Artificial Intelligence.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Courses</span>
+        <h4 class="footer-heading">Tracks</h4>
+        <ul class="footer-links">
+          <li><a href="course-youtube-automation.html"><span>YouTube Automation</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="course-canva.html"><span>Graphic Designing</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="course-wordpress.html"><span>WordPress</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="course-artificial-intelligence.html"><span>Artificial Intelligence</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span>
+        <h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links">
+          <li><a href="/register"><span>Create account</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/login"><span>Student login</span><i data-lucide="arrow-right"></i></a></li>
+          <li><a href="/#viewCourses"><span>All courses</span><i data-lucide="arrow-right"></i></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p>
+      <p><a href="/">Back to homepage</a></p>
+    </div>
+  </footer>
+
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script>
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    /* ----------------------------------------------------------------
+       Course playlist resolution (unchanged behaviour)
+       ---------------------------------------------------------------- */
+    const PLAYLIST_LINKS = {
+      canva: 'https://youtube.com/playlist?list=PLEUsuq8UIsYA&si=Qs0RNbVoQD7Kdng4',
+      graphicdesigning: 'https://youtube.com/playlist?list=PLEUsuq8UIsYA&si=Qs0RNbVoQD7Kdng4',
+      graphicdesigningthroughcanva: 'https://youtube.com/playlist?list=PLEUsuq8UIsYA&si=Qs0RNbVoQD7Kdng4',
+      graphicsdesigning: 'https://youtube.com/playlist?list=PLEUsuq8UIsYA&si=Qs0RNbVoQD7Kdng4',
+      graphicsdesigining: 'https://youtube.com/playlist?list=PLEUsuq8UIsYA&si=Qs0RNbVoQD7Kdng4',
+
+      ai: 'https://youtube.com/playlist?list=PLQTO9V3Zldy4&si=y9dn_XdUIkElVZkj',
+      artificialintelligence: 'https://youtube.com/playlist?list=PLQTO9V3Zldy4&si=y9dn_XdUIkElVZkj',
+      advancedartificialintelligence: 'https://youtube.com/playlist?list=PLQTO9V3Zldy4&si=y9dn_XdUIkElVZkj',
+
+      wordpress: 'https://youtube.com/playlist?list=PLc0Bqc25RKTg&si=RezB3e_Dcfm7jOqA',
+      webdevelopment: 'https://youtube.com/playlist?list=PLc0Bqc25RKTg&si=RezB3e_Dcfm7jOqA',
+      webdevelopmentthroughwordpress: 'https://youtube.com/playlist?list=PLc0Bqc25RKTg&si=RezB3e_Dcfm7jOqA',
+
+      youtubeautomation: 'https://youtube.com/playlist?list=PLfwp9CvuUprE&si=PQzJ7KfoQkhiD6xm'
+    };
+
+    const PLAYLIST_THUMBNAILS = {
+      canva: 'images/thumb-graphics.jpeg',
+      graphicdesigning: 'images/thumb-graphics.jpeg',
+      graphicdesigningthroughcanva: 'images/thumb-graphics.jpeg',
+      graphicsdesigning: 'images/thumb-graphics.jpeg',
+      graphicsdesigining: 'images/thumb-graphics.jpeg',
+
+      ai: 'images/thumb-ai.jpeg',
+      artificialintelligence: 'images/thumb-ai.jpeg',
+      advancedartificialintelligence: 'images/thumb-ai.jpeg',
+
+      wordpress: 'images/thumb-webdev.jpeg',
+      webdevelopment: 'images/thumb-webdev.jpeg',
+      webdevelopmentthroughwordpress: 'images/thumb-webdev.jpeg',
+
+      youtubeautomation: 'images/thumb-yt.jpeg'
+    };
+
+    const params = new URLSearchParams(location.search);
+    const course = params.get('course') || 'your course';
+    const label = decodeURIComponent(course);
+    const courseKey = label.toLowerCase().replace(/[^a-z]/g, '');
+
+    document.getElementById('pageTitle').textContent = label + ' practical live classes.';
+    document.getElementById('playlistTitle').textContent = label + ' video playlist';
+    document.title = label + ' — Practical Live Classes | Ahmad Saleem Mentorship';
+
+    const theme = label.toLowerCase().includes('youtube') ? 'theme-youtube'
+      : label.toLowerCase().includes('artificial') ? 'theme-ai'
+      : label.toLowerCase().includes('canva') ? 'theme-canva'
+      : 'theme-wordpress';
+    document.body.classList.add(theme);
+
+    const playlistButton = document.getElementById('playlistButton');
+    const playlistThumbnail = document.getElementById('playlistThumbnail');
+    const playlistLink = PLAYLIST_LINKS[courseKey];
+
+    if (playlistLink) {
+      playlistButton.href = playlistLink;
+    } else {
+      playlistButton.setAttribute('aria-disabled', 'true');
+      playlistButton.removeAttribute('target');
+      playlistButton.addEventListener('click', event => event.preventDefault());
+    }
+
+    if (PLAYLIST_THUMBNAILS[courseKey]) {
+      playlistThumbnail.src = PLAYLIST_THUMBNAILS[courseKey];
+      playlistThumbnail.alt = label + ' playlist thumbnail';
+    }
+
+    if (window.app && typeof window.app.renderIcons === 'function') window.app.renderIcons();
+  </script>
+</body>
+</html>

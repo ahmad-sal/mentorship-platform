@@ -1,0 +1,11 @@
+/* ==========================================================================
+   Ahmad Saleem Mentorship — legacy responsive entry point.
+
+   Responsive behaviour, overflow safeguards and reduced-motion handling now
+   live in the shared design system: /theme.css
+
+   This file is kept so older markup that still references responsive.css keeps
+   working. It intentionally contains no rules of its own.
+   ========================================================================== */
+
+@import url("/theme.css");

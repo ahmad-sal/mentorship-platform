@@ -1,0 +1,11 @@
+/* ==========================================================================
+   Ahmad Saleem Mentorship — legacy stylesheet entry point.
+
+   The design system now lives in a single shared file so every page stays
+   visually consistent: /theme.css
+
+   This file is kept so older markup that still references Mentor.css keeps
+   working. It intentionally contains no rules of its own.
+   ========================================================================== */
+
+@import url("/theme.css");

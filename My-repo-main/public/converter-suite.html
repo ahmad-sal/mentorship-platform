@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Convert documents and images between multiple formats in one place." />
+  <title>Converter Suite — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme converter-suite-public-page" data-current-tool="converter-suite">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="converter-suite-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="converter-suite-heading">
+      <span class="section-kicker">One place for your everyday conversions</span>
+      <h1>Converter Suite</h1>
+      <p>Convert documents and images between multiple formats in one place. Files are processed on this server and are not kept after conversion.</p>
+    </header>
+
+    <div class="converter-panels">
+      <section class="converter-panel" data-converter="document" aria-labelledby="documentConverterTitle">
+        <header class="converter-panel-heading">
+          <span class="converter-panel-icon document-converter-icon" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 5.5h14l7 7V34H9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M23 6v8h7M14 20h11M14 24.5h11M14 29h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <div>
+            <span class="section-kicker">Documents</span>
+            <h2 id="documentConverterTitle">PDF Converter</h2>
+            <p>Reconstruct supported text and tables between PDF and Office files.</p>
+          </div>
+        </header>
+
+        <div class="converter-format-fields">
+          <label class="converter-field">
+            <span>From</span>
+            <select data-format="from" aria-label="PDF converter source format">
+              <option value="pdf">PDF</option>
+              <option value="word">Word (.docx)</option>
+              <option value="powerpoint">PowerPoint (.pptx)</option>
+              <option value="excel">Excel (.xlsx)</option>
+            </select>
+          </label>
+          <span class="converter-format-arrow" aria-hidden="true">→</span>
+          <label class="converter-field">
+            <span>To</span>
+            <select data-format="to" aria-label="PDF converter destination format">
+              <option value="pdf">PDF</option>
+              <option value="word">Word (.docx)</option>
+              <option value="powerpoint">PowerPoint (.pptx)</option>
+              <option value="excel">Excel (.xlsx)</option>
+            </select>
+          </label>
+        </div>
+        <p class="converter-selection" data-selection aria-live="polite"></p>
+
+        <label class="converter-upload" data-upload tabindex="0" role="button" aria-label="Select a document or drop it here">
+          <input type="file" data-file aria-label="Choose a source document" />
+          <span class="converter-upload-icon" aria-hidden="true">↑</span>
+          <strong data-upload-title>Select a document</strong>
+          <span data-upload-hint>Drop your file here or browse</span>
+          <small data-upload-types>PDF, DOCX, PPTX, or XLSX · up to 30 MB</small>
+        </label>
+        <div class="converter-file" data-file-info hidden>
+          <span class="converter-file-type" data-file-type aria-hidden="true">PDF</span>
+          <span class="converter-file-copy"><strong data-file-name></strong><small data-file-size></small></span>
+          <button class="btn btn-ghost converter-remove" type="button" data-remove aria-label="Remove selected document">Remove</button>
+        </div>
+
+        <p class="converter-note">Office-to-PDF uses LibreOffice. Other document conversions rebuild supported text and tables; complex layouts, images, charts, macros, and scanned-PDF OCR are not preserved.</p>
+        <div class="converter-actions">
+          <button class="btn btn-primary btn-lg converter-submit" type="button" data-convert disabled>
+            <span class="converter-spinner" aria-hidden="true" hidden></span>
+            <span data-convert-label>Convert</span>
+          </button>
+          <a class="btn btn-secondary btn-lg converter-download" data-download href="#" hidden>Download</a>
+        </div>
+        <p class="converter-status" data-status role="status" aria-live="polite" aria-atomic="true">Choose formats and select a document.</p>
+      </section>
+
+      <section class="converter-panel" data-converter="image" aria-labelledby="imageConverterTitle">
+        <header class="converter-panel-heading">
+          <span class="converter-panel-icon image-converter-icon" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5.5" y="7.5" width="29" height="25" rx="3" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="15" r="2.5" stroke="currentColor" stroke-width="2"/><path d="m8 29 8-8 5 5 4-4 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div>
+            <span class="section-kicker">Images</span>
+            <h2 id="imageConverterTitle">Image Converter</h2>
+            <p>Re-encode JPEG, JPG, PNG, and WebP images at their original dimensions.</p>
+          </div>
+        </header>
+
+        <div class="converter-format-fields">
+          <label class="converter-field">
+            <span>From</span>
+            <select data-format="from" aria-label="Image converter source format">
+              <option value="jpeg">JPEG</option>
+              <option value="jpg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+          <span class="converter-format-arrow" aria-hidden="true">→</span>
+          <label class="converter-field">
+            <span>To</span>
+            <select data-format="to" aria-label="Image converter destination format">
+              <option value="jpeg">JPEG</option>
+              <option value="jpg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+        </div>
+        <p class="converter-selection" data-selection aria-live="polite"></p>
+
+        <label class="converter-upload" data-upload tabindex="0" role="button" aria-label="Select an image or drop it here">
+          <input type="file" data-file aria-label="Choose a source image" />
+          <span class="converter-upload-icon" aria-hidden="true">↑</span>
+          <strong data-upload-title>Select an image</strong>
+          <span data-upload-hint>Drop your image here or browse</span>
+          <small data-upload-types>JPEG, JPG, PNG, or WebP · up to 20 MB</small>
+        </label>
+        <div class="converter-file" data-file-info hidden>
+          <span class="converter-file-type" data-file-type aria-hidden="true">PNG</span>
+          <span class="converter-file-copy"><strong data-file-name></strong><small data-file-size></small></span>
+          <button class="btn btn-ghost converter-remove" type="button" data-remove aria-label="Remove selected image">Remove</button>
+        </div>
+
+        <p class="converter-note">Images are decoded and re-encoded with Sharp. Transparent pixels are composited onto white when the selected output is JPEG/JPG. Animated images are not supported.</p>
+        <div class="converter-actions">
+          <button class="btn btn-primary btn-lg converter-submit" type="button" data-convert disabled>
+            <span class="converter-spinner" aria-hidden="true" hidden></span>
+            <span data-convert-label>Convert</span>
+          </button>
+          <a class="btn btn-secondary btn-lg converter-download" data-download href="#" hidden>Download</a>
+        </div>
+        <p class="converter-status" data-status role="status" aria-live="polite" aria-atomic="true">Choose formats and select an image.</p>
+      </section>
+    </div>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="converterMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="converterMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/converter-suite.js"></script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Reduce PDF file size with browser-based compression options, without uploading your document." />
+  <title>Compress PDF — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme compress-pdf-public-page" data-current-tool="compress-pdf">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="compress-pdf-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="compress-pdf-heading">
+      <span class="section-kicker">Private, right in your browser</span>
+      <h1>Compress PDF</h1>
+      <p>Reduce your PDF file size while choosing the quality and compression level that works best for you.</p>
+    </header>
+
+    <section class="compress-pdf-workspace" aria-label="Compress a PDF file">
+      <div class="compress-upload-area" data-upload-area role="button" tabindex="0" aria-label="Select a PDF or drop it here">
+        <input class="compress-file-input" data-file-input type="file" accept="application/pdf,.pdf" tabindex="-1" aria-label="Choose a PDF file">
+        <span class="compress-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 7.5h15l9 9V36a4.5 4.5 0 0 1-4.5 4.5h-15A4.5 4.5 0 0 1 12 36V12a4.5 4.5 0 0 1 4.5-4.5Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M27 8v10h9M19 22h10M19 27h7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M32 19v9m0 0-4-4m4 4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <strong data-upload-title>Select PDF File</strong>
+        <span class="compress-upload-hint" data-upload-hint>Drop PDF here or click to browse</span>
+        <span class="compress-upload-limit">Processed locally · Up to 100 MB</span>
+      </div>
+
+      <section class="compress-file-info" data-file-info aria-label="Selected PDF" hidden>
+        <span class="compress-file-badge" aria-hidden="true">PDF</span>
+        <span class="compress-file-copy"><strong data-file-name></strong><small data-file-size></small></span>
+        <button class="btn btn-secondary compress-replace-button" type="button" data-action="replace">Replace file</button>
+      </section>
+
+      <fieldset class="compress-level-section" data-level-section hidden>
+        <legend>Choose Compression Level</legend>
+        <p class="compress-level-intro">Each option trades image detail for smaller file size.</p>
+        <div class="compress-level-grid">
+          <label class="compress-level-card">
+            <input type="radio" name="compressionLevel" value="extreme">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Extreme Compression</strong>
+              <small>Less Quality, High Compression</small>
+            </span>
+          </label>
+          <label class="compress-level-card is-recommended">
+            <input type="radio" name="compressionLevel" value="recommended">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Recommended Compression</strong>
+              <small>Good Quality, Good Compression</small>
+            </span>
+            <span class="compress-recommended-badge">Recommended</span>
+          </label>
+          <label class="compress-level-card">
+            <input type="radio" name="compressionLevel" value="less">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Less Compression</strong>
+              <small>High Quality, Less Compression</small>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="compress-privacy-note" data-privacy-note hidden>
+        To reduce size in every preset, each page is converted to an image. Page appearance and order are retained, but text will no longer be selectable or searchable, and forms, links, bookmarks, attachments, and digital signatures are not preserved.
+      </div>
+
+      <div class="compress-actions">
+        <button class="btn btn-primary btn-lg compress-submit" type="button" data-action="compress" disabled hidden>
+          <span data-compress-label>Compress PDF</span>
+        </button>
+        <a class="btn btn-primary btn-lg compress-download" data-action="download" href="#" download="compressed-document.pdf" hidden>
+          <span aria-hidden="true">↓</span> Download Compressed PDF
+        </a>
+      </div>
+
+      <section class="compress-results" data-results aria-labelledby="compressResultsTitle" hidden>
+        <div class="compress-results-heading">
+          <span class="section-kicker">Compression Results</span>
+          <h2 id="compressResultsTitle" data-result-title></h2>
+          <p data-result-detail></p>
+        </div>
+        <div class="compress-result-body">
+          <div class="compress-donut" data-donut role="img">
+            <svg viewBox="0 0 36 36" aria-hidden="true">
+              <circle class="compress-donut-track" cx="18" cy="18" r="15.9155"></circle>
+              <circle class="compress-donut-saved" data-donut-saved cx="18" cy="18" r="15.9155"></circle>
+            </svg>
+            <span class="compress-donut-value" data-donut-value></span>
+            <span class="compress-donut-label">saved</span>
+          </div>
+          <dl class="compress-size-comparison">
+            <div><dt>Original Size</dt><dd data-original-size></dd></div>
+            <span class="compress-size-arrow" aria-hidden="true">→</span>
+            <div><dt>Compressed Size</dt><dd data-compressed-size></dd></div>
+            <div class="compress-size-saved"><dt>Size difference</dt><dd data-size-difference></dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <div class="compress-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p class="compress-status-message" data-status-message>Select a PDF to choose a compression level.</p>
+        <div class="compress-progress-wrap" data-progress-wrap hidden>
+          <span class="compress-spinner" aria-hidden="true"></span>
+          <span data-progress-message>Checking your PDF…</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="compressMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="compressMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/vendor/pdf-lib.min.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/compress-pdf-engine.js"></script>
+  <script type="module" src="/compress-pdf.js"></script>
+</body>
+</html>

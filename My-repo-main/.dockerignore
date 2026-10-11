@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+uploads
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+coverage
+dist
+build
+*.log

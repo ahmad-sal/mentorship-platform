@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Add text, images, drawings, and shapes to PDF documents in your browser." />
+  <title>Additive PDF — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme additive-pdf-public-page" data-current-tool="additive-pdf">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden><p class="tools-dropdown-heading">Quick access</p><div class="tools-dropdown-grid" data-tools-menu></div></div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links"><a class="btn btn-ghost" href="/admin/login">Admin</a><a class="btn btn-secondary" href="/login">Student Login</a><a class="btn btn-primary" href="/register">Get Started</a></div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme"><span id="themeIcon" aria-hidden="true">◐</span><span class="theme-label" id="themeLabel">Dark Mode</span></button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu"><span aria-hidden="true">☰</span></button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a><a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav><a class="mobile-nav-item" href="/tools">🧰 Tools</a><button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown"><span aria-hidden="true">⌄</span></button><div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div></div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links"><a class="btn btn-primary btn-lg" href="/register">Create student account</a><a class="btn btn-secondary btn-lg" href="/login">Student Login</a><a class="btn btn-ghost" href="/admin/login">Admin portal</a></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="additive-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="additive-heading">
+      <span class="section-kicker">Private PDF annotation in your browser</span>
+      <h1>Additive PDF</h1>
+      <p>Add text, images, drawings, and shapes to your PDF documents. Original text remains unchanged; standard PDF fonts support common Latin characters. Saving a signed PDF may invalidate its digital signature.</p>
+    </header>
+
+    <section class="additive-upload" data-upload-panel aria-label="Open a PDF" tabindex="0">
+      <span class="additive-upload-icon" aria-hidden="true">＋</span>
+      <h2>Start with a PDF</h2>
+      <p>Select a PDF document or drop it here. Files are processed locally and are not uploaded.</p>
+      <button class="btn btn-primary btn-lg" type="button" data-select-pdf>Select PDF File</button>
+      <input type="file" accept="application/pdf,.pdf" data-pdf-input hidden>
+      <p class="additive-status" data-upload-status role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="additive-editor" data-editor hidden aria-label="PDF editor">
+      <div class="additive-toolbar">
+        <div class="additive-toolbar-title"><span class="additive-toolbar-mark" aria-hidden="true">✎</span><div><strong>Additive PDF</strong><small data-document-name></small></div></div>
+        <div class="additive-toolbar-controls">
+          <button class="btn btn-ghost" type="button" data-replace-pdf>Replace PDF</button>
+          <span class="additive-toolbar-divider" aria-hidden="true"></span>
+          <button class="btn btn-ghost additive-icon-button" type="button" data-undo aria-label="Undo" title="Undo" disabled>↶</button>
+          <button class="btn btn-ghost additive-icon-button" type="button" data-redo aria-label="Redo" title="Redo" disabled>↷</button>
+          <span class="additive-toolbar-divider" aria-hidden="true"></span>
+          <button class="btn btn-ghost additive-icon-button" type="button" data-zoom-out aria-label="Zoom out" title="Zoom out">−</button>
+          <span class="additive-zoom" data-zoom-label>100%</span>
+          <button class="btn btn-ghost additive-icon-button" type="button" data-zoom-in aria-label="Zoom in" title="Zoom in">＋</button>
+          <button class="btn btn-ghost" type="button" data-fit>Fit page</button>
+          <button class="btn btn-primary" type="button" data-save disabled>Save Changes</button>
+          <a class="btn btn-secondary" data-download href="#" download="edited-document.pdf" hidden>Download PDF</a>
+        </div>
+      </div>
+
+      <div class="additive-toolbox" role="toolbar" aria-label="PDF editing tools">
+        <button class="additive-tool-button is-active" type="button" data-tool="select" aria-pressed="true">↖ Select</button>
+        <button class="additive-tool-button" type="button" data-add-text>Ｔ Add text</button>
+        <button class="additive-tool-button" type="button" data-add-image>▧ Add image</button>
+        <input type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" data-image-input hidden>
+        <button class="additive-tool-button" type="button" data-tool="draw" aria-pressed="false">✎ Pencil</button>
+        <label class="additive-tool-field">Shape
+          <select data-shape-type aria-label="Shape type">
+            <option value="arrow">Arrow</option><option value="line">Line</option><option value="circle">Circle</option><option value="rectangle">Rectangle</option><option value="triangle">Triangle</option>
+          </select>
+        </label>
+        <button class="additive-tool-button" type="button" data-tool="shape" aria-pressed="false">＋ Add shape</button>
+        <label class="additive-tool-field">Pencil color <input type="color" data-pencil-color value="#1769e0"></label>
+        <label class="additive-tool-field">Pencil size <input type="number" data-pencil-width min="1" max="30" value="3"></label>
+        <button class="additive-tool-button additive-delete" type="button" data-delete disabled>Delete selected</button>
+      </div>
+
+      <div class="additive-properties" data-properties hidden aria-label="Selected element properties">
+        <strong class="additive-properties-title" data-property-title>Selection</strong>
+        <div class="additive-property-group" data-text-properties hidden>
+          <label>Font <select data-prop="fontFamily"><option value="Helvetica">Helvetica</option><option value="Times">Times New Roman</option><option value="Courier">Courier New</option></select></label>
+          <label>Size <input data-prop="fontSize" type="number" min="6" max="144" value="18"></label>
+          <label class="additive-check"><input data-prop="bold" type="checkbox"> Bold</label>
+          <label class="additive-check"><input data-prop="italic" type="checkbox"> Italic</label>
+          <label class="additive-check"><input data-prop="underline" type="checkbox"> Underline</label>
+          <label>Text <input data-prop="color" type="color" value="#172033"></label>
+          <label>Background <input data-prop="backgroundColor" type="color" value="#ffffff"></label>
+          <label>Align <select data-prop="align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+          <label>Text opacity <input data-prop="opacity" type="range" min="0.1" max="1" step="0.05" value="1"></label>
+          <label>Background opacity <input data-prop="backgroundOpacity" type="range" min="0" max="1" step="0.05" value="0"></label>
+        </div>
+        <div class="additive-property-group" data-drawing-properties hidden>
+          <label>Stroke <input data-prop="color" type="color" value="#1769e0"></label>
+          <label>Width <input data-prop="strokeWidth" type="number" min="1" max="30" value="3"></label>
+          <label>Opacity <input data-prop="opacity" type="range" min="0.1" max="1" step="0.05" value="1"></label>
+        </div>
+        <div class="additive-property-group" data-shape-properties hidden>
+          <label>Outline <input data-prop="color" type="color" value="#1769e0"></label>
+          <label data-shape-fill>Fill <input data-prop="fillColor" type="color" value="#dbeafe"></label>
+          <label>Stroke <input data-prop="strokeWidth" type="number" min="1" max="30" value="3"></label>
+          <label>Opacity <input data-prop="opacity" type="range" min="0.1" max="1" step="0.05" value="1"></label>
+          <label data-shape-fill>Fill opacity <input data-prop="fillOpacity" type="range" min="0" max="1" step="0.05" value="0.25"></label>
+        </div>
+        <div class="additive-property-group" data-image-properties hidden><span>Drag to move. Use the corner handle to resize while preserving the image ratio.</span></div>
+      </div>
+
+      <div class="additive-workspace">
+        <aside class="additive-pages" aria-label="PDF pages"><h2>Pages <span data-page-count></span></h2><div class="additive-thumbnails" data-thumbnails></div></aside>
+        <section class="additive-canvas-area" aria-label="Selected PDF page">
+          <div class="additive-canvas-scroll" data-canvas-scroll>
+            <div class="additive-page-frame" data-page-frame>
+              <canvas class="additive-pdf-canvas" data-page-canvas></canvas>
+              <div class="additive-overlay" data-overlay aria-label="Editable PDF overlays"></div>
+            </div>
+          </div>
+          <p class="additive-canvas-hint" data-editor-status role="status" aria-live="polite">Select a tool, then click or drag on the page.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="additiveMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading"><span class="section-kicker">Keep exploring</span><h2 id="additiveMoreToolsTitle">Explore More Tools</h2></div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col"><a class="brand-logo" href="/"><span class="logo-icon" aria-hidden="true">AS</span><span class="logo-text">Ahmad Saleem Mentorship</span></a><p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p></div>
+      <div class="footer-col"><span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4><ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul></div>
+      <div class="footer-col"><span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4><ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/vendor/pdf-lib.min.js"></script>
+  <script src="/additive-pdf-engine.js"></script>
+  <script src="/tools.js"></script>
+  <script type="module" src="/additive-pdf.js"></script>
+</body>
+</html>

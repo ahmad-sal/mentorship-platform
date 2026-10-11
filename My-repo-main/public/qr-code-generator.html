@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08101f">
+  <meta name="description" content="Create and customize scannable QR codes for links, files, text, and WhatsApp.">
+  <title>QR Code Generator — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme qr-code-generator-public-page" data-current-tool="qr-code-generator">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden><p class="tools-dropdown-heading">Quick access</p><div class="tools-dropdown-grid" data-tools-menu></div></div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links"><a class="btn btn-ghost" href="/admin/login">Admin</a><a class="btn btn-secondary" href="/login">Student Login</a><a class="btn btn-primary" href="/register">Get Started</a></div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme"><span id="themeIcon" aria-hidden="true">◐</span><span class="theme-label" id="themeLabel">Dark Mode</span></button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu"><span aria-hidden="true">☰</span></button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer"><div class="mobile-drawer-inner">
+      <a class="mobile-nav-item" href="/">Home</a><a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+      <div class="mobile-tools-nav" data-mobile-tools-nav><a class="mobile-nav-item" href="/tools">🧰 Tools</a><button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown"><span aria-hidden="true">⌄</span></button><div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div></div>
+      <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+      <div class="mobile-auth-links"><a class="btn btn-primary btn-lg" href="/register">Create student account</a><a class="btn btn-secondary btn-lg" href="/login">Student Login</a><a class="btn btn-ghost" href="/admin/login">Admin portal</a></div>
+    </div></div>
+  </header>
+
+  <main id="mainContent" class="compress-pdf-page qr-code-generator-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="qr-code-heading">
+      <span class="section-kicker">Create a scannable design</span>
+      <h1>QR Code Generator</h1>
+      <p>Choose what your QR code should open, then customize its design and download a sharp PNG.</p>
+    </header>
+
+    <section class="qr-code-workspace" aria-label="QR code generator">
+      <section class="qr-code-type-step" data-type-step>
+        <h2>What should your QR code open?</h2>
+        <p>Choose one of the six QR code types to get started.</p>
+        <div class="qr-code-type-grid" role="list" aria-label="QR code types">
+          <button type="button" class="qr-code-type-card" data-type="url"><span aria-hidden="true">↗</span><strong>URL / Link</strong><small>Open any website</small></button>
+          <button type="button" class="qr-code-type-card" data-type="pdf"><span aria-hidden="true">▤</span><strong>PDF</strong><small>Share a PDF document</small></button>
+          <button type="button" class="qr-code-type-card" data-type="image"><span aria-hidden="true">▧</span><strong>Image</strong><small>Open a hosted image</small></button>
+          <button type="button" class="qr-code-type-card" data-type="text"><span aria-hidden="true">≡</span><strong>Text</strong><small>Show a message or details</small></button>
+          <button type="button" class="qr-code-type-card" data-type="audio"><span aria-hidden="true">♫</span><strong>Audio</strong><small>Play a hosted audio file</small></button>
+          <button type="button" class="qr-code-type-card" data-type="whatsapp"><span aria-hidden="true">◉</span><strong>WhatsApp</strong><small>Open a chat link</small></button>
+        </div>
+      </section>
+
+      <section class="qr-code-input-step" data-input-step hidden>
+        <button type="button" class="qr-code-back-link" data-action="back">← Change QR type</button>
+        <div class="qr-code-form-heading"><span class="qr-code-type-mark" data-category-icon aria-hidden="true"></span><div><h2 data-category-title></h2><p data-category-description></p></div></div>
+        <form data-input-form novalidate>
+          <div class="qr-code-field-panel" data-form-url hidden>
+            <label for="qrWebsiteUrl">Website URL / Link <span aria-hidden="true">*</span></label>
+            <input id="qrWebsiteUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com" maxlength="2048">
+            <small>Include http:// or https://. The exact valid URL will be encoded.</small>
+          </div>
+          <div class="qr-code-field-panel" data-form-text hidden>
+            <label for="qrText">Text <span aria-hidden="true">*</span></label>
+            <textarea id="qrText" rows="5" maxlength="2500" placeholder="Enter the text to display when the QR code is scanned"></textarea>
+            <small data-text-count>Up to 2,500 characters. Actual QR capacity depends on the content and error correction.</small>
+          </div>
+          <div class="qr-code-field-panel" data-form-whatsapp hidden>
+            <label for="qrCountrySearch">Country or region <span aria-hidden="true">*</span></label>
+            <input id="qrCountrySearch" type="search" list="qrCountryOptions" placeholder="🇵🇰 Pakistan (+92)" autocomplete="off">
+            <datalist id="qrCountryOptions"></datalist>
+            <input type="hidden" data-country-code value="PK">
+            <label for="qrPhone">Phone number <span aria-hidden="true">*</span></label>
+            <input id="qrPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="300 1234567" maxlength="32">
+            <small data-phone-hint>Enter the number as used in the selected country. The country calling code is added automatically.</small>
+            <label for="qrWhatsappMessage">Pre-filled WhatsApp Message</label>
+            <textarea id="qrWhatsappMessage" rows="3" maxlength="1000" placeholder="Optional message — it will not be sent automatically"></textarea>
+          </div>
+          <div class="qr-code-field-panel" data-form-file hidden>
+            <label data-file-label for="qrFileInput">Choose a file <span aria-hidden="true">*</span></label>
+            <div class="qr-code-file-drop" data-file-drop role="button" tabindex="0">
+              <input id="qrFileInput" type="file" data-file-input>
+              <span aria-hidden="true" data-file-icon>＋</span>
+              <strong data-file-prompt>Select or drop a file here</strong>
+              <small data-file-accept></small>
+            </div>
+            <p class="qr-code-hosting-note">The file will be uploaded to public Cloudinary storage so anyone scanning the QR code can open it. Uploaded files remain available online; do not upload sensitive or private files.</p>
+            <p class="qr-code-hosted-url" data-hosted-url hidden></p>
+          </div>
+          <div class="qr-code-field-panel">
+            <label for="qrCodeName">QR Code Name <span>(optional)</span></label>
+            <input id="qrCodeName" type="text" maxlength="64" placeholder="e.g. My website">
+            <small>Used for supported labels, banners, and the downloaded filename.</small>
+          </div>
+          <div class="qr-code-form-status" data-form-status role="status" aria-live="polite"></div>
+          <button class="btn btn-primary btn-lg qr-code-customize-start" type="submit" data-action="customize" disabled>Customize QR Code</button>
+        </form>
+      </section>
+
+      <section class="qr-code-customizer" data-customizer hidden>
+        <div class="qr-code-customizer-header">
+          <div><button class="qr-code-back-link" type="button" data-action="edit-input">← Edit QR content</button><h2>Customize QR Code</h2><p>Your preview updates as you change the design.</p></div>
+          <span class="qr-code-data-badge" data-data-summary></span>
+        </div>
+        <div class="qr-code-customizer-layout">
+          <div class="qr-code-options">
+            <section class="qr-code-control-section">
+              <h3>1. Premade Templates</h3><p class="qr-code-section-help">Choose a starting style; every setting stays editable.</p>
+              <div class="qr-code-template-grid" data-template-grid></div>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>2. Frames</h3>
+              <div class="qr-code-option-grid qr-code-frame-grid" data-frame-grid></div>
+              <div class="qr-code-inline-controls"><label>Frame color <input type="color" data-option="frameColor" value="#2563eb"></label><label>Label text <input type="color" data-option="labelColor" value="#172033"></label></div>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>3. Body Shapes</h3><p class="qr-code-section-help">Patterns supported by the QR renderer; unsupported shapes are intentionally not offered.</p>
+              <div class="qr-code-option-grid" data-body-grid></div>
+              <label class="qr-code-color-control">Body color <input type="color" data-option="bodyColor" value="#111827"></label>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>4. Outer Eye Shapes</h3><div class="qr-code-option-grid" data-outer-grid></div>
+              <label class="qr-code-color-control">Outer eye color <input type="color" data-option="outerColor" value="#111827"></label>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>5. Inner Eye Shapes</h3><div class="qr-code-option-grid" data-inner-grid></div>
+              <label class="qr-code-color-control">Inner eye color <input type="color" data-option="innerColor" value="#111827"></label>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>6. Colors and Background</h3>
+              <label class="qr-code-select-control">Background mode
+                <select data-option="backgroundMode"><option value="transparent">Transparent Background</option><option value="solid" selected>Solid Background Color</option><option value="gradient">Gradient Background</option></select>
+              </label>
+              <div class="qr-code-preset-colors" data-solid-colors aria-label="Solid background color presets">
+                <button type="button" data-bg-preset="#ffffff" aria-label="White background"><span style="--swatch:#ffffff"></span>White</button>
+                <button type="button" data-bg-preset="#111827" aria-label="Black background"><span style="--swatch:#111827"></span>Black</button>
+                <button type="button" data-bg-preset="#2563eb" aria-label="Blue background"><span style="--swatch:#2563eb"></span>Blue</button>
+                <button type="button" data-bg-preset="#dc2626" aria-label="Red background"><span style="--swatch:#dc2626"></span>Red</button>
+                <button type="button" data-bg-preset="#15803d" aria-label="Green background"><span style="--swatch:#15803d"></span>Green</button>
+              </div>
+              <div class="qr-code-inline-controls" data-solid-custom><label>Custom background <input type="color" data-option="backgroundColor" value="#ffffff"></label></div>
+              <div class="qr-code-inline-controls" data-gradient-controls hidden><label>Gradient start <input type="color" data-option="gradientStart" value="#ffffff"></label><label>Gradient end <input type="color" data-option="gradientEnd" value="#dbeafe"></label><label>Direction <select data-option="gradientDirection"><option value="vertical">Top to bottom</option><option value="horizontal">Left to right</option><option value="diagonal">Diagonal</option></select></label></div>
+              <p class="qr-code-contrast-warning" data-contrast-warning role="status" hidden></p>
+            </section>
+            <section class="qr-code-control-section">
+              <h3>7. Logo</h3><p class="qr-code-section-help">High error correction is enabled for logos, but keep the center mark compact and test the downloaded code.</p>
+              <div class="qr-code-logo-grid" data-logo-grid>
+                <button type="button" data-logo="youtube" aria-label="YouTube logo"><span>▶</span>YouTube</button>
+                <button type="button" data-logo="whatsapp" aria-label="WhatsApp logo"><span>◉</span>WhatsApp</button>
+                <button type="button" data-logo="facebook" aria-label="Facebook logo"><span>f</span>Facebook</button>
+                <button type="button" data-logo="instagram" aria-label="Instagram logo"><span>◎</span>Instagram</button>
+                <button type="button" data-logo="x" aria-label="X logo"><span>𝕏</span>X</button>
+                <button type="button" data-logo="google" aria-label="Google logo"><span>G</span>Google</button>
+              </div>
+              <div class="qr-code-inline-controls qr-code-logo-upload"><label for="qrLogoInput">Upload Your Own Logo</label><input id="qrLogoInput" type="file" accept="image/png,image/jpeg,image/webp"><button class="btn btn-secondary" type="button" data-action="remove-logo" disabled>Remove logo</button></div>
+              <label class="qr-code-range-control" data-logo-size-control>Logo size <input type="range" min="12" max="24" step="1" data-option="logoSize" value="16"><output data-logo-size-value>16%</output></label>
+            </section>
+          </div>
+          <aside class="qr-code-preview-sidebar" aria-label="Live QR code preview">
+            <div class="qr-code-preview-sticky">
+              <h3>Live Preview</h3><p>Scan to test the content and design.</p>
+              <div class="qr-code-preview-frame" data-preview-frame><div class="qr-code-preview-output" data-preview-output aria-live="polite"><div class="qr-code-placeholder">Your QR code preview will appear here.</div></div></div>
+              <p class="qr-code-preview-status" data-preview-status role="status" aria-live="polite"></p>
+              <a class="btn btn-primary btn-lg qr-code-download" data-action="download" href="#" download hidden>↓ Download QR Code</a>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="qrMoreToolsTitle" hidden><div class="merge-more-tools-heading"><span class="section-kicker">Keep exploring</span><h2 id="qrMoreToolsTitle">Explore More Tools</h2></div><div class="tool-recommendation-grid" data-recommendation-grid></div></section>
+  </main>
+
+  <footer class="site-footer"><div class="footer-container"><div class="footer-col brand-col"><a class="brand-logo" href="/"><span class="logo-icon" aria-hidden="true">AS</span><span class="logo-text">Ahmad Saleem Mentorship</span></a><p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p></div><div class="footer-col"><span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4><ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul></div><div class="footer-col"><span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4><ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div></footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/vendor/libphonenumber-js/libphonenumber-max.js"></script>
+  <script src="/vendor/qr-code-styling/qr-code-styling.js"></script>
+  <script src="/qr-code-generator.js"></script>
+</body>
+</html>

@@ -67,6 +67,14 @@
       available: true
     },
     {
+      id: 'qr-code-generator',
+      name: 'QR Code Generator',
+      description: 'Create scannable QR codes for links, files, messages, and WhatsApp with a customizable design.',
+      icon: '<svg class="qr-code-generator-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.5" y="5.5" width="11" height="11" rx="1" stroke="currentColor" stroke-width="2"/><rect x="8.5" y="8.5" width="5" height="5" fill="currentColor"/><rect x="23.5" y="5.5" width="11" height="11" rx="1" stroke="currentColor" stroke-width="2"/><rect x="26.5" y="8.5" width="5" height="5" fill="currentColor"/><rect x="5.5" y="23.5" width="11" height="11" rx="1" stroke="currentColor" stroke-width="2"/><rect x="8.5" y="26.5" width="5" height="5" fill="currentColor"/><path d="M23 23h4v4h-4zm7 0h5v5h-5zm-7 7h5v5h-5zm8 0h4v4h-4zm-1 7v-4h4" fill="currentColor"/></svg>',
+      route: '/tools/qr-code-generator',
+      available: true
+    },
+    {
       id: 'additive-pdf',
       name: 'Additive PDF',
       description: 'Add text, images, drawings, and shapes to your PDF documents.',
@@ -259,6 +267,7 @@
         !document.body.classList.contains('upscale-image-public-page') &&
         !document.body.classList.contains('remove-background-public-page') &&
         !document.body.classList.contains('blur-face-public-page') &&
+        !document.body.classList.contains('qr-code-generator-public-page') &&
         !document.body.classList.contains('additive-pdf-public-page') &&
         !document.body.classList.contains('lock-unlock-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';

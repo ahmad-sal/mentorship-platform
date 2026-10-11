@@ -276,14 +276,14 @@
     document.querySelectorAll('[data-tools-nav]').forEach(function (wrapper) {
       if (wrapper.dataset.dropdownReady === 'true') return;
       var panel = wrapper.querySelector('.tools-dropdown');
-      var toggle = wrapper.querySelector('.tools-nav-toggle');
-      if (!panel || !toggle) return;
+      var trigger = wrapper.querySelector('.nav-link');
+      if (!panel || !trigger) return;
       wrapper.dataset.dropdownReady = 'true';
 
       function setOpen(open) {
         panel.hidden = !open;
         wrapper.classList.toggle('is-open', open);
-        toggle.setAttribute('aria-expanded', String(open));
+        trigger.setAttribute('aria-expanded', String(open));
       }
 
       wrapper.addEventListener('mouseenter', function () { setOpen(true); });
@@ -294,13 +294,10 @@
       wrapper.addEventListener('focusout', function (event) {
         if (!wrapper.contains(event.relatedTarget)) setOpen(false);
       });
-      toggle.addEventListener('click', function () {
-        setOpen(true);
-      });
       wrapper.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
           setOpen(false);
-          toggle.focus();
+          trigger.focus();
         }
       });
       document.addEventListener('click', function (event) {

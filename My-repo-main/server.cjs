@@ -30,6 +30,15 @@ const {
   blurImage,
   inspectImage: inspectBlurFaceImage
 } = require('./blur-face.cjs');
+const {
+  COUNTRY_CODES: QR_COUNTRY_CODES,
+  MAX_SHARE_BYTES: MAX_QR_SHARE_BYTES,
+  MAX_SHARE_CONCURRENCY: MAX_QR_SHARE_CONCURRENCY,
+  createShareUploadMiddleware,
+  normalizePhoneNumber,
+  uploadShareFile
+} = require('./qr-code-generator.cjs');
+const qrBrandIcons = require('@fortawesome/free-brands-svg-icons');
 const supabase = require('./supabase.cjs');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
@@ -237,6 +246,10 @@ app.get('/tools/remove-background', (req, res) => {
 
 app.get('/tools/blur-face', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'blur-face.html'));
+});
+
+app.get('/tools/qr-code-generator', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'qr-code-generator.html'));
 });
 
 app.get('/tools/additive-pdf', (req, res) => {
@@ -685,6 +698,101 @@ app.post('/api/tools/blur-face', limitBlurFaceConcurrency, receiveBlurFaceImage,
   }
 });
 
+app.get('/api/tools/qr-code-generator/countries', (req, res) => {
+  return res.set('Cache-Control', 'public, max-age=86400').json(QR_COUNTRY_CODES);
+});
+
+app.post('/api/tools/qr-code-generator/phone', (req, res) => {
+  try {
+    return res.json({
+      phone: normalizePhoneNumber(req.body && req.body.phone, req.body && req.body.country)
+    });
+  } catch (error) {
+    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 400;
+    return res.status(statusCode).json({ error: error.message });
+  }
+});
+
+const qrShareUpload = createShareUploadMiddleware();
+let activeQrShareRequests = 0;
+function limitQrShareConcurrency(req, res, next) {
+  if (activeQrShareRequests >= MAX_QR_SHARE_CONCURRENCY) {
+    return res.status(429).json({ error: 'Public file hosting is busy. Wait a moment and try again.' });
+  }
+  activeQrShareRequests += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeQrShareRequests -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
+
+function receiveQrShareFile(req, res, next) {
+  qrShareUpload(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Files must be 20 MB or smaller.' });
+    }
+    return res.status(400).json({ error: 'Choose exactly one file to continue.' });
+  });
+}
+
+app.post('/api/tools/qr-code-generator/share-file', limitQrShareConcurrency, receiveQrShareFile, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose a file to continue.' });
+    const category = String(req.body.category || '');
+    const result = await uploadShareFile(req.file, category, cloudinary);
+    return res.status(201).set('Cache-Control', 'no-store, private').json({
+      url: result.url,
+      format: result.format,
+      resourceType: result.resourceType,
+      bytes: result.bytes,
+      publiclyAccessible: true
+    });
+  } catch (error) {
+    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 502;
+    if (statusCode >= 500) {
+      console.error('QR Code Generator public file upload failed.', {
+        code: error.code || 'PUBLIC_FILE_UPLOAD_FAILED',
+        statusCode
+      });
+    }
+    return res.status(statusCode).json({
+      error: statusCode === 500
+        ? 'The file could not be hosted for public QR access. Try again later.'
+        : error.message
+    });
+  }
+});
+
+const qrBrandIconNames = {
+  youtube: 'faYoutube',
+  whatsapp: 'faWhatsapp',
+  facebook: 'faFacebook',
+  instagram: 'faInstagram',
+  x: 'faXTwitter',
+  google: 'faGoogle'
+};
+app.get('/vendor/qr-brand-logos/:brand.svg', (req, res) => {
+  const iconName = qrBrandIconNames[String(req.params.brand || '').toLowerCase()];
+  const icon = iconName && qrBrandIcons[iconName];
+  if (!icon) return res.status(404).type('text/plain').send('Logo not found.');
+  const [width, height, , , sourcePaths] = icon.icon;
+  const paths = (Array.isArray(sourcePaths) ? sourcePaths : [sourcePaths])
+    .map((data) => '<path d="' + data + '"/>').join('');
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    width + ' ' + height + '" fill="currentColor" aria-hidden="true">' + paths + '</svg>';
+  return res.set({
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Content-Type': 'image/svg+xml; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff'
+  }).send(svg);
+});
+
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -710,6 +818,14 @@ app.get('/vendor/pdfjs.worker.js', (req, res) => {
 });
 
 app.use('/vendor/qpdf-run', express.static(path.join(__dirname, 'node_modules', 'qpdf-run'), { index: false }));
+app.use('/vendor/qr-code-styling', express.static(
+  path.join(__dirname, 'node_modules', 'qr-code-styling', 'lib'),
+  { index: false, maxAge: '1y', immutable: true }
+));
+app.use('/vendor/libphonenumber-js', express.static(
+  path.join(__dirname, 'node_modules', 'libphonenumber-js', 'bundle'),
+  { index: false, maxAge: '1y', immutable: true }
+));
 app.use('/vendor/mediapipe-face-detection', express.static(
   path.join(__dirname, 'node_modules', '@mediapipe', 'face_detection'),
   { index: false, maxAge: '1y', immutable: true }

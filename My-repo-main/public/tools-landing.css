@@ -45,9 +45,8 @@ body.tools-public-page.dark {
 .fx-aurora {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
+  filter: blur(42px);
   opacity: 0.5;
-  will-change: transform;
 }
 body.dark-theme .fx-aurora,
 body.dark .fx-aurora { opacity: 0.68; }
@@ -114,7 +113,6 @@ body.dark .fx-aurora { opacity: 0.68; }
   transform-origin: bottom center;
   -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 82%);
   mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 82%);
-  animation: fxGridScroll 9s linear infinite;
   opacity: 0.55;
 }
 body.dark-theme .fx-grid,
@@ -132,7 +130,7 @@ body.dark .fx-grid { opacity: 0.8; }
   bottom: 0;
   width: 22vw;
   background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.16), rgba(109, 140, 247, 0.2), transparent);
-  filter: blur(18px);
+  filter: blur(10px);
   animation: fxBeamSweep 11s ease-in-out infinite;
 }
 @keyframes fxBeamSweep {
@@ -474,11 +472,8 @@ body.tools-public-page .tools-card-icon {
       color-mix(in srgb, var(--fx-volt) 26%, var(--primary-subtle)),
       var(--primary-subtle));
   font-size: 1.55rem;
-  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
-  animation: fxIconFloat 6s ease-in-out infinite;
+  transition: transform 240ms var(--ease-out), box-shadow 240ms var(--ease-out);
 }
-body.tools-public-page .tools-card:nth-child(2n) .tools-card-icon { animation-delay: 1.4s; }
-body.tools-public-page .tools-card:nth-child(3n) .tools-card-icon { animation-delay: 2.7s; }
 @keyframes fxIconFloat {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50%      { transform: translateY(-4px) rotate(-3deg); }
@@ -489,7 +484,6 @@ body.tools-public-page .tools-card:focus-visible .tools-card-icon {
   box-shadow:
     0 0 0 4px color-mix(in srgb, var(--fx-volt) 16%, transparent),
     0 10px 30px -8px rgba(109, 140, 247, 0.8);
-  animation-play-state: paused;
 }
 body.tools-public-page .tools-card .tools-card-icon svg {
   width: 2.25rem;
@@ -561,8 +555,8 @@ body.tools-public-page .tools-card:hover .tools-card-arrow {
 
 body.tools-public-page .tools-card-grid .tools-card {
   opacity: 0;
-  animation: fxCardIn 620ms var(--ease-out) forwards;
-  animation-delay: calc(var(--fx-i, 0) * 55ms);
+  animation: fxCardIn 420ms var(--ease-out) forwards;
+  animation-delay: calc(var(--fx-i, 0) * 18ms);
 }
 @keyframes fxCardIn {
   0%   { opacity: 0; transform: translateY(34px) rotateX(-9deg) scale(0.96); }
@@ -577,12 +571,14 @@ body.tools-public-page .tools-card-grid .tools-card {
 @media (max-width: 767px) {
   .fx-bolt-mark { display: none; }
   .fx-grid { height: 34vh; }
+  .fx-aurora { animation: none; }
+  .fx-beam { display: none; }
   body.tools-public-page .tools-page-heading { padding-inline: 0.25rem; }
 }
 
 @media (max-width: 560px) {
   body.tools-public-page .tools-card { min-height: 164px; }
-  .fx-aurora { filter: blur(48px); }
+  .fx-aurora { filter: blur(32px); }
 }
 
 /* ==========================================================================

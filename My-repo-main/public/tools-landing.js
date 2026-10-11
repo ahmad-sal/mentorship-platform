@@ -143,14 +143,16 @@
      --------------------------------------------------------------------- */
   function initCanvas() {
     var canvas = document.querySelector('.fx-canvas');
-    if (!canvas || reducedMotion) {
+    var saveData = navigator.connection && navigator.connection.saveData;
+    var smallScreen = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+    if (!canvas || reducedMotion || saveData || smallScreen) {
       if (canvas) canvas.style.display = 'none';
       return;
     }
     var ctx = canvas.getContext && canvas.getContext('2d');
     if (!ctx) return;
 
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     var width = 0;
     var height = 0;
     var particles = [];
@@ -168,7 +170,7 @@
     }
 
     function seedParticles() {
-      var count = Math.round(Math.min(70, Math.max(28, width / 22)));
+      var count = Math.round(Math.min(28, Math.max(16, width / 48)));
       particles = [];
       for (var i = 0; i < count; i += 1) {
         particles.push({
@@ -221,7 +223,11 @@
     var last = 0;
     function frame(now) {
       if (!running) return;
-      var dt = last ? Math.min(now - last, 48) : 16;
+      if (last && now - last < 33) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      var dt = last ? Math.min(now - last, 64) : 33;
       last = now;
 
       ctx.clearRect(0, 0, width, height);
@@ -238,8 +244,6 @@
         var twinkle = 0.35 + Math.sin(p.phase) * 0.25;
         ctx.beginPath();
         ctx.fillStyle = 'hsla(' + p.hue + ', 90%, 70%, ' + twinkle + ')';
-        ctx.shadowColor = 'hsla(' + p.hue + ', 90%, 65%, 0.8)';
-        ctx.shadowBlur = 6;
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
       }

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Remove an image background automatically, refine the transparent result, and download a PNG." />
+  <title>Remove Background — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme remove-background-public-page" data-current-tool="remove-background">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="compress-pdf-page remove-background-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="remove-background-heading">
+      <span class="section-kicker">AI-powered image tool</span>
+      <h1>Remove Background</h1>
+      <p>Automatically isolate the main subject, refine the result if needed, and download a transparent PNG.</p>
+    </header>
+
+    <section class="remove-background-workspace" aria-label="Remove an image background">
+      <div class="remove-background-upload" data-upload-area role="button" tabindex="0" aria-label="Select an image or drop it here">
+        <input class="remove-background-file-input" data-file-input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/tiff,image/avif,.tif,.tiff,.avif,.bmp,.svg" tabindex="-1" aria-label="Choose an image file">
+        <span class="remove-background-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="7" width="36" height="34" rx="5" stroke="currentColor" stroke-width="2.2"/><circle cx="17" cy="18" r="3.5" stroke="currentColor" stroke-width="2.2"/><path d="m9 36 10-10 7 7 6-7 7 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="m30 18 4-4 4 4m-4-4v10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <strong data-upload-title>Select Image</strong>
+        <span class="remove-background-upload-hint" data-upload-hint>Drop an image here or click to browse</span>
+        <span class="remove-background-upload-limit">PNG · JPG/JPEG · WebP · still GIF/TIFF · AVIF · Up to 20 MB / 10 megapixels</span>
+      </div>
+
+      <section class="remove-background-file-info" data-file-info aria-label="Selected image" hidden>
+        <span class="remove-background-file-badge" aria-hidden="true">IMG</span>
+        <span class="remove-background-file-copy"><strong data-file-name></strong><small data-file-details></small></span>
+        <button class="btn btn-secondary" type="button" data-action="replace">Replace image</button>
+      </section>
+
+      <p class="remove-background-privacy">
+        Automatic segmentation is processed by Cloudinary, an external service. A temporary authenticated image copy is uploaded, and deletion is requested after processing. Animated GIFs and multi-page TIFFs are rejected rather than flattened; SVG, BMP, and ICO are not supported by the installed image processor.
+      </p>
+
+      <div class="remove-background-progress" data-progress role="status" aria-live="polite" hidden>
+        <span class="compress-spinner" aria-hidden="true"></span>
+        <span data-progress-message>Detecting the subject and removing the background…</span>
+      </div>
+
+      <section class="remove-background-editor" data-editor hidden>
+        <div class="remove-background-mode-row">
+          <div class="remove-background-mode-tabs" role="tablist" aria-label="Editing mode">
+            <button class="remove-background-mode is-active" type="button" role="tab" aria-selected="true" aria-controls="automaticPanel" data-mode="automatic">Automatic</button>
+            <button class="remove-background-mode" type="button" role="tab" aria-selected="false" aria-controls="manualPanel" data-mode="manual">Manual</button>
+          </div>
+          <p class="remove-background-mode-help" data-mode-help>AI-selected transparent result</p>
+        </div>
+
+        <section id="automaticPanel" class="remove-background-panel" role="tabpanel" data-panel="automatic">
+          <div class="remove-background-preview-heading">
+            <h2>Before &amp; after</h2>
+            <p>Drag the divider or focus it and use the arrow keys.</p>
+          </div>
+          <div class="remove-background-comparison" data-comparison role="slider" tabindex="0"
+               aria-label="Image comparison divider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+               aria-valuetext="Original 50 percent, background removed 50 percent">
+            <img class="remove-background-after" data-after-image alt="AI background-removed result with transparency" hidden>
+            <div class="remove-background-before-layer" data-before-layer>
+              <img class="remove-background-before" data-before-image alt="Original uploaded image">
+            </div>
+            <span class="remove-background-label remove-background-label-before" aria-hidden="true">Original</span>
+            <span class="remove-background-label remove-background-label-after" data-after-label aria-hidden="true" hidden>Background Removed</span>
+            <span class="remove-background-divider" data-divider aria-hidden="true"><span>↔</span></span>
+          </div>
+        </section>
+
+        <section id="manualPanel" class="remove-background-panel" role="tabpanel" data-panel="manual" hidden>
+          <div class="remove-background-preview-heading">
+            <h2>Refine the mask</h2>
+            <p>Paint over the subject to keep it, or unwanted areas to remove them.</p>
+          </div>
+          <div class="remove-background-brush-controls" aria-label="Manual brush controls">
+            <div class="remove-background-brush-actions" role="group" aria-label="Brush action">
+              <button class="btn btn-secondary is-active" type="button" data-brush-mode="keep" aria-pressed="true">Keep Area</button>
+              <button class="btn btn-secondary" type="button" data-brush-mode="remove" aria-pressed="false">Remove Area</button>
+            </div>
+            <label class="remove-background-size-label" for="backgroundBrushSize">
+              Brush size <output data-brush-size-label for="backgroundBrushSize">32 px</output>
+            </label>
+            <input id="backgroundBrushSize" class="remove-background-size" data-brush-size type="range" min="8" max="160" step="1" value="32">
+            <button class="btn btn-secondary" type="button" data-action="undo" disabled>Undo stroke</button>
+            <button class="btn btn-secondary" type="button" data-action="reset" disabled>Reset corrections</button>
+          </div>
+          <p class="remove-background-brush-hint" data-brush-hint>Keep Area is active. Drag across image areas that should remain visible.</p>
+          <div class="remove-background-canvas-stage" data-canvas-stage>
+            <div class="remove-background-canvas-wrap">
+              <canvas class="remove-background-canvas" data-result-canvas aria-label="Manual transparent image preview"></canvas>
+              <canvas class="remove-background-strokes" data-stroke-canvas aria-hidden="true"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <div class="remove-background-actions">
+          <button class="btn btn-primary btn-lg remove-background-submit" type="button" data-action="finalize" disabled>Remove Background</button>
+        </div>
+        <section class="remove-background-final" data-final aria-labelledby="removeBackgroundFinalTitle" hidden>
+          <h2 id="removeBackgroundFinalTitle">Your transparent image is ready</h2>
+          <p data-final-details></p>
+          <a class="btn btn-primary btn-lg remove-background-download" data-action="download" href="#" download hidden>
+            <span aria-hidden="true">↓</span> Download Image
+          </a>
+        </section>
+      </section>
+
+      <div class="remove-background-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p data-status-message>Select an image to automatically remove its background.</p>
+        <button class="btn btn-secondary" type="button" data-action="retry" hidden>Retry background removal</button>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="removeBackgroundMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="removeBackgroundMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/remove-background.js"></script>
+</body>
+</html>

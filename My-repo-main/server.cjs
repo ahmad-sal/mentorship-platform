@@ -12,6 +12,19 @@ const {
   inspectDocument,
   inspectImage
 } = require('./converter-suite.cjs');
+const {
+  compressImage,
+  getSafeSvgPreview,
+  inspectImage: inspectCompressImage
+} = require('./compress-image.cjs');
+const {
+  MAX_IMAGE_BYTES: MAX_UPSCALE_IMAGE_BYTES,
+  createUpscaleImageProcessor
+} = require('./upscale-image.cjs');
+const {
+  MAX_IMAGE_BYTES: MAX_BACKGROUND_REMOVAL_IMAGE_BYTES,
+  createRemoveBackgroundProcessor
+} = require('./remove-background.cjs');
 const supabase = require('./supabase.cjs');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
@@ -54,6 +67,8 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const upscaleImageProcessor = createUpscaleImageProcessor(cloudinary);
+const removeBackgroundProcessor = createRemoveBackgroundProcessor(cloudinary);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -203,8 +218,24 @@ app.get('/tools/compress-pdf', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'compress-pdf.html'));
 });
 
+app.get('/tools/compress-image', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'compress-image.html'));
+});
+
+app.get('/tools/upscale-image', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'upscale-image.html'));
+});
+
+app.get('/tools/remove-background', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'remove-background.html'));
+});
+
 app.get('/tools/additive-pdf', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'additive-pdf.html'));
+});
+
+app.get('/tools/lock-unlock-pdf', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'lock-unlock-pdf.html'));
 });
 
 app.get('/tools/converter-suite', (req, res) => {
@@ -296,6 +327,262 @@ function registerConverterEndpoints(kind, fileLimit, concurrencyLimit, inspect, 
 registerConverterEndpoints('document', MAX_DOCUMENT_BYTES, 2, inspectDocument, convertDocument);
 registerConverterEndpoints('image', MAX_IMAGE_BYTES, 4, inspectImage, convertImage);
 
+let activeImageCompressionRequests = 0;
+const compressImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 1, fieldNameSize: 50, fieldSize: 32 }
+}).single('file');
+
+function limitImageCompressionConcurrency(req, res, next) {
+  if (activeImageCompressionRequests >= 2) {
+    return res.status(429).json({ error: 'Image compression is busy. Wait a moment and try again.' });
+  }
+  activeImageCompressionRequests += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeImageCompressionRequests -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
+
+function receiveCompressionImage(req, res, next) {
+  compressImageUpload(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Images must be 20 MB or smaller.' });
+    }
+    return res.status(400).json({ error: 'Choose exactly one image file to continue.' });
+  });
+}
+
+function handleImageCompressionFailure(res, error) {
+  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+  if (statusCode === 500) {
+    console.error('Compress Image internal processing error.', { code: error.code || 'UNEXPECTED_ERROR' });
+  }
+  return res.status(statusCode).json({
+    error: statusCode === 500 ? 'The image could not be compressed. Try another supported image.' : error.message
+  });
+}
+
+app.post('/api/tools/compress-image/inspect', limitImageCompressionConcurrency, receiveCompressionImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    return res.json(await inspectCompressImage(req.file));
+  } catch (error) {
+    return handleImageCompressionFailure(res, error);
+  }
+});
+
+app.post('/api/tools/compress-image/preview', limitImageCompressionConcurrency, receiveCompressionImage, (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const preview = getSafeSvgPreview(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Length': String(preview.length),
+      'Content-Security-Policy': "default-src 'none'; script-src 'none'; style-src 'none'; sandbox",
+      'Content-Type': 'image/svg+xml'
+    });
+    return res.send(preview);
+  } catch (error) {
+    return handleImageCompressionFailure(res, error);
+  }
+});
+
+app.post('/api/tools/compress-image', limitImageCompressionConcurrency, receiveCompressionImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const result = await compressImage(req.file, req.body.level);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Disposition': 'attachment; filename="' + result.filename + '"',
+      'Content-Length': String(result.bytes.length),
+      'Content-Type': result.mime,
+      'X-Output-Filename': result.filename,
+      'X-Output-Format': result.format,
+      'X-Output-Width': String(result.width),
+      'X-Output-Height': String(result.height),
+      'X-Output-Pages': String(result.pages)
+    });
+    return res.send(result.bytes);
+  } catch (error) {
+    return handleImageCompressionFailure(res, error);
+  }
+});
+
+let activeUpscaleImageRequests = 0;
+const upscaleImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_UPSCALE_IMAGE_BYTES, files: 1, fields: 0 }
+}).single('file');
+
+function limitUpscaleImageConcurrency(req, res, next) {
+  if (activeUpscaleImageRequests >= 2) {
+    return res.status(429).json({ error: 'AI image processing is busy. Wait a moment and try again.' });
+  }
+  activeUpscaleImageRequests += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeUpscaleImageRequests -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
+
+function receiveUpscaleImage(req, res, next) {
+  upscaleImageUpload(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Images must be 20 MB or smaller.' });
+    }
+    return res.status(400).json({ error: 'Choose exactly one image file to continue.' });
+  });
+}
+
+function handleUpscaleImageFailure(res, error) {
+  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+  if (statusCode >= 500) {
+    console.error('Upscale Image processing failed.', { code: error.code || 'PROCESSING_ERROR' });
+  }
+  return res.status(statusCode).json({
+    error: statusCode === 500 ? 'The image could not be upscaled. Try another supported image.' : error.message
+  });
+}
+
+app.post('/api/tools/upscale-image/preview', limitUpscaleImageConcurrency, receiveUpscaleImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const preview = await upscaleImageProcessor.createRasterPreview(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Length': String(preview.bytes.length),
+      'Content-Type': 'image/png',
+      'X-Original-Width': String(preview.width),
+      'X-Original-Height': String(preview.height),
+      'X-Preview-Width': String(preview.previewWidth),
+      'X-Preview-Height': String(preview.previewHeight)
+    });
+    return res.send(preview.bytes);
+  } catch (error) {
+    return handleUpscaleImageFailure(res, error);
+  }
+});
+
+app.post('/api/tools/upscale-image', limitUpscaleImageConcurrency, receiveUpscaleImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const result = await upscaleImageProcessor.upscaleImage(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Disposition': 'attachment; filename="' + result.filename + '"',
+      'Content-Length': String(result.bytes.length),
+      'Content-Type': result.mime,
+      'X-Output-Filename': result.filename,
+      'X-Output-Width': String(result.width),
+      'X-Output-Height': String(result.height),
+      'X-Original-Width': String(result.originalWidth),
+      'X-Original-Height': String(result.originalHeight),
+      'X-Original-Format': result.originalFormat,
+      'X-Output-Has-Alpha': String(result.hasAlpha)
+    });
+    return res.send(result.bytes);
+  } catch (error) {
+    return handleUpscaleImageFailure(res, error);
+  }
+});
+
+let activeBackgroundRemovalRequests = 0;
+const backgroundRemovalUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_BACKGROUND_REMOVAL_IMAGE_BYTES, files: 1, fields: 0 }
+}).single('file');
+
+function limitBackgroundRemovalConcurrency(req, res, next) {
+  if (activeBackgroundRemovalRequests >= 2) {
+    return res.status(429).json({ error: 'AI image processing is busy. Wait a moment and try again.' });
+  }
+  activeBackgroundRemovalRequests += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeBackgroundRemovalRequests -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
+
+function receiveBackgroundRemovalImage(req, res, next) {
+  backgroundRemovalUpload(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Images must be 20 MB or smaller.' });
+    }
+    return res.status(400).json({ error: 'Choose exactly one image file to continue.' });
+  });
+}
+
+function handleBackgroundRemovalFailure(res, error) {
+  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+  if (statusCode >= 500) {
+    console.error('Remove Background processing failed.', { code: error.code || 'PROCESSING_ERROR' });
+  }
+  return res.status(statusCode).json({
+    error: statusCode === 500
+      ? 'The image background could not be removed. Try another supported image.'
+      : error.message
+  });
+}
+
+app.post('/api/tools/remove-background/preview', limitBackgroundRemovalConcurrency, receiveBackgroundRemovalImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const preview = await removeBackgroundProcessor.createRasterPreview(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Length': String(preview.bytes.length),
+      'Content-Type': 'image/png',
+      'X-Original-Width': String(preview.width),
+      'X-Original-Height': String(preview.height)
+    });
+    return res.send(preview.bytes);
+  } catch (error) {
+    return handleBackgroundRemovalFailure(res, error);
+  }
+});
+
+app.post('/api/tools/remove-background', limitBackgroundRemovalConcurrency, receiveBackgroundRemovalImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const result = await removeBackgroundProcessor.removeBackground(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Disposition': 'attachment; filename="' + result.filename + '"',
+      'Content-Length': String(result.bytes.length),
+      'Content-Type': result.mime,
+      'X-Output-Filename': result.filename,
+      'X-Output-Width': String(result.width),
+      'X-Output-Height': String(result.height),
+      'X-Original-Width': String(result.originalWidth),
+      'X-Original-Height': String(result.originalHeight),
+      'X-Original-Format': result.format,
+      'X-Output-Has-Alpha': String(result.hasAlpha)
+    });
+    return res.send(result.bytes);
+  } catch (error) {
+    return handleBackgroundRemovalFailure(res, error);
+  }
+});
+
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -319,6 +606,8 @@ app.get('/vendor/pdfjs.js', (req, res) => {
 app.get('/vendor/pdfjs.worker.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs'));
 });
+
+app.use('/vendor/qpdf-run', express.static(path.join(__dirname, 'node_modules', 'qpdf-run'), { index: false }));
 
 app.get('/vendor/jspdf.umd.min.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'node_modules', 'jspdf', 'dist', 'jspdf.umd.min.js'));

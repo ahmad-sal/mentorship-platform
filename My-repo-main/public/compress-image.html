@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Compress images with format-preserving quality options and compare file sizes." />
+  <title>Compress Image — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme compress-image-public-page" data-current-tool="compress-image">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown">
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="compress-pdf-page compress-image-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="compress-pdf-heading">
+      <span class="section-kicker">Quality compression, format preserved</span>
+      <h1>Compress Image</h1>
+      <p>Reduce image file size while keeping its format, dimensions, transparency, and animation where supported.</p>
+    </header>
+
+    <section class="compress-pdf-workspace" aria-label="Compress an image file">
+      <div class="compress-upload-area" data-upload-area role="button" tabindex="0" aria-label="Select an image or drop it here">
+        <input class="compress-file-input" data-file-input type="file" accept="image/*,.tif,.tiff,.avif,.svg,.bmp,.ico" tabindex="-1" aria-label="Choose an image file">
+        <span class="compress-upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="36" height="32" rx="5" stroke="currentColor" stroke-width="2.2"/><circle cx="17" cy="19" r="3.5" stroke="currentColor" stroke-width="2.2"/><path d="m9 36 11-11 7 7 5-5 7 8M34 12v11m0 0-4-4m4 4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <strong data-upload-title>Select Image File</strong>
+        <span class="compress-upload-hint" data-upload-hint>Drop an image here or click to browse</span>
+        <span class="compress-upload-limit">JPEG · PNG · WebP · GIF · SVG · TIFF · AVIF · Up to 20 MB / 40 megapixels</span>
+      </div>
+
+      <section class="compress-file-info" data-file-info aria-label="Selected image" hidden>
+        <span class="compress-file-badge compress-image-file-badge" aria-hidden="true">IMG</span>
+        <span class="compress-file-copy"><strong data-file-name></strong><small data-file-size></small><small data-image-details></small></span>
+        <button class="btn btn-secondary compress-replace-button" type="button" data-action="replace">Replace file</button>
+      </section>
+      <figure class="compress-image-preview" data-source-preview hidden>
+        <img data-source-image alt="Preview of selected image">
+        <figcaption data-source-caption></figcaption>
+      </figure>
+
+      <fieldset class="compress-level-section" data-level-section hidden>
+        <legend>Choose Compression Level</legend>
+        <p class="compress-level-intro">Each option trades image detail or processing effort for a smaller file.</p>
+        <div class="compress-level-grid">
+          <label class="compress-level-card">
+            <input type="radio" name="imageCompressionLevel" value="extreme">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Extreme Compression</strong>
+              <small>Smaller file, more quality trade-off</small>
+            </span>
+          </label>
+          <label class="compress-level-card is-recommended">
+            <input type="radio" name="imageCompressionLevel" value="recommended">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Recommended Compression</strong>
+              <small>Balanced quality and file size</small>
+            </span>
+            <span class="compress-recommended-badge">Recommended</span>
+          </label>
+          <label class="compress-level-card">
+            <input type="radio" name="imageCompressionLevel" value="less">
+            <span class="compress-level-radio" aria-hidden="true"></span>
+            <span class="compress-level-copy">
+              <strong>Less Compression</strong>
+              <small>Higher quality, less file-size change</small>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="compress-privacy-note" data-privacy-note hidden>
+        Images are processed by this site's image engine in temporary memory and are not stored. Supported formats retain their original format and dimensions; GIF animation and transparency are preserved when the source and encoder support them. Metadata is retained where the format and encoder permit it. BMP and ICO are not supported by the current image engine.
+      </div>
+
+      <div class="compress-actions">
+        <button class="btn btn-primary btn-lg compress-submit" type="button" data-action="compress" disabled hidden>
+          <span data-compress-label>Compress Image</span>
+        </button>
+        <a class="btn btn-primary btn-lg compress-download" data-action="download" href="#" download hidden>
+          <span aria-hidden="true">↓</span> Download Compressed Image
+        </a>
+      </div>
+
+      <section class="compress-results compress-image-results" data-results aria-labelledby="imageResultsTitle" hidden>
+        <div class="compress-results-heading">
+          <span class="section-kicker">Compression Results</span>
+          <h2 id="imageResultsTitle" data-result-title></h2>
+          <p data-result-detail></p>
+        </div>
+        <figure class="compress-image-preview compress-image-result-preview" data-result-preview hidden>
+          <img data-result-image alt="Preview of processed image">
+          <figcaption data-result-caption></figcaption>
+        </figure>
+        <div class="compress-result-body">
+          <div class="compress-donut" data-donut role="img">
+            <svg viewBox="0 0 36 36" aria-hidden="true">
+              <circle class="compress-donut-track" cx="18" cy="18" r="15.9155"></circle>
+              <circle class="compress-donut-saved" data-donut-saved cx="18" cy="18" r="15.9155"></circle>
+            </svg>
+            <span class="compress-donut-value" data-donut-value></span>
+            <span class="compress-donut-label">saved</span>
+          </div>
+          <dl class="compress-size-comparison">
+            <div><dt>Original Size</dt><dd data-original-size></dd></div>
+            <span class="compress-size-arrow" aria-hidden="true">→</span>
+            <div><dt>Compressed Size</dt><dd data-compressed-size></dd></div>
+            <div class="compress-size-saved"><dt>Size difference</dt><dd data-size-difference></dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <div class="compress-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p class="compress-status-message" data-status-message>Select an image to choose a compression level.</p>
+        <div class="compress-progress-wrap" data-progress-wrap hidden>
+          <span class="compress-spinner" aria-hidden="true"></span>
+          <span data-progress-message>Checking your image…</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="compressImageMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading">
+        <span class="section-kicker">Keep exploring</span>
+        <h2 id="compressImageMoreToolsTitle">Explore More Tools</h2>
+      </div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/">
+          <span class="logo-icon" aria-hidden="true">AS</span>
+          <span class="logo-text">Ahmad Saleem Mentorship</span>
+        </a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4>
+        <ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4>
+        <ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script type="module" src="/compress-image.js"></script>
+</body>
+</html>

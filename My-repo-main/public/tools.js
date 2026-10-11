@@ -35,11 +35,43 @@
       available: true
     },
     {
+      id: 'compress-image',
+      name: 'Compress Image',
+      description: 'Reduce image file size while preserving its format, dimensions, and animation where supported.',
+      icon: '<svg class="image-compress-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.5" y="7.5" width="29" height="25" rx="4" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="16" r="2.5" stroke="currentColor" stroke-width="2"/><path d="m8 29 8-8 5 5 4-4 7 7M28 12v7m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      route: '/tools/compress-image',
+      available: true
+    },
+    {
+      id: 'upscale-image',
+      name: 'Upscale Image',
+      description: 'Automatically enhance and upscale images with AI, then compare before and after.',
+      icon: '<svg class="image-upscale-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.5" y="7.5" width="29" height="25" rx="4" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="16" r="2.5" stroke="currentColor" stroke-width="2"/><path d="m8 29 8-8 5 5 5-7 6 10M27 12h6m0 0v6m0-6-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      route: '/tools/upscale-image',
+      available: true
+    },
+    {
+      id: 'remove-background',
+      name: 'Remove Background',
+      description: 'Automatically remove image backgrounds and refine transparent edges with a Keep/Remove brush.',
+      icon: '<svg class="image-background-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.5" y="5.5" width="29" height="29" rx="5" stroke="currentColor" stroke-width="2"/><path d="M9 9h6v6H9zm8 0h6v6h-6zm8 0h6v6h-6zM9 17h6v6H9zm16 0h6v6h-6zM9 25h6v6H9zm8 0h6v6h-6zm8 0h6v6h-6z" fill="currentColor" opacity=".18"/><circle cx="20" cy="19" r="5" fill="var(--surface)" stroke="currentColor" stroke-width="2"/><path d="m16.5 22.5-3 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      route: '/tools/remove-background',
+      available: true
+    },
+    {
       id: 'additive-pdf',
       name: 'Additive PDF',
       description: 'Add text, images, drawings, and shapes to your PDF documents.',
       icon: '<svg class="additive-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 6.5h14l6 6v8M22 7v7h6M11 18h7M11 22h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m20 29 8.9-8.9a2.5 2.5 0 0 1 3.5 3.5L23.5 33.5l-5 1.5 1.5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 13v18a3 3 0 0 0 3 3h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
       route: '/tools/additive-pdf',
+      available: true
+    },
+    {
+      id: 'lock-unlock-pdf',
+      name: 'Lock & Unlock PDF',
+      description: 'Protect PDF files with a password or remove password protection from documents you are authorized to unlock.',
+      icon: '🔐',
+      route: '/tools/lock-unlock-pdf',
       available: true
     },
     {
@@ -215,7 +247,11 @@
         !document.body.classList.contains('merge-pdf-public-page') &&
         !document.body.classList.contains('split-pdf-public-page') &&
         !document.body.classList.contains('compress-pdf-public-page') &&
-        !document.body.classList.contains('additive-pdf-public-page')) return;
+        !document.body.classList.contains('compress-image-public-page') &&
+        !document.body.classList.contains('upscale-image-public-page') &&
+        !document.body.classList.contains('remove-background-public-page') &&
+        !document.body.classList.contains('additive-pdf-public-page') &&
+        !document.body.classList.contains('lock-unlock-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';
     }
     if (themeButton && themeButton.dataset.toolsThemeReady !== 'true') {

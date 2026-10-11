@@ -1,0 +1,618 @@
+/* ==========================================================================
+   Tools Landing — "Storm Grid" ultra redesign
+   --------------------------------------------------------------------------
+   Presentation-only layer for public/tools.html. It loads AFTER tools.css and
+   re-skins the page under body.tools-public-page so none of the shared tool
+   sub-pages (calculator, merge-pdf, ...) are affected. No behaviour changes:
+   cards are still rendered by tools.js into [data-tools-grid].
+   ========================================================================== */
+
+/* --- Registered property lets the hover border rotate smoothly ----------- */
+@property --tools-ring-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+body.tools-public-page {
+  /* Accent ramp reused by cards, beams and canvas FX */
+  --fx-volt: #6d8cf7;        /* electric periwinkle */
+  --fx-volt-2: #22d3ee;      /* cyan spark          */
+  --fx-volt-3: #a78bfa;      /* violet ember        */
+  --fx-amber: #fbbf24;       /* lightning flash     */
+  --fx-card-halo: 0.62;      /* dark themes glow harder */
+  position: relative;
+  isolation: isolate;
+}
+
+body.tools-public-page.dark-theme,
+body.tools-public-page.dark {
+  --fx-card-halo: 1;
+}
+
+/* ==========================================================================
+   1. LIVING BACKGROUND — aurora blobs, horizon grid, energy beam, canvas
+   ========================================================================== */
+
+.fx-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fx-aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+}
+body.dark-theme .fx-aurora,
+body.dark .fx-aurora { opacity: 0.68; }
+
+.fx-aurora-a {
+  top: -14vh;
+  left: -10vw;
+  width: 46vw;
+  height: 46vw;
+  min-width: 380px;
+  min-height: 380px;
+  background: radial-gradient(circle at 35% 35%, rgba(109, 140, 247, 0.55), transparent 68%);
+  animation: fxAuroraA 26s ease-in-out infinite alternate;
+}
+.fx-aurora-b {
+  top: -6vh;
+  right: -12vw;
+  width: 40vw;
+  height: 40vw;
+  min-width: 320px;
+  min-height: 320px;
+  background: radial-gradient(circle at 60% 40%, rgba(34, 211, 238, 0.42), transparent 66%);
+  animation: fxAuroraB 32s ease-in-out infinite alternate;
+}
+.fx-aurora-c {
+  bottom: -18vh;
+  left: 30vw;
+  width: 44vw;
+  height: 44vw;
+  min-width: 340px;
+  min-height: 340px;
+  background: radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.36), transparent 68%);
+  animation: fxAuroraC 38s ease-in-out infinite alternate;
+}
+
+@keyframes fxAuroraA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(6vw, 5vh, 0) scale(1.12); }
+  100% { transform: translate3d(-2vw, 9vh, 0) scale(0.96); }
+}
+@keyframes fxAuroraB {
+  0%   { transform: translate3d(0, 0, 0) scale(1.04); }
+  50%  { transform: translate3d(-7vw, 7vh, 0) scale(0.92); }
+  100% { transform: translate3d(3vw, -3vh, 0) scale(1.1); }
+}
+@keyframes fxAuroraC {
+  0%   { transform: translate3d(0, 0, 0) scale(0.94); }
+  50%  { transform: translate3d(-8vw, -6vh, 0) scale(1.08); }
+  100% { transform: translate3d(6vw, 2vh, 0) scale(1); }
+}
+
+/* Horizon grid — a receding perspective floor under the hero */
+.fx-grid {
+  position: absolute;
+  left: -25vw;
+  right: -25vw;
+  bottom: -6vh;
+  height: 46vh;
+  background-image:
+    linear-gradient(rgba(109, 140, 247, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109, 140, 247, 0.22) 1px, transparent 1px);
+  background-size: 54px 54px;
+  transform: perspective(620px) rotateX(64deg);
+  transform-origin: bottom center;
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 82%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 82%);
+  animation: fxGridScroll 9s linear infinite;
+  opacity: 0.55;
+}
+body.dark-theme .fx-grid,
+body.dark .fx-grid { opacity: 0.8; }
+
+@keyframes fxGridScroll {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 0 54px, 0 0; }
+}
+
+/* Horizontal energy beam that sweeps under the heading */
+.fx-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22vw;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.16), rgba(109, 140, 247, 0.2), transparent);
+  filter: blur(18px);
+  animation: fxBeamSweep 11s ease-in-out infinite;
+}
+@keyframes fxBeamSweep {
+  0%   { transform: translateX(-30vw) skewX(-14deg); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(115vw) skewX(-14deg); opacity: 0; }
+}
+
+/* Particle / lightning canvas */
+.fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   2. HERO — kicker, gradient title, lightning accents, stat pills
+   ========================================================================== */
+
+body.tools-public-page .tools-page-heading {
+  position: relative;
+  max-width: 760px;
+  margin-inline: auto;
+  margin-bottom: clamp(2.2rem, 5vw, 3.4rem);
+  text-align: center;
+}
+
+/* Glass kicker chip */
+body.tools-public-page .tools-page-heading .section-kicker {
+  position: relative;
+  padding: 0.42rem 0.95rem;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: 0 0 22px -6px rgba(109, 140, 247, 0.55);
+  animation: fxKickerFloat 5.2s ease-in-out infinite;
+}
+body.tools-public-page .tools-page-heading .section-kicker::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--fx-volt-2);
+  box-shadow: 0 0 10px var(--fx-volt-2);
+  animation: fxPulseDot 1.8s ease-in-out infinite;
+}
+@keyframes fxKickerFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+@keyframes fxPulseDot {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.55); opacity: 0.55; }
+}
+
+/* Animated gradient title with shine sweep */
+body.tools-public-page .tools-page-heading h1 {
+  position: relative;
+  margin-bottom: 0.9rem;
+  font-size: clamp(2.6rem, 7.5vw, 4.4rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.04;
+  color: transparent;
+  background: linear-gradient(
+    100deg,
+    var(--text-heading) 0%,
+    var(--text-heading) 30%,
+    var(--fx-volt) 46%,
+    var(--fx-volt-2) 54%,
+    var(--fx-volt-3) 62%,
+    var(--text-heading) 80%,
+    var(--text-heading) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: fxTitleSweep 7s linear infinite;
+  filter: drop-shadow(0 4px 26px rgba(109, 140, 247, 0.35));
+}
+@keyframes fxTitleSweep {
+  from { background-position: 130% 50%; }
+  to   { background-position: -130% 50%; }
+}
+
+/* Flickering bolt marks that flank the title */
+.fx-bolt-mark {
+  position: absolute;
+  top: 50%;
+  width: clamp(26px, 4vw, 44px);
+  height: auto;
+  color: var(--fx-amber);
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+  animation: fxBoltFlicker 6s steps(1, end) infinite;
+  pointer-events: none;
+}
+.fx-bolt-mark.fx-bolt-left  { left: -8px;  transform: translateY(-58%) scaleX(-1) rotate(-8deg); }
+.fx-bolt-mark.fx-bolt-right { right: -8px; transform: translateY(-30%) rotate(8deg); animation-delay: 2.6s; }
+@keyframes fxBoltFlicker {
+  0%, 86%, 100% { opacity: 0.85; }
+  87%           { opacity: 0.15; }
+  89%           { opacity: 1;   filter: drop-shadow(0 0 22px rgba(251, 191, 36, 1)); }
+  91%           { opacity: 0.3; }
+  93%           { opacity: 1; }
+}
+
+body.tools-public-page .tools-page-heading p {
+  max-width: 54ch;
+  margin-inline: auto;
+  font-size: clamp(0.98rem, 1.6vw, 1.12rem);
+  line-height: 1.75;
+}
+
+/* Stat pills row */
+.fx-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+.fx-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: transform var(--motion-ui) var(--ease-out),
+    border-color var(--motion-ui) var(--ease-out),
+    box-shadow var(--motion-ui) var(--ease-out),
+    color var(--motion-ui) var(--ease-out);
+}
+.fx-stat-pill:hover {
+  transform: translateY(-3px) scale(1.04);
+  border-color: var(--primary-border);
+  color: var(--text-heading);
+  box-shadow: 0 8px 26px -10px rgba(109, 140, 247, 0.7);
+}
+.fx-stat-pill b {
+  color: var(--fx-volt);
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+body.dark-theme .fx-stat-pill b,
+body.dark .fx-stat-pill b { color: var(--fx-volt-2); }
+
+/* ==========================================================================
+   3. CARD GRID — perspective stage + electric divider
+   ========================================================================== */
+
+body.tools-public-page .tools-page {
+  position: relative;
+  z-index: 1;
+}
+
+body.tools-public-page .tools-card-grid {
+  perspective: 1400px;
+  gap: clamp(0.9rem, 1.8vw, 1.35rem);
+}
+
+/* Glowing divider bar above the grid */
+.fx-divider {
+  position: relative;
+  height: 2px;
+  margin: clamp(1.6rem, 3.5vw, 2.4rem) 0 clamp(1.8rem, 4vw, 2.6rem);
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg,
+    transparent, var(--fx-volt) 22%, var(--fx-volt-2) 50%, var(--fx-volt-3) 78%, transparent);
+  background-size: 200% 100%;
+  animation: fxDividerFlow 4.5s linear infinite;
+  opacity: 0.75;
+}
+.fx-divider::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(8px);
+  opacity: 0.55;
+}
+@keyframes fxDividerFlow {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   4. TOOL CARDS — glass, 3D tilt, spotlight, rotating ring, bolt overlay
+   ========================================================================== */
+
+body.tools-public-page .tools-card {
+  position: relative;
+  display: flex;
+  min-height: 208px;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: clamp(1.3rem, 3vw, 1.75rem);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--surface) 92%, var(--fx-volt) 8%),
+      var(--surface) 55%,
+      color-mix(in srgb, var(--surface) 88%, var(--fx-volt-2) 12%));
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  /* JS writes --card-rx / --card-ry / --spot-x / --spot-y */
+  transform: rotateX(var(--card-rx, 0deg)) rotateY(var(--card-ry, 0deg))
+    translateY(var(--card-lift, 0px)) scale(var(--card-scale, 1));
+  transform-style: preserve-3d;
+  transition:
+    transform 420ms var(--ease-out),
+    box-shadow 420ms var(--ease-out),
+    border-color 420ms var(--ease-out);
+  will-change: transform;
+}
+
+body.tools-public-page .tools-card:hover,
+body.tools-public-page .tools-card:focus-visible {
+  --card-lift: -10px;
+  --card-scale: 1.025;
+  border-color: color-mix(in srgb, var(--fx-volt) 55%, var(--border));
+  box-shadow:
+    0 24px 60px -22px rgba(109, 140, 247, calc(0.65 * var(--fx-card-halo))),
+    0 0 0 1px color-mix(in srgb, var(--fx-volt) 35%, transparent),
+    0 0 44px -8px rgba(34, 211, 238, calc(0.4 * var(--fx-card-halo)));
+  color: var(--text-primary);
+  z-index: 2;
+}
+
+/* Rotating conic ring revealed on hover */
+body.tools-public-page .tools-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--tools-ring-angle),
+    transparent 0deg,
+    var(--fx-volt) 60deg,
+    var(--fx-volt-2) 120deg,
+    transparent 200deg,
+    var(--fx-volt-3) 300deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 380ms var(--ease-out);
+  pointer-events: none;
+}
+body.tools-public-page .tools-card:hover::before,
+body.tools-public-page .tools-card:focus-visible::before {
+  opacity: 1;
+  animation: fxRingSpin 3.2s linear infinite;
+}
+@keyframes fxRingSpin {
+  to { --tools-ring-angle: 360deg; }
+}
+
+/* Cursor spotlight that follows the pointer inside the card */
+body.tools-public-page .tools-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    320px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(109, 140, 247, 0.28),
+    rgba(34, 211, 238, 0.12) 42%,
+    transparent 70%);
+  opacity: 0;
+  transition: opacity 320ms var(--ease-out);
+  pointer-events: none;
+}
+body.tools-public-page .tools-card:hover::after,
+body.tools-public-page .tools-card:focus-visible::after {
+  opacity: 1;
+}
+
+/* Small zig-zag bolt that streaks across the card on hover */
+body.tools-public-page .tools-card .fx-card-bolt {
+  position: absolute;
+  top: 12%;
+  left: -30%;
+  width: 46%;
+  height: auto;
+  color: var(--fx-amber);
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.9));
+  opacity: 0;
+  pointer-events: none;
+}
+body.tools-public-page .tools-card:hover .fx-card-bolt {
+  animation: fxCardBolt 900ms var(--ease-out) 60ms 1;
+}
+@keyframes fxCardBolt {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.7) rotate(-6deg); }
+  10%  { opacity: 1; }
+  22%  { opacity: 0.35; }
+  30%  { opacity: 1; }
+  60%  { opacity: 0.9; transform: translate(240%, 28%) scale(1.05) rotate(4deg); }
+  100% { opacity: 0; transform: translate(320%, 42%) scale(1.15) rotate(8deg); }
+}
+
+body.tools-public-page .tools-card:focus-visible {
+  outline: 2px solid var(--fx-volt);
+  outline-offset: 3px;
+}
+
+/* --- Icon: floating tile with orbit glow ------------------------------- */
+body.tools-public-page .tools-card-icon {
+  position: relative;
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--fx-volt) 30%, var(--primary-border));
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 120% at 20% 15%,
+      color-mix(in srgb, var(--fx-volt) 26%, var(--primary-subtle)),
+      var(--primary-subtle));
+  font-size: 1.55rem;
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+  animation: fxIconFloat 6s ease-in-out infinite;
+}
+body.tools-public-page .tools-card:nth-child(2n) .tools-card-icon { animation-delay: 1.4s; }
+body.tools-public-page .tools-card:nth-child(3n) .tools-card-icon { animation-delay: 2.7s; }
+@keyframes fxIconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-4px) rotate(-3deg); }
+}
+body.tools-public-page .tools-card:hover .tools-card-icon,
+body.tools-public-page .tools-card:focus-visible .tools-card-icon {
+  transform: scale(1.12) rotate(-6deg);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--fx-volt) 16%, transparent),
+    0 10px 30px -8px rgba(109, 140, 247, 0.8);
+  animation-play-state: paused;
+}
+body.tools-public-page .tools-card .tools-card-icon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+/* --- Copy block -------------------------------------------------------- */
+body.tools-public-page .tools-card-copy {
+  display: block;
+  min-width: 0;
+  padding: 0.2rem 1.4rem 0 0;
+  transform: translateZ(24px);
+}
+body.tools-public-page .tools-card-title {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--text-heading);
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  background: linear-gradient(90deg, var(--text-heading), var(--text-heading));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 420ms var(--ease-out);
+}
+body.tools-public-page .tools-card:hover .tools-card-title {
+  background-image: linear-gradient(90deg, var(--fx-volt), var(--fx-volt-2));
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+body.tools-public-page .tools-card-description {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.62;
+}
+
+/* --- Corner arrow: charged launch on hover ----------------------------- */
+body.tools-public-page .tools-card-arrow {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.15rem;
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  place-items: center;
+  border: 1px solid var(--primary-border);
+  border-radius: 50%;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-size: 0.95rem;
+  transform: translateZ(34px);
+  transition: transform 380ms var(--ease-out), background-color 380ms var(--ease-out),
+    color 380ms var(--ease-out), box-shadow 380ms var(--ease-out),
+    border-color 380ms var(--ease-out);
+}
+body.tools-public-page .tools-card:hover .tools-card-arrow {
+  transform: translate(4px, -4px) translateZ(40px) scale(1.12);
+  border-color: var(--fx-volt);
+  background: linear-gradient(135deg, var(--fx-volt), var(--fx-volt-2));
+  color: #fff;
+  box-shadow: 0 8px 22px -6px rgba(109, 140, 247, 0.85);
+}
+
+/* ==========================================================================
+   5. ENTRANCE — staged pop-in; neutralised for reduced motion
+   ========================================================================== */
+
+body.tools-public-page .tools-card-grid .tools-card {
+  opacity: 0;
+  animation: fxCardIn 620ms var(--ease-out) forwards;
+  animation-delay: calc(var(--fx-i, 0) * 55ms);
+}
+@keyframes fxCardIn {
+  0%   { opacity: 0; transform: translateY(34px) rotateX(-9deg) scale(0.96); }
+  70%  { opacity: 1; transform: translateY(-4px) rotateX(1.5deg) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0deg) scale(1); }
+}
+
+/* ==========================================================================
+   6. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .fx-bolt-mark { display: none; }
+  .fx-grid { height: 34vh; }
+  body.tools-public-page .tools-page-heading { padding-inline: 0.25rem; }
+}
+
+@media (max-width: 560px) {
+  body.tools-public-page .tools-card { min-height: 164px; }
+  .fx-aurora { filter: blur(48px); }
+}
+
+/* ==========================================================================
+   7. REDUCED MOTION — everything decorative stops; layout stays intact
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-aurora,
+  .fx-grid,
+  .fx-beam,
+  .fx-divider,
+  .fx-divider::after,
+  .fx-bolt-mark,
+  body.tools-public-page .tools-page-heading .section-kicker,
+  body.tools-public-page .tools-page-heading .section-kicker::before,
+  body.tools-public-page .tools-page-heading h1,
+  body.tools-public-page .tools-card-icon,
+  body.tools-public-page .tools-card::before {
+    animation: none !important;
+  }
+  body.tools-public-page .tools-card-grid .tools-card {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+  body.tools-public-page .tools-card,
+  body.tools-public-page .tools-card:hover,
+  body.tools-public-page .tools-card:focus-visible {
+    transform: none;
+  }
+  body.tools-public-page .tools-card::after,
+  body.tools-public-page .tools-card .fx-card-bolt { display: none; }
+}

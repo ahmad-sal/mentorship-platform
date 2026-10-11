@@ -12,9 +12,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/theme.css">
   <link rel="stylesheet" href="/tools.css">
+  <link rel="stylesheet" href="/tools-landing.css">
 </head>
 <body class="light-theme tools-public-page">
   <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <div class="fx-scene" aria-hidden="true">
+    <span class="fx-aurora fx-aurora-a"></span>
+    <span class="fx-aurora fx-aurora-b"></span>
+    <span class="fx-aurora fx-aurora-c"></span>
+    <div class="fx-grid"></div>
+    <div class="fx-beam"></div>
+    <canvas class="fx-canvas"></canvas>
+  </div>
   <header class="site-header" id="siteHeader">
     <div class="nav-container">
       <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
@@ -79,7 +88,13 @@
       <span class="section-kicker">A little help, whenever you need it</span>
       <h1>Tools</h1>
       <p>Useful, easy-to-use tools for your work and learning — available instantly, with no account required.</p>
+      <div class="fx-stats">
+        <span class="fx-stat-pill"><b data-fx-count="18">18</b> tools &amp; converters</span>
+        <span class="fx-stat-pill"><b data-fx-count="0">0</b> sign-ups required</span>
+        <span class="fx-stat-pill"><b data-fx-count="100">100</b>% runs instantly</span>
+      </div>
     </header>
+    <div class="fx-divider" aria-hidden="true"></div>
     <section class="tools-card-grid" aria-label="Available tools" data-tools-grid></section>
   </main>
 
@@ -105,5 +120,6 @@
   </footer>
   <script src="/app-ui.js"></script>
   <script src="/tools.js"></script>
+  <script src="/tools-landing.js"></script>
 </body>
 </html>

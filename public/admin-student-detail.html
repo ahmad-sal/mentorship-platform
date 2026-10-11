@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Details | Admin Portal | Ahmad Saleem Mentorship</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <style>
+    /* Print dossier stays intentionally plain and legible on paper. */
+    .print-only-report { display: none; }
+
+    @media print {
+      body { background: #fff !important; color: #111827 !important; }
+      body > *:not(.print-only-report) { display: none !important; }
+      .print-only-report {
+        display: block;
+        padding: 2rem;
+        font-family: Arial, sans-serif;
+      }
+      .print-only-report h1 {
+        margin: 0 0 1rem;
+        font-size: 1.8rem;
+        color: #0f766e;
+        border-bottom: 2px solid #0f766e;
+        padding-bottom: 0.5rem;
+      }
+      .print-only-report .report-row { margin: 0.75rem 0; font-size: 1.1rem; line-height: 1.5; }
+      .print-only-report .report-label {
+        font-weight: 700;
+        color: #374151;
+        display: inline-block;
+        min-width: 220px;
+      }
+      .print-only-report .report-value { color: #111827; font-weight: 600; }
+      .print-only-report .course-highlight {
+        background: #f0fdfa;
+        padding: 0.75rem 1rem;
+        border-left: 4px solid #0d9488;
+        border-radius: 4px;
+        margin: 0.75rem 0;
+      }
+    }
+
+    /* Page-level polish on top of the shared design system. */
+    .dossier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+      gap: 0.9rem;
+      margin-top: 1.5rem;
+    }
+    .dossier-grid .info-box { margin: 0; }
+    .info-box__label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    .info-box__value {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      overflow-wrap: anywhere;
+    }
+    .span-2 { grid-column: span 2; }
+    @media (max-width: 560px) { .span-2 { grid-column: span 1; } }
+
+    .progress-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-width: 150px;
+    }
+    .progress-cell .progress-bar-bg { flex: 1; }
+    .progress-cell__value {
+      font-size: 0.8125rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-heading);
+      min-width: 2.6rem;
+      text-align: right;
+    }
+    .st-danger-btn {
+      border: 1px solid var(--danger-border);
+      background: var(--danger-subtle);
+      color: var(--danger);
+    }
+    .st-danger-btn:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+  </style>
+</head>
+<body class="light-theme">
+  <div class="app-shell">
+    <!-- ADMIN SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar" aria-label="Administration navigation">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Administration</span>
+        <a class="sidebar-link" href="/admin/dashboard">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a class="sidebar-link" href="/admin/progress">
+          <i data-lucide="bar-chart"></i><span>Student progress</span>
+        </a>
+      </nav>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Platform</span>
+        <a class="sidebar-link" href="/">
+          <i data-lucide="compass"></i><span>Public site</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="avatar avatar-sm" aria-hidden="true">AS</span>
+          <span class="sidebar-user__meta">
+            <span class="sidebar-user__name">Administrator</span>
+            <span class="sidebar-user__role">Mentor access</span>
+          </span>
+        </div>
+        <button class="sidebar-link mt-2" type="button" onclick="logout()" style="border:none; width:100%;">
+          <i data-lucide="log-out"></i><span>Log out</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <span class="app-topbar__title">Student dossier</span>
+        <span class="app-topbar__spacer"></span>
+        <a class="btn btn-secondary btn-sm" href="/admin/dashboard"><i data-lucide="arrow-left"></i> Dashboard</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </header>
+
+      <div class="app-content">
+        <div class="row-between" style="margin-bottom: 1.5rem;">
+          <div>
+            <span class="pill-badge badge-admin"><i data-lucide="user"></i><span>Student dossier</span></span>
+            <h1 style="font-size: clamp(1.5rem, 3.6vw, 2rem); font-weight: 800; letter-spacing: -0.03em; margin-top: 0.5rem;">Student profile</h1>
+            <p class="muted">Enrolment details, course progress and printable reporting for a single student.</p>
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-secondary" onclick="printStudentReport()">
+              <i data-lucide="printer"></i> Print full report
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="row-between" style="align-items: flex-start;">
+            <div class="row" style="gap: 0.9rem; align-items: center;">
+              <span class="avatar avatar-lg" id="stAvatar" aria-hidden="true">ST</span>
+              <div style="min-width: 0;">
+                <h2 id="stName" style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;">Student profile</h2>
+                <p id="stEmail" class="muted small" style="margin-top: 0.15rem;">—</p>
+              </div>
+            </div>
+            <button class="btn btn-sm st-danger-btn" id="btnDeleteStudent" onclick="deleteThisStudent()">
+              <i data-lucide="trash-2"></i> Remove student
+            </button>
+          </div>
+
+          <div class="dossier-grid">
+            <div class="info-box">
+              <div class="info-box__label">CNIC</div>
+              <div class="info-box__value" id="stCnic">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-box__label">WhatsApp</div>
+              <div class="info-box__value" id="stWhatsapp">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-box__label">Enrolled date</div>
+              <div class="info-box__value" id="stJoined">—</div>
+            </div>
+            <div class="info-box span-2">
+              <div class="info-box__label">Enrolled course(s)</div>
+              <div class="info-box__value" id="stEnrolledCourses" style="color: var(--primary);">—</div>
+            </div>
+            <div class="info-box span-2">
+              <div class="info-box__label">Completed course(s)</div>
+              <div class="info-box__value" id="stCompletedCourses" style="color: var(--emerald-text);">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row-between" style="margin-bottom: 1rem;">
+            <h2 style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">Individual course progress</h2>
+            <span class="badge badge-primary"><i data-lucide="activity"></i> Live data</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Course track</th>
+                  <th>Questions solved</th>
+                  <th>Progress</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="stProgressBody">
+                <tr><td colspan="4"><div class="loading-inline"><span class="spinner" aria-hidden="true"></span><span>Loading progress details…</span></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="print-only-report" id="printOnlyReport" aria-hidden="true"></section>
+
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script>
+    function syncThemeUI() {
+      const saved = localStorage.getItem('themePreference') || 'light';
+      document.body.classList.toggle('dark-theme', saved === 'dark');
+      document.body.classList.toggle('light-theme', saved !== 'dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.textContent = saved === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (icon) icon.innerHTML = getIcon(saved === 'dark' ? 'sun' : 'moon');
+    }
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('themePreference', isDark ? 'light' : 'dark');
+      syncThemeUI();
+    }
+    syncThemeUI();
+
+    function initialsOf(name) {
+      const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return 'ST';
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    }
+
+    async function loadStudent() {
+      const pathParts = window.location.pathname.split('/');
+      const studentId = pathParts[pathParts.length - 1];
+      const tbody = document.getElementById('stProgressBody');
+      try {
+        const res = await fetch(`/api/admin/students/${studentId}`);
+        if (!res.ok) throw new Error('Student not found.');
+        const data = await res.json();
+        const s = data.student;
+        const progressList = Array.isArray(data.progress) ? data.progress : [];
+
+        // Only show courses actually enrolled via the Enroll & Start action.
+        let enrolledCourses = [];
+        if (Array.isArray(s.enrolledCourseTitles) && s.enrolledCourseTitles.length > 0) {
+          enrolledCourses = s.enrolledCourseTitles.filter(Boolean);
+        } else if (Array.isArray(s.enrolledCourses) && s.enrolledCourses.length > 0) {
+          enrolledCourses = s.enrolledCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
+        }
+        window.currentStudentEnrolledCourses = enrolledCourses;
+
+        // Only show courses explicitly marked complete in course progress.
+        let completedCourses = [];
+        if (Array.isArray(s.completedCourseTitles) && s.completedCourseTitles.length > 0) {
+          completedCourses = s.completedCourseTitles.filter(Boolean);
+        } else if (Array.isArray(s.completedCourses) && s.completedCourses.length > 0) {
+          completedCourses = s.completedCourses.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean);
+        }
+        window.currentStudentCompletedCourses = completedCourses;
+
+        document.getElementById('stName').textContent = s.full_name || 'Student';
+        document.getElementById('stEmail').textContent = s.email || '—';
+        document.getElementById('stCnic').textContent = s.cnic || '—';
+        document.getElementById('stWhatsapp').textContent = s.whatsapp_number || '—';
+        document.getElementById('stJoined').textContent = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
+        document.getElementById('stEnrolledCourses').textContent = enrolledCourses.length ? enrolledCourses.join(', ') : 'None';
+        document.getElementById('stCompletedCourses').textContent = completedCourses.length ? completedCourses.join(', ') : 'None';
+        const avatar = document.getElementById('stAvatar');
+        if (avatar) avatar.textContent = initialsOf(s.full_name);
+
+        if (progressList.length === 0) {
+          tbody.innerHTML = `
+            <tr><td colspan="4">
+              <div class="empty-state" style="border:none;">
+                <span class="empty-state__icon" aria-hidden="true"><i data-lucide="bar-chart"></i></span>
+                <h3>No course progress recorded yet</h3>
+                <p>Progress appears here as soon as this student solves their first question in an enrolled course.</p>
+              </div>
+            </td></tr>`;
+        } else {
+          tbody.innerHTML = progressList.map(p => {
+            const pct = Math.max(0, Math.min(100, Number(p.progressPercentage) || 0));
+            return `
+            <tr>
+              <td><strong>${p.title}</strong></td>
+              <td><span style="font-variant-numeric: tabular-nums;">${p.completedQuestionCount || 0} / ${p.questionCount || 0}</span></td>
+              <td>
+                <div class="progress-cell">
+                  <div class="progress-bar-bg" role="progressbar" aria-label="${p.title} progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+                    <span class="progress-bar-fill${p.completed ? ' is-success' : ''}" data-progress="${pct}"></span>
+                  </div>
+                  <span class="progress-cell__value">${pct}%</span>
+                </div>
+              </td>
+              <td><span class="badge ${p.completed ? 'badge-emerald' : 'badge-amber'}">${p.completed ? 'Completed' : 'In Progress'}</span></td>
+            </tr>`;
+          }).join('');
+        }
+        if (window.app && app.renderIcons) app.renderIcons();
+        if (window.MentorUI && MentorUI.refresh) MentorUI.refresh();
+      } catch (e) {
+        tbody.innerHTML = `
+          <tr><td colspan="4">
+            <div class="empty-state" style="border:none;">
+              <span class="empty-state__icon" aria-hidden="true"><i data-lucide="alert-triangle"></i></span>
+              <h3>Unable to load this student</h3>
+              <p>${e.message || 'Something went wrong while loading the record.'}</p>
+              <a class="btn btn-secondary" href="/admin/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+            </div>
+          </td></tr>`;
+        if (window.app && app.renderIcons) app.renderIcons();
+      }
+    }
+
+    function printStudentReport() {
+      const report = document.getElementById('printOnlyReport');
+      const studentName = document.getElementById('stName').textContent.trim();
+      const whatsapp = document.getElementById('stWhatsapp').textContent.trim();
+      const enrolledDate = document.getElementById('stJoined').textContent.trim();
+      const email = document.getElementById('stEmail').textContent.trim();
+      const cnic = document.getElementById('stCnic').textContent.trim();
+      const enrolledText = document.getElementById('stEnrolledCourses').textContent.trim();
+      const completedText = document.getElementById('stCompletedCourses').textContent.trim();
+
+      report.innerHTML = `
+        <h1>Student Progress Dossier & Report</h1>
+        <p style="color:#6b7280; margin-bottom:1.5rem;">Printed on: ${new Date().toLocaleDateString()} | Ahmad Saleem Mentorship</p>
+
+        <div class="report-row"><span class="report-label">Student Name:</span> <span class="report-value">${studentName}</span></div>
+        <div class="report-row"><span class="report-label">Email:</span> <span class="report-value">${email}</span></div>
+        <div class="report-row"><span class="report-label">WhatsApp Number:</span> <span class="report-value">${whatsapp}</span></div>
+        <div class="report-row"><span class="report-label">Enrolled Date:</span> <span class="report-value">${enrolledDate}</span></div>
+        <div class="report-row"><span class="report-label">CNIC:</span> <span class="report-value">${cnic}</span></div>
+
+        <div class="course-highlight" style="margin-top:1.25rem;">
+          <div class="report-row"><span class="report-label">Enrolled Course Name:</span> <span class="report-value" style="color:#0f766e; font-size:1.15rem;">${enrolledText}</span></div>
+        </div>
+
+        <div class="course-highlight" style="background:#ecfdf5; border-left-color:#10b981;">
+          <div class="report-row"><span class="report-label">Completed Course Name(s):</span> <span class="report-value" style="color:#047857; font-size:1.15rem;">${completedText}</span></div>
+        </div>
+      `;
+      window.print();
+    }
+
+    async function deleteThisStudent() {
+      const pathParts = window.location.pathname.split('/');
+      const studentId = pathParts[pathParts.length - 1];
+      const studentName = document.getElementById('stName').textContent || 'this student';
+      if (!confirm(`Are you sure you want to permanently remove ${studentName}? This will delete all their enrollments and submissions.`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/students/${studentId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to remove student');
+        alert('Student successfully removed.');
+        window.location.href = '/admin/dashboard';
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    loadStudent();
+  </script>
+</body>
+</html>

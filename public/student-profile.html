@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Profile & Credentials | Ahmad Saleem Mentorship</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+</head>
+<body class="light-theme">
+  <a class="skip-link" href="#profileMain">Skip to main content</a>
+
+  <div class="app-shell">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Workspace navigation">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Workspace</span>
+        <a class="sidebar-link" href="/student/dashboard">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a class="sidebar-link" href="/student/dashboard#coursesSection">
+          <i data-lucide="book-open"></i><span>My courses</span>
+        </a>
+        <a class="sidebar-link" href="/student/dashboard#questionsSection">
+          <i data-lucide="message-square"></i><span>Curriculum tasks</span>
+        </a>
+        <a class="sidebar-link" href="/student/dashboard#submissionSection">
+          <i data-lucide="file-up"></i><span>Assignments</span>
+        </a>
+      </nav>
+
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Account</span>
+        <a class="sidebar-link active" href="/student/profile">
+          <i data-lucide="user"></i><span>Profile &amp; certificate</span>
+        </a>
+        <a class="sidebar-link" href="/student/practical-classes">
+          <i data-lucide="play-circle"></i><span>Live classes</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="avatar avatar-sm" id="sidebarAvatar" aria-hidden="true">S</span>
+          <span class="sidebar-user__meta">
+            <span class="sidebar-user__name" id="sidebarUserName">Student</span>
+            <span class="sidebar-user__role">Student account</span>
+          </span>
+        </div>
+        <button class="sidebar-link mt-2" type="button" onclick="logout()" style="border:none; width:100%;">
+          <i data-lucide="log-out"></i><span>Log out</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <span class="app-topbar__title">Profile &amp; credentials</span>
+        <span class="app-topbar__spacer"></span>
+
+        <a class="btn btn-secondary btn-sm" href="/student/dashboard"><i data-lucide="arrow-left"></i> Workspace</a>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="logout()"><i data-lucide="log-out"></i> Log out</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </header>
+
+      <div class="app-content" id="profileMain">
+        <!-- PROFILE HEADER -->
+        <div class="card mb-3" data-reveal>
+          <div class="profile-header">
+            <span class="avatar-large" id="avatarLetter" aria-hidden="true">S</span>
+            <div style="flex:1 1 240px; min-width:0;">
+              <span class="pill-badge"><i data-lucide="shield-check"></i><span>Verified student</span></span>
+              <h1 class="mt-2" id="profFullName" style="font-size:clamp(1.4rem,3.4vw,1.85rem);">Student name</h1>
+              <p class="muted small" id="profEmail">student@example.com</p>
+            </div>
+          </div>
+
+          <div class="profile-info-grid">
+            <div class="info-item">
+              <div class="info-label">CNIC</div>
+              <div class="info-val" id="profCnic">—</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">WhatsApp contact</div>
+              <div class="info-val" id="profWhatsapp">—</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Enrolled since</div>
+              <div class="info-val" id="profJoined">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEARNING STATS -->
+        <section class="workspace-section" aria-labelledby="credentialStatsHeading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">Credentials</span>
+              <h2 id="credentialStatsHeading" class="mt-1">Learning summary</h2>
+            </div>
+            <span class="badge badge-neutral"><i data-lucide="refresh-cw"></i> Real-time sync</span>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Course tracks</div>
+              <div class="stat-num" id="profStatCourses">—</div>
+              <div class="stat-foot">Tracks in your progress record</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Tasks completed</div>
+              <div class="stat-num" id="profStatTasks">—</div>
+              <div class="stat-foot">Across every track</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Courses completed</div>
+              <div class="stat-num" id="profStatCompleted">—</div>
+              <div class="stat-foot">Qualify for a certificate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Average progress</div>
+              <div class="stat-num" id="profStatAverage">—</div>
+              <div class="stat-foot">Mean across your tracks</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COURSE PROGRESS -->
+        <section class="card workspace-section" aria-labelledby="progressTableHeading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">Progress</span>
+              <h2 id="progressTableHeading" class="mt-1">Course completion progress</h2>
+            </div>
+          </div>
+
+          <div class="table-container" style="border:none; box-shadow:none;">
+            <table class="progress-table" style="min-width:38rem;">
+              <thead>
+                <tr>
+                  <th>Course track</th>
+                  <th>Tasks completed</th>
+                  <th>Progress</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="progressTableBody">
+                <tr>
+                  <td colspan="4">
+                    <div class="loading-inline">
+                      <span class="spinner" aria-hidden="true"></span>
+                      <span>Loading your progress…</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SUPPORT -->
+        <div class="card mt-3" data-reveal>
+          <div class="row-between">
+            <div style="max-width:52ch;">
+              <span class="section-kicker">Need something?</span>
+              <h3 class="mt-1">Certificate or record queries</h3>
+              <p class="muted small mt-1">
+                Your certificate name comes from your registration details. If anything looks wrong,
+                message your mentor before your course completes.
+              </p>
+            </div>
+            <a class="btn btn-outline" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="phone"></i> Contact mentor
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script>
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function renderProfileStats(progress) {
+      const rows = Array.isArray(progress) ? progress : [];
+      const completedTasks = rows.reduce((sum, p) => sum + Number(p.completedQuestionCount || 0), 0);
+      const completedCourses = rows.filter(p => p.completed).length;
+      const average = rows.length
+        ? Math.round(rows.reduce((sum, p) => sum + Number(p.progressPercentage || 0), 0) / rows.length)
+        : 0;
+
+      setText('profStatCourses', rows.length.toString());
+      setText('profStatTasks', completedTasks.toString());
+      setText('profStatCompleted', completedCourses.toString());
+      setText('profStatAverage', average + '%');
+    }
+
+    async function loadProfile() {
+      const tbody = document.getElementById('progressTableBody');
+      try {
+        const res = await fetch('/api/student/profile');
+        if (!res.ok) {
+          window.location.href = '/login?next=' + encodeURIComponent('/student/profile');
+          return;
+        }
+        const data = await res.json();
+        const s = data.student || {};
+
+        const displayName = s.full_name || 'Student';
+        setText('profFullName', displayName);
+        setText('profEmail', s.email || '—');
+        setText('profCnic', s.cnic || '—');
+        setText('profWhatsapp', s.whatsapp_number || '—');
+        setText('profJoined', s.created_at ? new Date(s.created_at).toLocaleDateString() : '—');
+
+        const initial = String(displayName).charAt(0).toUpperCase();
+        setText('avatarLetter', initial);
+        setText('sidebarUserName', displayName);
+        setText('sidebarAvatar', initial);
+
+        const progress = data.progress || [];
+        renderProfileStats(progress);
+
+        if (!progress.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4">
+                <div class="empty-state" style="border:none; padding:1.75rem 1rem;">
+                  <span class="empty-state__icon" aria-hidden="true"><i data-lucide="pie-chart"></i></span>
+                  <h3>No progress recorded yet</h3>
+                  <p>Enrol in a course track and complete your first task — your progress will appear here immediately.</p>
+                  <a class="btn btn-primary" href="/student/dashboard"><i data-lucide="layout-dashboard"></i> Go to workspace</a>
+                </div>
+              </td>
+            </tr>`;
+          if (window.app && app.renderIcons) app.renderIcons();
+          return;
+        }
+
+        tbody.innerHTML = progress.map(p => {
+          const percentage = Number(p.progressPercentage || 0);
+          const statusClass = p.completed ? 'badge-emerald' : (Number(p.completedQuestionCount) > 0 ? 'badge-primary' : 'badge-neutral');
+          const statusLabel = p.completed ? 'Completed' : (Number(p.completedQuestionCount) > 0 ? 'In progress' : 'Not started');
+
+          return `
+            <tr>
+              <td><strong style="font-weight:800;">${p.title}</strong></td>
+              <td class="mono">${p.completedQuestionCount} / ${p.questionCount}</td>
+              <td>
+                <div class="progress">
+                  <span class="progress-bar-bg">
+                    <span class="progress-bar-fill ${percentage >= 100 ? 'is-success' : ''}" data-progress="${percentage}" style="width:0;"></span>
+                  </span>
+                  <span class="tiny strong" style="min-width:2.6rem; text-align:right; font-variant-numeric:tabular-nums;">${percentage}%</span>
+                </div>
+              </td>
+              <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+            </tr>
+          `;
+        }).join('');
+
+        if (window.app && app.renderIcons) app.renderIcons();
+        if (window.MentorUI && typeof window.MentorUI.refresh === 'function') window.MentorUI.refresh();
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              <div class="error-state" style="border:none;">
+                <span class="empty-state__icon" aria-hidden="true"><i data-lucide="alert-circle"></i></span>
+                <h3>We couldn't load your progress</h3>
+                <p>Check your connection and try again.</p>
+                <button class="btn btn-primary" type="button" onclick="loadProfile()">
+                  <i data-lucide="refresh-cw"></i> Retry
+                </button>
+              </div>
+            </td>
+          </tr>`;
+        if (window.app && app.renderIcons) app.renderIcons();
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

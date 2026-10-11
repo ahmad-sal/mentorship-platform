@@ -33,6 +33,9 @@
   left: 50%;
   z-index: 80;
   width: min(25rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.8rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);

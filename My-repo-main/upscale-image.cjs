@@ -6,10 +6,13 @@ const sharp = require('sharp');
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_INPUT_PIXELS = 10 * 1000 * 1000;
+const MAX_AI_UPSCALE_PIXELS = 2048 * 2048 - 1;
+const MAX_AI_UPSCALE_SIDE = 2048;
 const MAX_OUTPUT_PIXELS = 40 * 1000 * 1000;
 const MAX_OUTPUT_SIDE = 8192;
 const MAX_OUTPUT_BYTES = 100 * 1024 * 1024;
 const MAX_PROCESSING_MS = 120000;
+const MAX_RESULT_FETCH_RETRIES = 8;
 const INPUT_FORMATS = {
   '.jpg': 'jpeg',
   '.jpeg': 'jpeg',
@@ -36,6 +39,13 @@ function createUpscaleImageProcessor(cloudinary, fetchImage) {
         targetWidth * targetHeight > MAX_OUTPUT_PIXELS) {
       throw createError(413, 'This image is too large to safely upscale to 2×. Choose a smaller image.');
     }
+    if (input.width > MAX_AI_UPSCALE_SIDE || input.height > MAX_AI_UPSCALE_SIDE ||
+        input.width * input.height > MAX_AI_UPSCALE_PIXELS) {
+      throw createError(
+        413,
+        'Cloudinary AI upscaling supports images smaller than 4.2 megapixels and no larger than 2048 pixels on either side. Choose a smaller image.'
+      );
+    }
 
     if (!isConfigured(cloudinary)) {
       throw createError(503, 'AI image upscaling is temporarily unavailable. Try again later.');
@@ -48,9 +58,10 @@ function createUpscaleImageProcessor(cloudinary, fetchImage) {
     try {
       const eagerTransformation = [
         'a_auto_right',
-        'e_upscale',
         'e_auto_enhance',
+        'e_upscale',
         'c_scale,w_' + targetWidth + ',h_' + targetHeight,
+        'e_sharpen:80',
         'f_png'
       ].join('/');
       uploadAttempted = true;
@@ -69,35 +80,17 @@ function createUpscaleImageProcessor(cloudinary, fetchImage) {
       if (typeof fetcher !== 'function') {
         throw createError(503, 'The AI image processor is unavailable in this server environment.');
       }
-      let response;
+      let deliveryUrl;
       try {
-        response = await fetcher(eager.secure_url, {
-          signal: AbortSignal.timeout(MAX_PROCESSING_MS)
-        });
+        deliveryUrl = new URL(eager.secure_url);
       } catch (error) {
-        throw createError(
-          error && error.name === 'TimeoutError' ? 504 : 502,
-          error && error.name === 'TimeoutError'
-            ? 'AI image enhancement took too long. Try a smaller image.'
-            : 'The enhanced image could not be retrieved. Please try again.'
-        );
+        throw createError(502, 'The AI image processor returned an invalid result URL.');
       }
-      if (!response.ok) {
-        throw createError(502, 'The enhanced image could not be retrieved. Please try again.');
+      if (deliveryUrl.protocol !== 'https:' ||
+          !/(^|\.)res\.cloudinary\.com$/i.test(deliveryUrl.hostname)) {
+        throw createError(502, 'The AI image processor returned an invalid result URL.');
       }
-      const contentLength = Number(response.headers && response.headers.get('content-length'));
-      if (Number.isFinite(contentLength) && contentLength > MAX_OUTPUT_BYTES) {
-        throw createError(413, 'The enhanced image exceeds the 100 MB output limit.');
-      }
-      let outputBytes;
-      try {
-        outputBytes = Buffer.from(await response.arrayBuffer());
-      } catch (error) {
-        throw createError(502, 'The enhanced image could not be read. Please try again.');
-      }
-      if (!outputBytes.length || outputBytes.length > MAX_OUTPUT_BYTES) {
-        throw createError(413, 'The enhanced image is empty or exceeds the 100 MB output limit.');
-      }
+      let outputBytes = await retrieveEnhancedImage(deliveryUrl.toString(), fetcher);
 
       let outputMetadata;
       try {
@@ -193,6 +186,149 @@ function createUpscaleImageProcessor(cloudinary, fetchImage) {
       previewHeight: previewMetadata.height
     };
   }
+}
+
+async function retrieveEnhancedImage(url, fetcher) {
+  const signal = AbortSignal.timeout(MAX_PROCESSING_MS);
+  let lastError = null;
+  for (let attempt = 0; attempt <= MAX_RESULT_FETCH_RETRIES; attempt += 1) {
+    let response;
+    try {
+      response = await fetcher(url, { signal });
+    } catch (error) {
+      if (signal.aborted || error && error.name === 'TimeoutError') {
+        throw createError(504, 'AI image enhancement took too long while retrieving the result. Retry the enhancement.');
+      }
+      lastError = createError(502, 'The enhanced image could not be retrieved from Cloudinary.');
+      if (attempt === MAX_RESULT_FETCH_RETRIES) break;
+      await waitForRetry(attempt, null, signal);
+      continue;
+    }
+
+    if (!response.ok) {
+      const status = response.status;
+      if (!isRetryableDeliveryStatus(status)) {
+        const error = createError(502, 'Cloudinary returned HTTP ' + status + ' while retrieving the enhanced image.', 'DELIVERY_HTTP_' + status);
+        error.providerStatus = status;
+        throw error;
+      }
+      await cancelResponseBody(response);
+      lastError = createError(
+        status === 423 ? 504 : 502,
+        status === 423
+          ? 'Cloudinary is still generating the enhanced image. Retry the enhancement in a moment.'
+          : 'Cloudinary temporarily could not deliver the enhanced image (HTTP ' + status + ').'
+      );
+      lastError.providerStatus = status;
+      lastError.code = 'DELIVERY_HTTP_' + status;
+      if (attempt === MAX_RESULT_FETCH_RETRIES) break;
+      await waitForRetry(attempt, response.headers && response.headers.get('retry-after'), signal);
+      continue;
+    }
+
+    const contentLength = Number(response.headers && response.headers.get('content-length'));
+    if (Number.isFinite(contentLength) && contentLength > MAX_OUTPUT_BYTES) {
+      await cancelResponseBody(response);
+      throw createError(413, 'The enhanced image exceeds the 100 MB output limit.');
+    }
+    try {
+      const bytes = await readResponseLimited(response, MAX_OUTPUT_BYTES);
+      if (!bytes.length) throw createError(502, 'Cloudinary returned an empty enhanced image.');
+      return bytes;
+    } catch (error) {
+      if (Number.isInteger(error && error.statusCode) && error.statusCode !== 502) throw error;
+      lastError = error;
+      if (attempt === MAX_RESULT_FETCH_RETRIES) break;
+      await waitForRetry(attempt, null, signal);
+    }
+  }
+
+  if (signal.aborted) {
+    throw createError(504, 'AI image enhancement took too long while retrieving the result. Retry the enhancement.');
+  }
+  throw lastError || createError(502, 'The enhanced image could not be retrieved from Cloudinary.');
+}
+
+function isRetryableDeliveryStatus(status) {
+  return status === 408 || status === 423 || status === 425 || status === 429 ||
+    status >= 500 && status <= 599;
+}
+
+async function waitForRetry(attempt, retryAfter, signal) {
+  if (signal.aborted) {
+    throw createError(504, 'AI image enhancement took too long while retrieving the result. Retry the enhancement.');
+  }
+  let delay = Math.min(5000, 250 * Math.pow(2, attempt));
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    const retryDate = Date.parse(retryAfter);
+    const requestedDelay = Number.isFinite(seconds)
+      ? seconds * 1000
+      : Number.isFinite(retryDate) ? retryDate - Date.now() : NaN;
+    if (Number.isFinite(requestedDelay) && requestedDelay > 0) {
+      delay = Math.min(5000, requestedDelay);
+    }
+  }
+  await new Promise((resolve, reject) => {
+    let timer;
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', onAbort);
+      reject(createError(504, 'AI image enhancement took too long while retrieving the result. Retry the enhancement.'));
+    };
+    timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, delay);
+    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal.aborted) onAbort();
+  });
+}
+
+async function cancelResponseBody(response) {
+  if (!response.body || typeof response.body.cancel !== 'function') return;
+  try {
+    await response.body.cancel();
+  } catch (error) {
+    console.warn('Cloudinary result response could not be cancelled before retrying.', {
+      code: error && error.code || 'RESPONSE_CANCEL_FAILED'
+    });
+  }
+}
+
+async function readResponseLimited(response, maximumBytes) {
+  if (!response.body || typeof response.body.getReader !== 'function') {
+    let bytes;
+    try {
+      bytes = Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      throw createError(502, 'The enhanced image response was interrupted.');
+    }
+    if (!bytes.length) throw createError(502, 'Cloudinary returned an empty enhanced image.');
+    if (bytes.length > maximumBytes) throw createError(413, 'The enhanced image exceeds the 100 MB output limit.');
+    return bytes;
+  }
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const item = await reader.read();
+      if (item.done) break;
+      totalBytes += item.value.length;
+      if (totalBytes > maximumBytes) {
+        await reader.cancel();
+        throw createError(413, 'The enhanced image exceeds the 100 MB output limit.');
+      }
+      chunks.push(Buffer.from(item.value));
+    }
+  } catch (error) {
+    if (Number.isInteger(error && error.statusCode)) throw error;
+    throw createError(502, 'The enhanced image response was interrupted.');
+  }
+  if (!totalBytes) throw createError(502, 'Cloudinary returned an empty enhanced image.');
+  return Buffer.concat(chunks, totalBytes);
 }
 
 async function inspectImage(file) {
@@ -312,14 +448,17 @@ function safeOutputName(inputName) {
   return (base || 'image') + '-upscaled.png';
 }
 
-function createError(statusCode, message) {
+function createError(statusCode, message, code) {
   const error = new Error(message);
   error.statusCode = statusCode;
+  if (code) error.code = code;
   return error;
 }
 
 module.exports = {
   MAX_IMAGE_BYTES,
+  MAX_AI_UPSCALE_PIXELS,
+  MAX_AI_UPSCALE_SIDE,
   MAX_INPUT_PIXELS,
   MAX_OUTPUT_PIXELS,
   MAX_OUTPUT_SIDE,

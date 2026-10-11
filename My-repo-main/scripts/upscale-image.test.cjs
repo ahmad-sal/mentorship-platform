@@ -2,7 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const sharp = require('sharp');
-const { createUpscaleImageProcessor, inspectImage } = require('../upscale-image.cjs');
+const {
+  MAX_AI_UPSCALE_PIXELS,
+  createUpscaleImageProcessor,
+  inspectImage
+} = require('../upscale-image.cjs');
 
 const animatedGif = Buffer.from(
   '47494638396101000100800000000000ffffff21f904010a0000002c000000000100010000020244010021f904010a0000002c00000000010001000002024c01003b',
@@ -36,7 +40,7 @@ async function createFixture() {
 }
 
 function createProcessor(options) {
-  const state = { uploads: [], deletions: [], eager: null };
+  const state = { uploads: [], deletions: [], eager: null, fetches: 0 };
   const cloudinary = {
     config() {
       return { cloud_name: 'test', api_key: 'test', api_secret: 'test' };
@@ -48,7 +52,7 @@ function createProcessor(options) {
         return {
           end() {
             callback(null, {
-              eager: [{ secure_url: 'https://processor.example/result.png' }]
+              eager: [{ secure_url: 'https://res.cloudinary.com/test/image/authenticated/e_upscale/result.png' }]
             });
           }
         };
@@ -61,7 +65,20 @@ function createProcessor(options) {
     }
   };
   const fetchImage = async () => {
-    if (options && options.failFetch) throw new Error('mock fetch failure');
+    state.fetches += 1;
+    const status = options && options.fetchStatuses && options.fetchStatuses[state.fetches - 1];
+    if (status) {
+      return new Response('', {
+        status,
+        headers: { 'retry-after': '0' }
+      });
+    }
+    if (options && options.failFetch ||
+        options && options.failFetchAttempts >= state.fetches) {
+      const error = new Error('mock fetch failure');
+      error.name = 'TypeError';
+      throw error;
+    }
     const dimensions = state.eager.match(/c_scale,w_(\d+),h_(\d+)/);
     const width = Number(dimensions[1]);
     const height = Number(dimensions[2]);
@@ -143,10 +160,20 @@ async function main() {
   assert.ok(alphaValues.some((value) => value === 255), 'opaque areas should be retained');
   assert.match(state.eager, /e_upscale/);
   assert.match(state.eager, /e_auto_enhance/);
+  assert.match(state.eager, /e_sharpen:80/);
   assert.match(state.eager, /w_48,h_32/);
   assert.equal(state.uploads[0].type, 'authenticated');
   assert.equal(state.deletions.length, 1, 'temporary Cloudinary images should be deleted');
   assert.equal(state.deletions[0].settings.invalidate, true);
+
+  const { processor: pollingProcessor, state: pollingState } = createProcessor({
+    fetchStatuses: [423, 503]
+  });
+  const polledResult = await pollingProcessor.upscaleImage(imageFile('polling.jpg', fixture.jpeg));
+  assert.equal(polledResult.width, fixture.width * 2);
+  assert.equal(pollingState.fetches, 3, 'temporary delivery responses should retry the same result URL');
+  assert.equal(pollingState.uploads.length, 1, 'retrieval polling must not create duplicate AI jobs');
+  assert.equal(pollingState.deletions.length, 1);
 
   const opaque = await processor.upscaleImage(imageFile('photo.jpg', fixture.jpeg));
   assert.equal(opaque.width, fixture.width * 2);
@@ -160,9 +187,43 @@ async function main() {
   );
   assert.equal(brokenState.deletions.length, 1, 'temporary images should be deleted on invalid AI output');
 
-  const { processor: fetchFailureProcessor, state: fetchFailureState } = createProcessor({ failFetch: true });
-  await assert.rejects(fetchFailureProcessor.upscaleImage(imageFile('photo.jpg', fixture.jpeg)), /could not be retrieved/);
-  assert.equal(fetchFailureState.deletions.length, 1, 'temporary images should be deleted when retrieval fails');
+  const { processor: transientNetworkProcessor, state: transientNetworkState } = createProcessor({
+    failFetchAttempts: 1
+  });
+  const afterNetworkRetry = await transientNetworkProcessor.upscaleImage(imageFile('network.png', fixture.png));
+  assert.equal(afterNetworkRetry.width, fixture.width * 2);
+  assert.equal(transientNetworkState.fetches, 2, 'a temporary network failure should retry the same result URL');
+  assert.equal(transientNetworkState.uploads.length, 1, 'network retries must not create duplicate AI jobs');
+
+  const { processor: exhaustedProcessor, state: exhaustedState } = createProcessor({
+    fetchStatuses: Array(9).fill(503)
+  });
+  await assert.rejects(
+    exhaustedProcessor.upscaleImage(imageFile('unavailable.png', fixture.png)),
+    /temporarily could not deliver/
+  );
+  assert.equal(exhaustedState.fetches, 9, 'transient delivery retries should stop at the configured bound');
+  assert.equal(exhaustedState.deletions.length, 1);
+
+  const { processor: permanentFailureProcessor, state: permanentFailureState } = createProcessor({
+    fetchStatuses: [404]
+  });
+  await assert.rejects(
+    permanentFailureProcessor.upscaleImage(imageFile('photo.jpg', fixture.jpeg)),
+    /HTTP 404/
+  );
+  assert.equal(permanentFailureState.fetches, 1, 'permanent delivery failures should not be retried');
+
+  const largeForModel = await sharp({
+    create: { width: 2049, height: 2048, channels: 3, background: '#777777' }
+  }).png().toBuffer();
+  assert.equal(MAX_AI_UPSCALE_PIXELS, 2048 * 2048 - 1);
+  const { processor: tooLargeProcessor, state: tooLargeState } = createProcessor();
+  await assert.rejects(
+    tooLargeProcessor.upscaleImage(imageFile('too-large.png', largeForModel)),
+    /smaller than 4.2 megapixels/
+  );
+  assert.equal(tooLargeState.uploads.length, 0, 'out-of-range images should be rejected before provider upload');
 
   const { processor: cleanupFailureProcessor } = createProcessor({ failCleanup: true });
   const originalConsoleError = console.error;

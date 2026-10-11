@@ -125,13 +125,46 @@
           <div class="remove-background-comparison" data-comparison role="slider" tabindex="0"
                aria-label="Image comparison divider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
                aria-valuetext="Original 50 percent, background removed 50 percent">
-            <img class="remove-background-after" data-after-image alt="AI background-removed result with transparency" hidden>
+            <div class="remove-background-after-layer" data-after-layer>
+              <img class="remove-background-after" data-after-image alt="AI background-removed result with transparency" hidden>
+            </div>
             <div class="remove-background-before-layer" data-before-layer>
               <img class="remove-background-before" data-before-image alt="Original uploaded image">
             </div>
             <span class="remove-background-label remove-background-label-before" aria-hidden="true">Original</span>
             <span class="remove-background-label remove-background-label-after" data-after-label aria-hidden="true" hidden>Background Removed</span>
             <span class="remove-background-divider" data-divider aria-hidden="true"><span>↔</span></span>
+          </div>
+        </section>
+
+        <section class="remove-background-color" data-background-controls aria-labelledby="removeBackgroundColorTitle" hidden>
+          <div class="remove-background-color-heading">
+            <h2 id="removeBackgroundColorTitle">Background Color</h2>
+            <p>Choose a solid color to preview and include in your download.</p>
+          </div>
+          <div class="remove-background-color-options" role="group" aria-label="Background color">
+            <button class="remove-background-color-option" type="button" data-background-color="#ffffff" aria-pressed="false">
+              <span class="remove-background-color-swatch" aria-hidden="true"></span>White
+            </button>
+            <button class="remove-background-color-option" type="button" data-background-color="#000000" aria-pressed="false">
+              <span class="remove-background-color-swatch" aria-hidden="true"></span>Black
+            </button>
+            <button class="remove-background-color-option" type="button" data-background-color="#0000ff" aria-pressed="false">
+              <span class="remove-background-color-swatch" aria-hidden="true"></span>Blue
+            </button>
+            <button class="remove-background-color-option" type="button" data-background-color="#ff0000" aria-pressed="false">
+              <span class="remove-background-color-swatch" aria-hidden="true"></span>Red
+            </button>
+            <button class="remove-background-color-option" type="button" data-background-color="#008000" aria-pressed="false">
+              <span class="remove-background-color-swatch" aria-hidden="true"></span>Green
+            </button>
+            <label class="remove-background-custom-color">
+              <span class="remove-background-custom-picker" aria-hidden="true">
+                <input data-custom-background-color type="color" value="#3366cc" aria-label="Choose a custom background color">
+              </span>
+              <span>Custom Color</span>
+              <output data-custom-color-hex aria-live="polite">#3366CC</output>
+            </label>
           </div>
         </section>
 

@@ -85,6 +85,8 @@
     comparison.classList.add('is-loading');
     comparisonWrap.hidden = true;
     originalLayer.style.width = '100%';
+    delete comparison.dataset.outputWidth;
+    delete comparison.dataset.outputHeight;
   }
 
   function clearSelection() {
@@ -240,6 +242,98 @@
     if (!valid) throw new Error('The AI processor did not return the expected 2× image dimensions.');
   }
 
+  function verifyPreviewUrl(url) {
+    return new Promise(function (resolve, reject) {
+      var preview = new Image();
+      preview.onload = function () {
+        preview.onload = null;
+        preview.onerror = null;
+        resolve();
+      };
+      preview.onerror = function () {
+        preview.onload = null;
+        preview.onerror = null;
+        reject(new Error('The enhanced image could not be decoded for preview.'));
+      };
+      preview.src = url;
+      if (preview.complete && preview.naturalWidth) preview.onload();
+    });
+  }
+
+  async function runEnhancement(nextFile, activeId, signal) {
+    setProgress('Generating your AI-enhanced preview…');
+    setStatus('Cloudinary is applying AI super-resolution and preparing the 2× result.', '');
+    try {
+      var response = await postFile('/api/tools/upscale-image', nextFile, signal);
+      if (activeId !== requestId) return;
+      if (response.headers.get('content-type') !== 'image/png') {
+        throw new Error('The AI processor returned an unexpected output format.');
+      }
+      var outputWidth = Number(response.headers.get('X-Output-Width'));
+      var outputHeight = Number(response.headers.get('X-Output-Height'));
+      var originalWidth = Number(response.headers.get('X-Original-Width'));
+      var originalHeight = Number(response.headers.get('X-Original-Height'));
+      if (outputWidth !== originalWidth * 2 || outputHeight !== originalHeight * 2 ||
+          originalWidth !== Number(comparison.dataset.originalWidth) ||
+          originalHeight !== Number(comparison.dataset.originalHeight)) {
+        throw new Error('The AI processor did not return an exact 2× image matching the selected original.');
+      }
+      var responseFilename = response.headers.get('X-Output-Filename');
+      if (!responseFilename || /[/\\]/.test(responseFilename) || !/\.png$/i.test(responseFilename)) {
+        throw new Error('The enhanced image filename could not be verified.');
+      }
+      var blob = await response.blob();
+      await verifyEnhancedBlob(blob, outputWidth, outputHeight);
+      if (activeId !== requestId) return;
+
+      var nextUrl = URL.createObjectURL(blob);
+      try {
+        await verifyPreviewUrl(nextUrl);
+      } catch (error) {
+        revokeObjectUrl(nextUrl);
+        throw error;
+      }
+      if (activeId !== requestId) {
+        revokeObjectUrl(nextUrl);
+        return;
+      }
+
+      var previousUrl = enhancedUrl;
+      enhancedBlob = blob;
+      enhancedUrl = nextUrl;
+      outputFilename = responseFilename;
+      comparison.dataset.outputWidth = String(outputWidth);
+      comparison.dataset.outputHeight = String(outputHeight);
+      enhancedImage.src = nextUrl;
+      enhancedImage.hidden = false;
+      enhancedLabel.hidden = false;
+      divider.hidden = false;
+      comparison.classList.remove('is-loading');
+      comparison.setAttribute('aria-valuetext', 'Original ' + split + ' percent, Enhanced ' + (100 - split) + ' percent');
+      upscaleButton.hidden = false;
+      retryButton.hidden = true;
+      revokeObjectUrl(previousUrl);
+
+      revokeObjectUrl(downloadUrl);
+      downloadUrl = null;
+      downloadButton.removeAttribute('href');
+      downloadButton.removeAttribute('download');
+      downloadButton.hidden = true;
+      finalPanel.hidden = true;
+      setStatus('AI-enhanced preview ready · ' + outputWidth + ' × ' + outputHeight + ' pixels.', 'success');
+    } catch (error) {
+      if (activeId !== requestId || error && error.name === 'AbortError') return;
+      retryButton.hidden = false;
+      setStatus(error && error.message ? error.message :
+        'The image could not be enhanced. Try again or select another supported image.', 'error');
+    } finally {
+      if (activeId === requestId) {
+        setBusy(false);
+        setProgress('');
+      }
+    }
+  }
+
   async function loadFile(nextFile) {
     if (!nextFile) return;
     clearSelection();
@@ -274,54 +368,18 @@
       comparison.classList.add('is-loading');
       comparison.style.setProperty('--upscale-split', split + '%');
       comparison.setAttribute('aria-valuenow', String(split));
+      comparison.dataset.originalWidth = String(dimensions.width);
+      comparison.dataset.originalHeight = String(dimensions.height);
       originalLayer.style.width = '100%';
 
-      setProgress('Generating your AI-enhanced preview…');
-      setStatus('The preview is being enhanced automatically with AI.', '');
-      var response = await postFile('/api/tools/upscale-image', nextFile, signal);
-      if (activeId !== requestId) return;
-      if (response.headers.get('content-type') !== 'image/png') {
-        throw new Error('The AI processor returned an unexpected output format.');
-      }
-      var outputWidth = Number(response.headers.get('X-Output-Width'));
-      var outputHeight = Number(response.headers.get('X-Output-Height'));
-      var originalWidth = Number(response.headers.get('X-Original-Width'));
-      var originalHeight = Number(response.headers.get('X-Original-Height'));
-      if (outputWidth !== dimensions.width * 2 || outputHeight !== dimensions.height * 2 ||
-          originalWidth !== dimensions.width || originalHeight !== dimensions.height) {
-        throw new Error('The AI processor did not return an exact 2× result for the selected image.');
-      }
-      var responseFilename = response.headers.get('X-Output-Filename');
-      if (!responseFilename || /[/\\]/.test(responseFilename) || !/\.png$/i.test(responseFilename)) {
-        throw new Error('The enhanced image filename could not be verified.');
-      }
-      var blob = await response.blob();
-      await verifyEnhancedBlob(blob, outputWidth, outputHeight);
-      if (activeId !== requestId) return;
-
-      enhancedBlob = blob;
-      enhancedUrl = URL.createObjectURL(blob);
-      outputFilename = responseFilename;
-      comparison.dataset.outputWidth = String(outputWidth);
-      comparison.dataset.outputHeight = String(outputHeight);
-      enhancedImage.src = enhancedUrl;
-      enhancedImage.hidden = false;
-      enhancedLabel.hidden = false;
-      divider.hidden = false;
-      comparison.classList.remove('is-loading');
-      comparison.setAttribute('aria-valuetext', 'Original ' + split + ' percent, Enhanced ' + (100 - split) + ' percent');
-      upscaleButton.hidden = false;
-      upscaleButton.disabled = false;
-      retryButton.hidden = true;
-      setStatus('AI-enhanced preview ready · ' + outputWidth + ' × ' + outputHeight + ' pixels.', 'success');
+      await runEnhancement(nextFile, activeId, signal);
     } catch (error) {
       if (activeId !== requestId || error && error.name === 'AbortError') return;
-      clearOutput();
-      retryButton.hidden = false;
+      retryButton.hidden = true;
       setStatus(error && error.message ? error.message :
         'The image could not be enhanced. Try another supported image.', 'error');
     } finally {
-      if (activeId === requestId) {
+      if (activeId === requestId && processing) {
         setBusy(false);
         setProgress('');
       }
@@ -371,6 +429,17 @@
       if (activeId === requestId) setBusy(false);
       setProgress('');
     }
+  }
+
+  function retryEnhancement() {
+    if (processing || !file) return;
+    if (controller) controller.abort();
+    controller = new AbortController();
+    requestId += 1;
+    var activeId = requestId;
+    setBusy(true);
+    setProgress('Retrying image enhancement…');
+    runEnhancement(file, activeId, controller.signal);
   }
 
   function triggerPicker() {
@@ -448,7 +517,7 @@
     var action = button.getAttribute('data-action');
     if (action === 'replace') triggerPicker();
     else if (action === 'upscale') prepareDownload();
-    else if (action === 'retry' && file) loadFile(file);
+    else if (action === 'retry' && file) retryEnhancement();
   });
 
   window.addEventListener('pagehide', function () {

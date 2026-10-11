@@ -25,6 +25,11 @@ const {
   MAX_IMAGE_BYTES: MAX_BACKGROUND_REMOVAL_IMAGE_BYTES,
   createRemoveBackgroundProcessor
 } = require('./remove-background.cjs');
+const {
+  MAX_IMAGE_BYTES: MAX_BLUR_FACE_IMAGE_BYTES,
+  blurImage,
+  inspectImage: inspectBlurFaceImage
+} = require('./blur-face.cjs');
 const supabase = require('./supabase.cjs');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
@@ -228,6 +233,10 @@ app.get('/tools/upscale-image', (req, res) => {
 
 app.get('/tools/remove-background', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'remove-background.html'));
+});
+
+app.get('/tools/blur-face', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'blur-face.html'));
 });
 
 app.get('/tools/additive-pdf', (req, res) => {
@@ -450,7 +459,10 @@ function receiveUpscaleImage(req, res, next) {
 function handleUpscaleImageFailure(res, error) {
   const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
   if (statusCode >= 500) {
-    console.error('Upscale Image processing failed.', { code: error.code || 'PROCESSING_ERROR' });
+    console.error('Upscale Image processing failed.', {
+      code: error.code || 'PROCESSING_ERROR',
+      statusCode: error.providerStatus || statusCode
+    });
   }
   return res.status(statusCode).json({
     error: statusCode === 500 ? 'The image could not be upscaled. Try another supported image.' : error.message
@@ -583,6 +595,96 @@ app.post('/api/tools/remove-background', limitBackgroundRemovalConcurrency, rece
   }
 });
 
+let activeBlurFaceRequests = 0;
+const blurFaceUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_BLUR_FACE_IMAGE_BYTES, files: 1, fields: 2 }
+}).single('file');
+
+function limitBlurFaceConcurrency(req, res, next) {
+  if (activeBlurFaceRequests >= 2) {
+    return res.status(429).json({ error: 'Image processing is busy. Wait a moment and try again.' });
+  }
+  activeBlurFaceRequests += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeBlurFaceRequests -= 1;
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  next();
+}
+
+function receiveBlurFaceImage(req, res, next) {
+  blurFaceUpload(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Images must be 20 MB or smaller.' });
+    }
+    return res.status(400).json({ error: 'Choose exactly one image file to continue.' });
+  });
+}
+
+function handleBlurFaceFailure(res, error) {
+  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+  if (statusCode >= 500) {
+    console.error('Blur Face image processing failed.', {
+      code: error.code || 'PROCESSING_ERROR',
+      statusCode
+    });
+  }
+  return res.status(statusCode).json({
+    error: statusCode === 500 ? 'The face-blurred image could not be prepared. Try again.' : error.message
+  });
+}
+
+app.post('/api/tools/blur-face/prepare', limitBlurFaceConcurrency, receiveBlurFaceImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    const image = await inspectBlurFaceImage(req.file);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Length': String(image.bytes.length),
+      'Content-Type': 'image/png',
+      'X-Original-Width': String(image.width),
+      'X-Original-Height': String(image.height),
+      'X-Original-Format': image.format,
+      'X-Output-Has-Alpha': String(image.hasAlpha)
+    });
+    return res.send(image.bytes);
+  } catch (error) {
+    return handleBlurFaceFailure(res, error);
+  }
+});
+
+app.post('/api/tools/blur-face', limitBlurFaceConcurrency, receiveBlurFaceImage, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image file to continue.' });
+    let regions;
+    try {
+      regions = JSON.parse(req.body.regions);
+    } catch (error) {
+      return res.status(400).json({ error: 'The selected blur areas are invalid.' });
+    }
+    const result = await blurImage(req.file, regions, req.body.originalName);
+    res.set({
+      'Cache-Control': 'no-store, private',
+      'Content-Disposition': 'attachment; filename="' + result.filename + '"',
+      'Content-Length': String(result.bytes.length),
+      'Content-Type': result.mime,
+      'X-Output-Filename': result.filename,
+      'X-Output-Width': String(result.width),
+      'X-Output-Height': String(result.height),
+      'X-Output-Has-Alpha': String(result.hasAlpha)
+    });
+    return res.send(result.bytes);
+  } catch (error) {
+    return handleBlurFaceFailure(res, error);
+  }
+});
+
 app.get(['/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -608,6 +710,10 @@ app.get('/vendor/pdfjs.worker.js', (req, res) => {
 });
 
 app.use('/vendor/qpdf-run', express.static(path.join(__dirname, 'node_modules', 'qpdf-run'), { index: false }));
+app.use('/vendor/mediapipe-face-detection', express.static(
+  path.join(__dirname, 'node_modules', '@mediapipe', 'face_detection'),
+  { index: false, maxAge: '1y', immutable: true }
+));
 
 app.get('/vendor/jspdf.umd.min.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'node_modules', 'jspdf', 'dist', 'jspdf.umd.min.js'));

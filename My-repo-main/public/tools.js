@@ -59,6 +59,14 @@
       available: true
     },
     {
+      id: 'blur-face',
+      name: 'Blur Face',
+      description: 'Detect and blur faces automatically, with adjustable manual blur areas for missed faces.',
+      icon: '<svg class="image-blur-face-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.5" y="5.5" width="29" height="29" rx="6" stroke="currentColor" stroke-width="2"/><path d="M14 15.5a6 6 0 0 1 12 0v2a6 6 0 0 1-12 0v-2Z" stroke="currentColor" stroke-width="2"/><path d="M11 29c1.5-4 4.4-6 9-6s7.5 2 9 6M16 17h.01M24 17h.01M17.5 20.5c1.5 1.2 3.5 1.2 5 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m11 9 2 2m14-2-2 2m-14 18 2-2m14 2-2-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      route: '/tools/blur-face',
+      available: true
+    },
+    {
       id: 'additive-pdf',
       name: 'Additive PDF',
       description: 'Add text, images, drawings, and shapes to your PDF documents.',
@@ -250,6 +258,7 @@
         !document.body.classList.contains('compress-image-public-page') &&
         !document.body.classList.contains('upscale-image-public-page') &&
         !document.body.classList.contains('remove-background-public-page') &&
+        !document.body.classList.contains('blur-face-public-page') &&
         !document.body.classList.contains('additive-pdf-public-page') &&
         !document.body.classList.contains('lock-unlock-pdf-public-page')) return;
       themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀' : '◐';

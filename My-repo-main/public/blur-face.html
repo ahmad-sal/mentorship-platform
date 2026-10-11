@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08101f">
+  <meta name="description" content="Automatically detect and blur faces in an image, or add adjustable manual blur areas.">
+  <title>Blur Face — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+</head>
+<body class="light-theme blur-face-public-page" data-current-tool="blur-face">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme"><span id="themeIcon" aria-hidden="true">◐</span><span class="theme-label" id="themeLabel">Dark Mode</span></button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu"><span aria-hidden="true">☰</span></button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="compress-pdf-page blur-face-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="blur-face-heading">
+      <span class="section-kicker">Private image processing</span>
+      <h1>Blur Face</h1>
+      <p>Automatically blur detected faces, then add or adjust oval blur areas for any faces that need extra coverage.</p>
+    </header>
+
+    <section class="blur-face-workspace" aria-label="Blur faces in an image">
+      <div class="blur-face-upload" data-upload-area>
+        <input class="blur-face-file-input" data-file-input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/tiff,image/avif,image/svg+xml,image/bmp,.tif,.tiff,.avif,.svg,.bmp" tabindex="-1" aria-label="Choose an image file">
+        <span class="blur-face-upload-icon" aria-hidden="true">▧</span>
+        <strong data-upload-title>Select Image</strong>
+        <span class="blur-face-upload-hint" data-upload-hint>Drop an image here or click to browse</span>
+        <span class="blur-face-upload-limit">PNG · JPG/JPEG · WebP · still GIF/TIFF · AVIF · SVG · BMP · Up to 20 MB / 10 megapixels</span>
+        <button class="btn btn-primary" type="button" data-action="select">Select Image</button>
+      </div>
+
+      <section class="blur-face-file-info" data-file-info aria-label="Selected image" hidden>
+        <span class="blur-face-file-badge" aria-hidden="true">IMG</span>
+        <span class="blur-face-file-copy"><strong data-file-name></strong><small data-file-details></small></span>
+        <button class="btn btn-secondary" type="button" data-action="replace">Replace image</button>
+      </section>
+
+      <p class="blur-face-privacy">Images are normalized by this website for preview; face detection runs locally in your browser. Still images only—animated GIFs and multi-page TIFFs are rejected rather than flattened.</p>
+
+      <div class="blur-face-progress" data-progress role="status" aria-live="polite" hidden>
+        <span class="compress-spinner" aria-hidden="true"></span>
+        <span data-progress-message>Preparing image…</span>
+      </div>
+
+      <section class="blur-face-editor" data-editor hidden>
+        <fieldset class="blur-face-detection-modes" data-mode-controls disabled>
+          <legend>Detection mode</legend>
+          <label><input type="radio" name="blurFaceMode" value="recommended" checked><span>Recommended <small>Medium</small></span></label>
+          <label><input type="radio" name="blurFaceMode" value="low"><span>Low Detection</span></label>
+          <label><input type="radio" name="blurFaceMode" value="high"><span>High Detection</span></label>
+        </fieldset>
+        <div class="blur-face-detection-summary" data-detection-summary role="status" aria-live="polite"></div>
+
+        <div class="blur-face-preview-heading">
+          <div><h2>Preview</h2><p>Drag manual ovals to move them; use the side and bottom handles to resize.</p></div>
+          <button class="btn btn-secondary blur-face-original-toggle" type="button" data-action="original" aria-pressed="false" disabled>Show Original</button>
+        </div>
+        <div class="blur-face-preview-stage" data-preview-stage>
+          <canvas class="blur-face-preview-canvas" data-preview-canvas aria-label="Image preview with detected faces blurred"></canvas>
+          <div class="blur-face-region-layer" data-region-layer aria-label="Detected and manual blur areas"></div>
+        </div>
+        <div class="blur-face-editor-actions">
+          <button class="btn btn-secondary" type="button" data-action="add-area" disabled><span aria-hidden="true">＋</span> Add Blur Area</button>
+          <span class="blur-face-manual-help">Manual ovals are included in the processed download.</span>
+        </div>
+        <div class="blur-face-submit-row">
+          <button class="btn btn-primary btn-lg blur-face-submit" type="button" data-action="blur" disabled>Blur Face</button>
+        </div>
+
+        <section class="blur-face-final" data-final aria-labelledby="blurFaceFinalTitle" hidden>
+          <h2 id="blurFaceFinalTitle">Your blurred image is ready</h2>
+          <p data-final-details></p>
+          <img class="blur-face-final-image" data-final-image alt="Final image with selected face areas blurred">
+          <a class="btn btn-primary btn-lg blur-face-download" data-action="download" href="#" download hidden><span aria-hidden="true">↓</span> Download Image</a>
+        </section>
+      </section>
+
+      <div class="blur-face-status" data-status role="status" aria-live="polite" aria-atomic="true">
+        <p data-status-message>Select an image to start automatic face detection.</p>
+      </div>
+    </section>
+
+    <section class="merge-more-tools" data-tools-recommendations aria-labelledby="blurFaceMoreToolsTitle" hidden>
+      <div class="merge-more-tools-heading"><span class="section-kicker">Keep exploring</span><h2 id="blurFaceMoreToolsTitle">Explore More Tools</h2></div>
+      <div class="tool-recommendation-grid" data-recommendation-grid></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col"><a class="brand-logo" href="/"><span class="logo-icon" aria-hidden="true">AS</span><span class="logo-text">Ahmad Saleem Mentorship</span></a><p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p></div>
+      <div class="footer-col"><span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4><ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul></div>
+      <div class="footer-col"><span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4><ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/vendor/mediapipe-face-detection/face_detection.js"></script>
+  <script src="/blur-face.js"></script>
+</body>
+</html>

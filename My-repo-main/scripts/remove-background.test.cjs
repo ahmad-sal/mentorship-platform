@@ -108,6 +108,11 @@ async function main() {
   assert.match(page, /data-mode="manual"/);
   assert.match(page, /data-brush-mode="keep"/);
   assert.match(page, /data-brush-mode="remove"/);
+  assert.match(page, /data-background-controls/);
+  for (const color of ['#ffffff', '#000000', '#0000ff', '#ff0000', '#008000']) {
+    assert.match(page, new RegExp('data-background-color="' + color + '"'));
+  }
+  assert.match(page, /data-custom-background-color/);
   assert.match(page, /data-action="undo"/);
   assert.match(page, /data-action="reset"/);
   assert.match(page, /Cloudinary, an external service/);
@@ -118,6 +123,9 @@ async function main() {
   assert.match(script, /source-in/);
   assert.match(script, /pointerdown/);
   assert.match(script, /toBlob/);
+  assert.match(script, /outputContext\.fillRect\(0, 0, width, height\)/);
+  assert.match(script, /outputContext\.drawImage\(cutoutBitmap, 0, 0\)/);
+  assert.match(script, /-with-background\.png/);
 
   const fixtures = await createFixtures();
   const supported = [

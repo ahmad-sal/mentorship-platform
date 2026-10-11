@@ -24,6 +24,7 @@
   var pointerId = null;
   var finalizing = false;
   var originalBitmap = null;
+  var selectedBackgroundColor = null;
 
   var uploadArea = root.querySelector('[data-upload-area]');
   var fileInput = root.querySelector('[data-file-input]');
@@ -39,12 +40,16 @@
   var manualTab = root.querySelector('[data-mode="manual"]');
   var panels = Array.prototype.slice.call(root.querySelectorAll('[data-panel]'));
   var comparison = root.querySelector('[data-comparison]');
+  var afterLayer = root.querySelector('[data-after-layer]');
   var beforeLayer = root.querySelector('[data-before-layer]');
   var beforeImage = root.querySelector('[data-before-image]');
   var afterImage = root.querySelector('[data-after-image]');
   var afterLabel = root.querySelector('[data-after-label]');
   var divider = root.querySelector('[data-divider]');
   var canvasStage = root.querySelector('[data-canvas-stage]');
+  var backgroundControls = root.querySelector('[data-background-controls]');
+  var customBackgroundColor = root.querySelector('[data-custom-background-color]');
+  var customColorHex = root.querySelector('[data-custom-color-hex]');
   var canvasWrap = root.querySelector('.remove-background-canvas-wrap');
   var resultCanvas = root.querySelector('[data-result-canvas]');
   var strokeCanvas = root.querySelector('[data-stroke-canvas]');
@@ -119,7 +124,50 @@
     finalizeButton.disabled = !processedBlob || finalizing;
   }
 
+  function setBackgroundColor(color) {
+    if (finalizing) return;
+    selectedBackgroundColor = color;
+    var hasSolidColor = Boolean(color);
+    canvasStage.classList.toggle('has-solid-background', hasSolidColor);
+    if (hasSolidColor) canvasStage.style.setProperty('--remove-background-solid-color', color);
+    else canvasStage.style.removeProperty('--remove-background-solid-color');
+    afterLayer.classList.toggle('has-solid-background', hasSolidColor);
+    if (hasSolidColor) afterLayer.style.setProperty('--remove-background-solid-color', color);
+    else afterLayer.style.removeProperty('--remove-background-solid-color');
+    root.querySelectorAll('[data-background-color]').forEach(function (button) {
+      var selected = button.getAttribute('data-background-color') === color;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    if (color && !root.querySelector('[data-background-color="' + color + '"]')) {
+      customColorHex.textContent = color.toUpperCase();
+      customBackgroundColor.setAttribute('aria-label', 'Custom background color ' + color.toUpperCase());
+      customBackgroundColor.closest('.remove-background-custom-color').setAttribute('data-selected', 'true');
+    } else {
+      customBackgroundColor.setAttribute('aria-label', 'Choose a custom background color');
+      customBackgroundColor.closest('.remove-background-custom-color').removeAttribute('data-selected');
+    }
+    customBackgroundColor.parentElement.style.backgroundColor = customBackgroundColor.value;
+    clearFinal();
+    if (processedBlob) {
+      setStatus(hasSolidColor
+        ? 'Background color updated in the preview. Select Remove Background to prepare the updated download.'
+        : 'Transparent background restored in the preview. Select Remove Background to prepare the download.', '');
+    }
+  }
+
+  function resetBackgroundColor() {
+    backgroundControls.hidden = true;
+    backgroundControls.querySelectorAll('button, input').forEach(function (control) {
+      control.disabled = false;
+    });
+    customBackgroundColor.value = '#3366cc';
+    customColorHex.textContent = '#3366CC';
+    setBackgroundColor(null);
+  }
+
   function clearEditor() {
+    resetBackgroundColor();
     revokeUrl(processedUrl);
     processedUrl = null;
     processedBlob = null;
@@ -146,6 +194,7 @@
   }
 
   function clearFailedResult() {
+    resetBackgroundColor();
     revokeUrl(processedUrl);
     processedUrl = null;
     processedBlob = null;
@@ -370,6 +419,7 @@
         ' · ' + response.headers.get('X-Original-Format').toUpperCase();
       fileInfo.hidden = false;
       editor.hidden = false;
+      backgroundControls.hidden = false;
       manualTab.disabled = false;
       retryButton.hidden = true;
       finalizeButton.disabled = false;
@@ -561,14 +611,44 @@
   async function finalizeOutput() {
     if (finalizing || !processedBlob) return;
     var activeRequestId = requestId;
+    var backgroundColor = selectedBackgroundColor;
     finalizing = true;
     finalizeButton.disabled = true;
     finalizeButton.setAttribute('aria-busy', 'true');
-    setProgress('Preparing and validating the transparent PNG…');
-    setStatus('Applying the latest mask corrections and checking the output.', '');
+    backgroundControls.querySelectorAll('button, input').forEach(function (control) {
+      control.disabled = true;
+    });
+    setProgress(backgroundColor
+      ? 'Applying the selected background color and validating the PNG…'
+      : 'Preparing and validating the transparent PNG…');
+    setStatus(backgroundColor
+      ? 'Combining the selected solid color with the latest foreground mask.'
+      : 'Applying the latest mask corrections and checking the output.', '');
     try {
       var outputBlob;
-      if (mode === 'manual') {
+      if (backgroundColor) {
+        var outputCanvas = document.createElement('canvas');
+        outputCanvas.width = width;
+        outputCanvas.height = height;
+        var outputContext = outputCanvas.getContext('2d');
+        outputContext.fillStyle = backgroundColor;
+        outputContext.fillRect(0, 0, width, height);
+        if (mode === 'manual') {
+          outputContext.drawImage(resultCanvas, 0, 0);
+        } else {
+          var cutoutBitmap = await createImageBitmap(processedBlob);
+          outputContext.drawImage(cutoutBitmap, 0, 0);
+          cutoutBitmap.close();
+        }
+        outputBlob = await new Promise(function (resolve, reject) {
+          outputCanvas.toBlob(function (blob) {
+            if (!blob) reject(new Error('The image with its selected background could not be exported.'));
+            else resolve(blob);
+          }, 'image/png');
+        });
+        outputCanvas.width = 0;
+        outputCanvas.height = 0;
+      } else if (mode === 'manual') {
         outputBlob = await new Promise(function (resolve, reject) {
           resultCanvas.toBlob(function (blob) {
             if (!blob) reject(new Error('The transparent image could not be exported.'));
@@ -584,11 +664,17 @@
       revokeUrl(downloadUrl);
       downloadUrl = URL.createObjectURL(outputBlob);
       downloadButton.href = downloadUrl;
-      downloadButton.download = outputFilename;
+      downloadButton.download = backgroundColor
+        ? outputFilename.replace(/-no-background\.png$/i, '-with-background.png')
+        : outputFilename;
       downloadButton.hidden = false;
-      finalDetails.textContent = width + ' × ' + height + ' pixels · transparent PNG · ' + formatSize(outputBlob.size);
+      finalDetails.textContent = width + ' × ' + height + ' pixels · ' +
+        (backgroundColor ? 'PNG · solid background ' + backgroundColor.toUpperCase() : 'transparent PNG') +
+        ' · ' + formatSize(outputBlob.size);
       finalPanel.hidden = false;
-      setStatus('Your background-removed image is validated and ready to download.', 'success');
+      setStatus(backgroundColor
+        ? 'Your image with the selected background color is validated and ready to download.'
+        : 'Your background-removed image is validated and ready to download.', 'success');
     } catch (error) {
       if (activeRequestId === requestId) {
         setStatus(error && error.message ? error.message : 'The transparent image could not be prepared.', 'error');
@@ -598,6 +684,9 @@
         finalizing = false;
         finalizeButton.removeAttribute('aria-busy');
         finalizeButton.disabled = !processedBlob;
+        backgroundControls.querySelectorAll('button, input').forEach(function (control) {
+          control.disabled = false;
+        });
         setProgress('');
       }
     }
@@ -638,6 +727,11 @@
   });
 
   root.addEventListener('click', function (event) {
+    var colorButton = event.target.closest('button[data-background-color]');
+    if (colorButton && root.contains(colorButton)) {
+      setBackgroundColor(colorButton.getAttribute('data-background-color'));
+      return;
+    }
     var button = event.target.closest('button[data-action], button[data-mode], button[data-brush-mode]');
     if (!button || !root.contains(button)) return;
     if (button.hasAttribute('data-mode')) {
@@ -667,6 +761,13 @@
       redrawManualImage();
       setStatus('Manual corrections were reset to the automatic result.', '');
     }
+  });
+
+  customBackgroundColor.addEventListener('input', function () {
+    var color = customBackgroundColor.value.toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(color)) return;
+    customColorHex.textContent = color.toUpperCase();
+    setBackgroundColor(color);
   });
 
   root.querySelectorAll('[data-mode]').forEach(function (tab) {

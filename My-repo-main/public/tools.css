@@ -44,7 +44,7 @@
   opacity: 0;
   visibility: hidden;
   transform: translate(-50%, -0.45rem);
-  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out), visibility 180ms;
+  transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out), visibility 350ms;
 }
 
 .tools-dropdown[hidden] { display: none; }

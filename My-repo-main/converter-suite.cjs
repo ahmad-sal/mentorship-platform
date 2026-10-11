@@ -181,6 +181,29 @@ async function inspectImage(file, from) {
   };
 }
 
+function validateDocumentFile(file, format) {
+  if (!file || !Buffer.isBuffer(file.buffer) || file.buffer.length === 0) {
+    throw createError(400, 'Choose a non-empty document to convert.');
+  }
+  if (file.buffer.length > MAX_DOCUMENT_BYTES) {
+    throw createError(413, 'Documents must be 30 MB or smaller.');
+  }
+
+  const extension = path.extname(String(file.originalname || '')).toLowerCase();
+  if (FORMAT_BY_EXTENSION[extension] !== format) {
+    throw createError(400, 'Choose a .' + DOCUMENT_FORMATS[format].extension.slice(1) + ' file for the selected source format.');
+  }
+  if (format === 'pdf') {
+    if (!file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+      throw createError(400, 'The selected file is not a valid PDF.');
+    }
+    return;
+  }
+  if (!file.buffer.subarray(0, 4).equals(Buffer.from('PK\u0003\u0004'))) {
+    throw createError(400, 'The selected file does not have a valid Office document signature.');
+  }
+}
+
 function validateImageFile(file, format) {
   if (!file || !Buffer.isBuffer(file.buffer) || file.buffer.length === 0) {
     throw createError(400, 'Choose a non-empty image to convert.');
@@ -247,6 +270,9 @@ async function parsePdf(buffer) {
       const table = detectPdfTable(lines);
       if (table) tables.push(table);
     }
+    if (!pages.some((page) => page.text)) {
+      throw createError(422, 'No selectable text was found. Scanned PDFs require OCR, which is not available in this converter.');
+    }
     return {
       title: 'Converted PDF',
       paragraphs: pages.filter((page) => page.text).map((page) => 'Page ' + page.number + ': ' + page.text),
@@ -259,6 +285,36 @@ async function parsePdf(buffer) {
   } finally {
     await pdf.destroy();
   }
+}
+
+function groupPdfTextItems(items) {
+  const positionedItems = items
+    .filter((item) => typeof item.str === 'string' && item.str.trim() && item.transform)
+    .map((item) => ({
+      text: item.str.trim(),
+      x: Number(item.transform[4]) || 0,
+      y: Number(item.transform[5]) || 0,
+      width: Number(item.width) || 0
+    }))
+    .sort((left, right) => right.y - left.y || left.x - right.x);
+  const lines = [];
+  for (const item of positionedItems) {
+    let line = lines.find((candidate) => Math.abs(candidate.y - item.y) <= 2.5);
+    if (!line) {
+      line = { y: item.y, items: [] };
+      lines.push(line);
+    }
+    line.items.push(item);
+  }
+  return lines
+    .sort((left, right) => right.y - left.y)
+    .map((line) => {
+      line.items.sort((left, right) => left.x - right.x);
+      return {
+        items: line.items,
+        text: line.items.map((item) => item.text).join(' ')
+      };
+    });
 }
 
 function detectPdfTable(lines) {

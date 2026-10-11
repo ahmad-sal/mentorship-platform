@@ -69,14 +69,17 @@ function m4aFixture() {
   return Buffer.concat([ftyp, mediaData, movie]);
 }
 
-test('public registry and page include one QR tool and exactly six input types', () => {
+test('public registry and page include one QR tool and exactly three input types', () => {
   assert.equal((registry.match(/id: 'qr-code-generator'/g) || []).length, 1);
   assert.match(registry, /name: 'QR Code Generator'[\s\S]*?route: '\/tools\/qr-code-generator'/);
   assert.match(server, /app\.get\('\/tools\/qr-code-generator'/);
   assert.match(page, /data-current-tool="qr-code-generator"/);
-  assert.equal((page.match(/class="qr-code-type-card" data-type=/g) || []).length, 6);
-  for (const type of ['url', 'pdf', 'image', 'text', 'audio', 'whatsapp']) {
+  assert.equal((page.match(/class="qr-code-type-card" data-type=/g) || []).length, 3);
+  for (const type of ['url', 'text', 'whatsapp']) {
     assert.match(page, new RegExp('data-type="' + type + '"'));
+  }
+  for (const type of ['pdf', 'image', 'audio']) {
+    assert.doesNotMatch(page, new RegExp('data-type="' + type + '"'));
   }
   assert.match(page, /data-template-grid/);
   assert.match(page, /data-frame-grid/);

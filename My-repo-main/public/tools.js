@@ -76,7 +76,7 @@
     },
     {
       id: 'additive-pdf',
-      name: 'Additive PDF',
+      name: 'Edit PDF',
       description: 'Add text, images, drawings, and shapes to your PDF documents.',
       icon: '<svg class="additive-pdf-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 6.5h14l6 6v8M22 7v7h6M11 18h7M11 22h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m20 29 8.9-8.9a2.5 2.5 0 0 1 3.5 3.5L23.5 33.5l-5 1.5 1.5-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 13v18a3 3 0 0 0 3 3h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
       route: '/tools/additive-pdf',
@@ -91,19 +91,11 @@
       available: true
     },
     {
-      id: 'converter-suite',
-      name: 'Converter Suite',
-      description: 'Convert documents and images between multiple formats in one place.',
-      icon: '<svg class="converter-suite-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 12.5h17M19.5 8l4.5 4.5-4.5 4.5M33 27.5H16M20.5 23 16 27.5l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="5.5" width="29" height="29" rx="6" stroke="currentColor" stroke-width="2"/></svg>',
-      route: '/tools/converter-suite?mode=all',
-      available: true
-    },
-    {
       id: 'pdf-to-other-converter',
       name: 'PDF to Other Converter',
       description: 'Convert PDF files into supported document formats using one unified converter.',
       icon: '📄',
-      route: '/tools/converter-suite?mode=pdf',
+      route: '/tools/converter-suite?mode=document&from=pdf&to=pdf',
       available: true
     },
     {
@@ -111,7 +103,7 @@
       name: 'Word to Other Converter',
       description: 'Convert Word documents into other supported document formats.',
       icon: '📝',
-      route: '/tools/converter-suite?mode=pdf',
+      route: '/tools/converter-suite?mode=document&from=word&to=word',
       available: true
     },
     {
@@ -119,7 +111,7 @@
       name: 'PowerPoint to Other Converter',
       description: 'Convert presentations into other supported document formats.',
       icon: '📊',
-      route: '/tools/converter-suite?mode=pdf',
+      route: '/tools/converter-suite?mode=document&from=powerpoint&to=powerpoint',
       available: true
     },
     {
@@ -127,7 +119,7 @@
       name: 'Excel to Other Converter',
       description: 'Convert spreadsheets into other supported document formats.',
       icon: '📈',
-      route: '/tools/converter-suite?mode=pdf',
+      route: '/tools/converter-suite?mode=document&from=excel&to=excel',
       available: true
     },
     {
@@ -135,7 +127,7 @@
       name: 'JPEG to Other Converter',
       description: 'Convert JPEG images into other supported image formats.',
       icon: '🖼️',
-      route: '/tools/converter-suite?mode=image',
+      route: '/tools/converter-suite?mode=image&from=jpeg&to=jpeg',
       available: true
     },
     {
@@ -143,7 +135,7 @@
       name: 'JPG to Other Converter',
       description: 'Convert JPG images into other supported image formats.',
       icon: '🌄',
-      route: '/tools/converter-suite?mode=image',
+      route: '/tools/converter-suite?mode=image&from=jpg&to=jpg',
       available: true
     },
     {
@@ -151,7 +143,7 @@
       name: 'PNG to Other Converter',
       description: 'Convert PNG images into other supported image formats.',
       icon: '🌆',
-      route: '/tools/converter-suite?mode=image',
+      route: '/tools/converter-suite?mode=image&from=png&to=png',
       available: true
     },
     {
@@ -159,7 +151,7 @@
       name: 'WebP to Other Converter',
       description: 'Convert WebP images into other supported image formats.',
       icon: '🌐',
-      route: '/tools/converter-suite?mode=image',
+      route: '/tools/converter-suite?mode=image&from=webp&to=webp',
       available: true
     }
   ];

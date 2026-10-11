@@ -14,14 +14,49 @@
     webp: { label: 'WebP', extension: '.webp', mime: 'image/webp', limit: 20 * 1024 * 1024 }
   };
 
-  var mode = new URLSearchParams(window.location.search).get('mode');
-  if (mode !== 'pdf' && mode !== 'image') mode = 'all';
+  var query = new URLSearchParams(window.location.search);
+  var mode = query.get('mode');
+  if (mode !== 'document' && mode !== 'image') mode = 'all';
+
+  var requestedFrom = query.get('from') || '';
+  var requestedTo = query.get('to') || '';
+
+  var toolNames = {
+    document: {
+      pdf: 'PDF to Other Converter',
+      word: 'Word to Other Converter',
+      powerpoint: 'PowerPoint to Other Converter',
+      excel: 'Excel to Other Converter'
+    },
+    image: {
+      jpeg: 'JPEG to Other Converter',
+      jpg: 'JPG to Other Converter',
+      png: 'PNG to Other Converter',
+      webp: 'WebP to Other Converter'
+    }
+  };
+
+  var heading = document.querySelector('.converter-suite-heading h1');
+  if (heading) {
+    var activeTool = null;
+    var sourceKey = requestedFrom || '';
+    if (mode === 'document' && toolNames.document[sourceKey]) {
+      activeTool = toolNames.document[sourceKey];
+    }
+    if (mode === 'image' && toolNames.image[sourceKey]) {
+      activeTool = toolNames.image[sourceKey];
+    }
+    if (activeTool) {
+      heading.textContent = activeTool;
+      document.title = activeTool + ' — Ahmad Saleem Mentorship';
+    }
+  }
 
   var panelsContainer = document.querySelector('.converter-panels');
   if (mode !== 'all') {
     panelsContainer.classList.add('is-single-panel');
     panelsContainer.querySelectorAll('[data-converter]').forEach(function (panel) {
-      if (panel.getAttribute('data-converter') !== (mode === 'pdf' ? 'document' : 'image')) {
+      if (panel.getAttribute('data-converter') !== mode) {
         panel.remove();
       }
     });
@@ -88,6 +123,23 @@
       uploadHint.textContent = file ? 'Choose another file or drop it here' : 'Drop your file here or browse';
       fileType.textContent = from.label;
       updateControls();
+    }
+
+    function applyDefaultRouteSelection() {
+      var sourceValues = kind === 'image' ? imageFormats : documentFormats;
+      var defaultFrom = kind === 'image' ? 'jpeg' : 'pdf';
+      var defaultTo = defaultFrom;
+      if (mode === 'document' && kind === 'document' && sourceValues[requestedFrom]) {
+        defaultFrom = requestedFrom;
+        defaultTo = sourceValues[requestedTo] ? requestedTo : defaultFrom;
+      }
+      if (mode === 'image' && kind === 'image' && sourceValues[requestedFrom]) {
+        defaultFrom = requestedFrom;
+        defaultTo = sourceValues[requestedTo] ? requestedTo : defaultFrom;
+      }
+      fromSelect.value = defaultFrom;
+      toSelect.value = defaultTo;
+      updateFormats();
     }
 
     function updateControls() {
@@ -298,7 +350,7 @@
     });
     window.addEventListener('pagehide', invalidateResult);
 
-    updateFormats();
+    applyDefaultRouteSelection();
     updateControls();
   });
 })();

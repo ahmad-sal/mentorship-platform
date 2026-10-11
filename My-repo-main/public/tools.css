@@ -1706,17 +1706,34 @@
     margin-top: 1.2rem;
   }
   .converter-field { display: grid; min-width: 0; gap: 0.4rem; color: var(--text-secondary); font-size: 0.74rem; font-weight: 700; }
+  .converter-select-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .converter-select-wrap::after {
+    content: '▾';
+    position: absolute;
+    top: 50%;
+    right: 0.8rem;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
   .converter-field select {
     width: 100%;
     min-width: 0;
     height: 2.75rem;
-    padding: 0 0.7rem;
+    padding: 0 2.2rem 0 0.7rem;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
     color: var(--text-primary);
     background: var(--surface);
     font: inherit;
     font-size: 0.83rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
   }
   .converter-field select:focus-visible { border-color: var(--primary); outline: none; box-shadow: var(--ring); }
   .converter-field select:disabled { cursor: wait; opacity: 0.7; }

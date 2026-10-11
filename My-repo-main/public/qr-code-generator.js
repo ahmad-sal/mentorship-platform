@@ -84,10 +84,7 @@
 
   var categories = {
     url: { title: 'URL / Link', description: 'Create a QR code that opens a website.', icon: '↗' },
-    pdf: { title: 'PDF', description: 'Upload a PDF and create a QR code to its publicly hosted file.', icon: '▤', accept: '.pdf,application/pdf', label: 'PDF file', extensions: ['pdf'] },
-    image: { title: 'Image', description: 'Upload an image and create a QR code that opens it.', icon: '▧', accept: '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp', label: 'PNG, JPG/JPEG, or WebP image', extensions: ['png', 'jpg', 'jpeg', 'webp'] },
     text: { title: 'Text', description: 'Encode plain text, contact information, or a short message.', icon: '≡' },
-    audio: { title: 'Audio', description: 'Upload an audio file and create a QR code to its public URL.', icon: '♫', accept: '.mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4', label: 'MP3, WAV, or M4A audio', extensions: ['mp3', 'wav', 'm4a'] },
     whatsapp: { title: 'WhatsApp', description: 'Create a QR code that opens a chat with an optional pre-filled message.', icon: '◉' }
   };
 
@@ -293,16 +290,8 @@
     filePrompt.textContent = 'Select or drop a file here';
     fileInput.value = '';
     Object.keys(formPanels).forEach(function (key) {
-      formPanels[key].hidden = key !== type && !(key === 'file' && ['pdf', 'image', 'audio'].includes(type));
+      formPanels[key].hidden = key !== type;
     });
-    if (['pdf', 'image', 'audio'].includes(type)) {
-      formPanels.file.hidden = false;
-      var category = categoryFor(type);
-      fileInput.accept = category.accept;
-      root.querySelector('[data-file-label]').innerHTML = category.label + ' <span aria-hidden="true">*</span>';
-      fileAccept.textContent = category.label + ' · Up to 20 MB';
-      root.querySelector('[data-file-icon]').textContent = category.icon;
-    }
     var category = categoryFor(type);
     categoryTitle.textContent = category.title;
     categoryDescription.textContent = category.description;
@@ -326,10 +315,6 @@
       var message = whatsappMessage.value;
       if (message) whatsAppUrl += '?text=' + encodeURIComponent(message);
       return { data: whatsAppUrl };
-    }
-    if (['pdf', 'image', 'audio'].includes(selectedType)) {
-      if (!hostedFileUrl) throw new Error('Upload the file and verify its public URL before customizing the QR code.');
-      return { data: hostedFileUrl };
     }
     throw new Error('Choose one of the available QR code types.');
   }

@@ -1,5 +1,4 @@
 node_modules/
-<<<<<<< HEAD
 build/
 dist/
 coverage/
@@ -9,8 +8,3 @@ coverage/
 !.env.example
 kiddoo.db
 uploads/
-=======
-.env
-kiddoo.db
-uploads/
->>>>>>> eae73cf460d86855e9451ec488fdcbe6351b581c

@@ -11,6 +11,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  db: {
+    schema: 'public'
+  },
   auth: {
     persistSession: false,
     autoRefreshToken: false
@@ -19,6 +22,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 const supabaseAdmin = supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey, {
+      db: {
+        schema: 'public'
+      },
       auth: {
         persistSession: false,
         autoRefreshToken: false

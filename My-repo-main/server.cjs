@@ -42,6 +42,7 @@ const qrBrandIcons = require('@fortawesome/free-brands-svg-icons');
 const supabase = require('./supabase.cjs');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('./cloudinary.cjs');
+const { AD_UNITS, getAdUnit, getAdStatus, getAdDatabaseFailure, validateAdCode } = require('./ads.cjs');
 
 const {
   findUserByEmail,
@@ -218,6 +219,10 @@ app.get('/tools', (req, res) => {
 
 app.get('/tools/calculator', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'calculator.html'));
+});
+
+app.get('/tools/honhaar-scholarship-2026', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'honhaar-scholarship-2026.html'));
 });
 
 app.get('/tools/merge-pdf', (req, res) => {
@@ -1051,6 +1056,27 @@ app.get('/api/session', (req, res) => {
   return res.json({ user: req.session.user });
 });
 
+app.get('/api/ads', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  // Public visitors may only read published rows, but the published view is
+  // filtered by RLS on public.ad_unit_configurations. The anon role has no
+  // policy on that table, so querying the view with the anon key silently
+  // returns zero rows. Read it with the server-only service-role client
+  // (never exposed to the browser); the published view already hides drafts,
+  // disabled units and every admin-only column.
+  const client = supabase.supabaseAdmin || supabase;
+  try {
+    const { data, error } = await client
+      .from('published_ad_units')
+      .select('unit_id, display_name, dimensions, published_code, published_at');
+    if (error) throw error;
+    return res.json({ ads: data || [] });
+  } catch (error) {
+    console.error('Published ad configuration could not be loaded:', error);
+    return res.status(503).json({ error: 'Advertising is temporarily unavailable.' });
+  }
+});
+
 app.get('/api/capacity', async (req, res) => {
   try {
     const capacity = await getPlatformCapacity();
@@ -1063,6 +1089,237 @@ app.get('/api/capacity', async (req, res) => {
 // ============================================================
 // ADMIN APIS
 // ============================================================
+
+function requireAdsAdminClient(res) {
+  const client = supabase.supabaseAdmin;
+  if (!client) {
+    res.status(503).json({ error: 'Ad management requires SUPABASE_SERVICE_ROLE_KEY on the server.' });
+    return null;
+  }
+  return client;
+}
+
+function validateAdUnitRoute(req, res) {
+  const unit = getAdUnit(req.params.unitId);
+  if (!unit) {
+    res.status(404).json({ error: 'Unknown ad unit.' });
+    return null;
+  }
+  return unit;
+}
+
+function requireSameOriginAdMutation(req, res, next) {
+  const origin = req.get('origin');
+  if (!origin) return next();
+  try {
+    const parsedOrigin = new URL(origin);
+    if ((parsedOrigin.protocol !== 'http:' && parsedOrigin.protocol !== 'https:') ||
+        parsedOrigin.host.toLowerCase() !== String(req.get('host') || '').toLowerCase()) {
+      return res.status(403).json({ error: 'Cross-origin ad management requests are not allowed.' });
+    }
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid request origin.' });
+  }
+  return next();
+}
+
+app.get('/api/admin/ads', requireAdmin, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .select('*')
+      .in('unit_id', AD_UNITS.map((unit) => unit.id));
+    if (error) throw error;
+    const byId = new Map((data || []).map((record) => [record.unit_id, record]));
+    const ads = AD_UNITS.map((unit) => {
+      const record = byId.get(unit.id);
+      return record ? { ...record, status: getAdStatus(record) } : {
+        unit_id: unit.id,
+        display_name: unit.name,
+        dimensions: unit.dimensions,
+        enabled: false,
+        draft_code: null,
+        published_code: null,
+        created_at: null,
+        updated_at: null,
+        published_at: null,
+        status: 'Unpublished'
+      };
+    });
+    return res.json({ ads });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error('Ad configuration load failed:', { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
+
+app.put('/api/admin/ads/:unitId/draft', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  const unit = validateAdUnitRoute(req, res);
+  if (!unit) return;
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  let draftCode;
+  try {
+    draftCode = validateAdCode(req.body && req.body.code);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+  try {
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .upsert({
+        unit_id: unit.id,
+        display_name: unit.name,
+        dimensions: unit.dimensions,
+        draft_code: draftCode,
+        updated_at: new Date().toISOString(),
+        updated_by: req.session.user.id
+      }, { onConflict: 'unit_id' })
+      .select('*')
+      .single();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Ad unit is missing from the database. Apply the advertising migration.' });
+    return res.json({ ad: { ...data, status: getAdStatus(data) } });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error(`Draft save failed for ${unit.id}:`, { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
+
+app.patch('/api/admin/ads/:unitId/enabled', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  const unit = validateAdUnitRoute(req, res);
+  if (!unit) return;
+  if (!req.body || typeof req.body.enabled !== 'boolean') {
+    return res.status(400).json({ error: 'Enabled must be true or false.' });
+  }
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .upsert({
+        unit_id: unit.id,
+        display_name: unit.name,
+        dimensions: unit.dimensions,
+        enabled: req.body.enabled,
+        updated_at: new Date().toISOString(),
+        updated_by: req.session.user.id
+      }, { onConflict: 'unit_id' })
+      .select('*')
+      .single();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Ad unit is missing from the database. Apply the advertising migration.' });
+    return res.json({ ad: { ...data, status: getAdStatus(data) } });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error(`Enable state update failed for ${unit.id}:`, { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
+
+app.post('/api/admin/ads/:unitId/publish', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  const unit = validateAdUnitRoute(req, res);
+  if (!unit) return;
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  try {
+    const { data: current, error: readError } = await client
+      .from('ad_unit_configurations')
+      .select('draft_code')
+      .eq('unit_id', unit.id)
+      .maybeSingle();
+    if (readError) throw readError;
+    if (!current) return res.status(404).json({ error: 'Ad unit is missing from the database. Apply the advertising migration.' });
+    if (!current.draft_code || !current.draft_code.trim()) {
+      return res.status(400).json({ error: 'Save non-empty ad code as a draft before publishing.' });
+    }
+    const publishedAt = new Date().toISOString();
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .update({
+        enabled: true,
+        published_code: current.draft_code,
+        published_at: publishedAt,
+        updated_at: publishedAt,
+        updated_by: req.session.user.id
+      })
+      .eq('unit_id', unit.id)
+      .select('*')
+      .single();
+    if (error) throw error;
+    return res.json({ ad: { ...data, status: getAdStatus(data) } });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error(`Publish failed for ${unit.id}:`, { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
+
+app.post('/api/admin/ads/:unitId/unpublish', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  const unit = validateAdUnitRoute(req, res);
+  if (!unit) return;
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .upsert({
+        unit_id: unit.id,
+        display_name: unit.name,
+        dimensions: unit.dimensions,
+        published_code: null,
+        published_at: null,
+        updated_at: now,
+        updated_by: req.session.user.id
+      }, { onConflict: 'unit_id' })
+      .select('*')
+      .single();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Ad unit is missing from the database. Apply the advertising migration.' });
+    return res.json({ ad: { ...data, status: getAdStatus(data) } });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error(`Unpublish failed for ${unit.id}:`, { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
+
+app.delete('/api/admin/ads/:unitId', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  const unit = validateAdUnitRoute(req, res);
+  if (!unit) return;
+  const client = requireAdsAdminClient(res);
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from('ad_unit_configurations')
+      .upsert({
+        unit_id: unit.id,
+        display_name: unit.name,
+        dimensions: unit.dimensions,
+        enabled: false,
+        draft_code: null,
+        published_code: null,
+        published_at: null,
+        updated_at: new Date().toISOString(),
+        updated_by: req.session.user.id
+      }, { onConflict: 'unit_id' })
+      .select('unit_id')
+      .single();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Ad unit is missing from the database. Apply the advertising migration.' });
+    return res.json({ message: 'Ad code removed.' });
+  } catch (error) {
+    const failure = getAdDatabaseFailure(error);
+    console.error(`Ad code removal failed for ${unit.id}:`, { code: failure.code });
+    return res.status(failure.status).json({ error: failure.error, code: failure.code });
+  }
+});
 
 app.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
   try {

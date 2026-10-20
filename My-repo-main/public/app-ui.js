@@ -377,6 +377,19 @@
     reducedMotion: prefersReduced
   };
 
+  // Ads belong on every visitor-facing page and tool. Admin screens are the
+  // only exception: management sessions must stay free of third-party ad code.
+  // ad-runtime.js discovers the page layout itself and skips empty pages.
+  var adPath = window.location.pathname.toLowerCase();
+  var isAdminScreen = /^\/admin/.test(adPath);
+  if (!isAdminScreen && !window.__adRuntimeRequested) {
+    window.__adRuntimeRequested = true;
+    var adRuntime = document.createElement('script');
+    adRuntime.src = '/ad-runtime.js';
+    adRuntime.async = true;
+    document.head.appendChild(adRuntime);
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

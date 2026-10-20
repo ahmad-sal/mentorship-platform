@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08101f" />
+  <meta name="description" content="Estimate your Honhaar Scholarship 2026 academic aggregate or continuing-student percentage. Calculations stay in your browser." />
+  <title>Honhaar Scholarship 2026 Calculator — Ahmad Saleem Mentorship</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/tools.css">
+  <link rel="stylesheet" href="/honhaar-scholarship-2026.css">
+</head>
+<body class="light-theme honhaar-public-page">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <header class="site-header" id="siteHeader">
+    <div class="nav-container">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 10-10-5-10 5 10 5 10-5Z"/><path d="M6 12v5c3.5 3 8.5 3 12 0v-5"/><path d="M22 10v6"/></svg>
+        </span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/#viewCourses">Courses</a>
+        <div class="tools-nav-item" data-tools-nav>
+          <a class="nav-link active" href="/tools" aria-haspopup="true">Tools</a>
+          <button class="tools-nav-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="toolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="tools-dropdown" id="toolsDropdown" hidden>
+            <p class="tools-dropdown-heading">Quick access</p>
+            <div class="tools-dropdown-grid" data-tools-menu></div>
+          </div>
+        </div>
+        <a class="nav-link" href="/meet-developer">Developer Team</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="desktop-auth-links">
+          <a class="btn btn-ghost" href="/admin/login">Admin</a>
+          <a class="btn btn-secondary" href="/login">Student Login</a>
+          <a class="btn btn-primary" href="/register">Get Started</a>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true">◐</span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Open navigation menu"><span aria-hidden="true">☰</span></button>
+      </div>
+    </div>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-inner">
+        <a class="mobile-nav-item" href="/">Home</a>
+        <a class="mobile-nav-item" href="/#viewCourses">Courses</a>
+        <div class="mobile-tools-nav" data-mobile-tools-nav>
+          <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
+          <button class="mobile-tools-toggle" type="button" aria-label="Show available tools" aria-expanded="false" aria-controls="mobileToolsDropdown"><span aria-hidden="true">⌄</span></button>
+          <div class="mobile-tools-list" id="mobileToolsDropdown" data-tools-mobile-menu hidden></div>
+        </div>
+        <a class="mobile-nav-item" href="/meet-developer">Developer Team</a>
+        <div class="mobile-auth-links">
+          <a class="btn btn-primary btn-lg" href="/register">Create student account</a>
+          <a class="btn btn-secondary btn-lg" href="/login">Student Login</a>
+          <a class="btn btn-ghost" href="/admin/login">Admin portal</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="calculator-page honhaar-page">
+    <a class="tools-breadcrumb" href="/tools"><span aria-hidden="true">←</span> All tools</a>
+    <header class="honhaar-heading">
+      <p class="section-kicker">Scholarship aggregate estimate</p>
+      <h1>Calculate your Honhaar Scholarship 2026</h1>
+      <p>Check your academic aggregate or continuing-student percentage against the supplied academic thresholds.</p>
+    </header>
+
+    <aside class="honhaar-notice" aria-labelledby="eligibilityNoticeTitle">
+      <h2 id="eligibilityNoticeTitle">Eligibility notice</h2>
+      <ul>
+        <li>Only BS/undergraduate students, including MBBS/BDS students, can apply.</li>
+        <li>MS, MPhil, and PhD students are not eligible.</li>
+        <li>From the second semester/year onward, only public-sector universities, medical and dental colleges, and HED colleges are eligible.</li>
+      </ul>
+    </aside>
+
+    <form class="honhaar-form" data-honhaar-form novalidate>
+      <div class="form-group">
+        <label for="semester">Where are you studying?</label>
+        <select id="semester" name="semester" required aria-describedby="semesterHint semesterError">
+          <option value="">Select your semester or year</option>
+          <option value="firstYear">First semester / First year</option>
+          <option value="continuing">Second semester / Year onward</option>
+        </select>
+        <p class="form-hint" id="semesterHint">Choose the option that matches your current study stage.</p>
+        <p class="form-error" id="semesterError" data-error-for="semester"></p>
+      </div>
+
+      <p class="honhaar-continuing-notice" data-continuing-notice hidden>Continuing-student eligibility is limited to public-sector universities/colleges, public medical/dental colleges, and HED colleges. Federal/private universities are not eligible at this stage.</p>
+
+      <div class="honhaar-choice-grid">
+        <div class="form-group" data-institution-field hidden>
+          <label for="institution">Institution type</label>
+          <select id="institution" name="institution" disabled required aria-describedby="institutionError">
+            <option value="">Select your institution type</option>
+            <option value="public">Public sector university/college</option>
+            <option value="medical">Public medical/dental college (MBBS/BDS)</option>
+            <option value="federalPrivate">Federal/private university</option>
+            <option value="hed">HED college</option>
+          </select>
+          <p class="form-error" id="institutionError" data-error-for="institution"></p>
+        </div>
+        <div class="form-group" data-stream-field hidden>
+          <label for="stream">Study stream</label>
+          <select id="stream" name="stream" disabled required aria-describedby="streamHint streamError">
+            <option value="">Select your stream</option>
+            <option value="sciences">Sciences</option>
+            <option value="arts">Arts &amp; Social Sciences</option>
+          </select>
+          <p class="form-hint" id="streamHint">MBBS/BDS uses Sciences only.</p>
+          <p class="form-error" id="streamError" data-error-for="stream"></p>
+        </div>
+      </div>
+      <p class="honhaar-medical-notice" data-medical-notice hidden>MBBS/BDS is assessed in Sciences. For continuing students, annual examination marks are required.</p>
+
+      <section class="honhaar-input-section" data-first-year-fields hidden aria-labelledby="firstYearTitle">
+        <div class="honhaar-section-heading">
+          <h2 id="firstYearTitle">Add your marks</h2>
+          <p>First-year aggregate: Matric 30% and Intermediate 70%. The threshold is checked against Intermediate percentage.</p>
+        </div>
+        <fieldset class="honhaar-mark-group">
+          <legend>Matric / SSC</legend>
+          <div class="honhaar-choice-grid">
+            <div class="form-group">
+              <label for="matricObtained">Obtained marks</label>
+              <input id="matricObtained" name="matricObtained" type="number" min="0" step="any" inputmode="decimal" disabled required aria-describedby="matricObtainedError">
+              <p class="form-error" id="matricObtainedError" data-error-for="matricObtained"></p>
+            </div>
+            <div class="form-group">
+              <label for="matricTotal">Total marks</label>
+              <input id="matricTotal" name="matricTotal" type="number" min="0.001" step="any" value="1100" inputmode="decimal" disabled required aria-describedby="matricTotalError">
+              <p class="form-error" id="matricTotalError" data-error-for="matricTotal"></p>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="honhaar-mark-group">
+          <legend>Intermediate / HSSC</legend>
+          <div class="honhaar-choice-grid">
+            <div class="form-group">
+              <label for="intermediateObtained">Obtained marks</label>
+              <input id="intermediateObtained" name="intermediateObtained" type="number" min="0" step="any" inputmode="decimal" disabled required aria-describedby="intermediateObtainedError">
+              <p class="form-error" id="intermediateObtainedError" data-error-for="intermediateObtained"></p>
+            </div>
+            <div class="form-group">
+              <label for="intermediateTotal">Total marks</label>
+              <input id="intermediateTotal" name="intermediateTotal" type="number" min="0.001" step="any" value="1200" inputmode="decimal" disabled required aria-describedby="intermediateTotalError">
+              <p class="form-error" id="intermediateTotalError" data-error-for="intermediateTotal"></p>
+            </div>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="honhaar-input-section" data-continuing-fields hidden aria-labelledby="continuingTitle">
+        <div class="form-group" data-result-system-field>
+          <label for="resultSystem">Select CGPA or annual exam marks</label>
+          <select id="resultSystem" name="resultSystem" disabled required aria-describedby="resultSystemError">
+            <option value="">Select your result system</option>
+            <option value="cgpa">CGPA (semester system)</option>
+            <option value="annual">Annual exam marks (annual system)</option>
+          </select>
+          <p class="form-error" id="resultSystemError" data-error-for="resultSystem"></p>
+        </div>
+        <h2 id="continuingTitle">Add your current result</h2>
+        <div class="honhaar-choice-grid" data-cgpa-fields hidden>
+          <div class="form-group">
+            <label for="cgpa">Current CGPA</label>
+            <input id="cgpa" name="cgpa" type="number" min="0" step="any" inputmode="decimal" disabled required aria-describedby="cgpaError">
+            <p class="form-error" id="cgpaError" data-error-for="cgpa"></p>
+          </div>
+          <div class="form-group">
+            <label for="cgpaScale">CGPA scale</label>
+            <select id="cgpaScale" name="cgpaScale" disabled required aria-describedby="cgpaScaleHint">
+              <option value="4">4.00</option>
+              <option value="5">5.00</option>
+            </select>
+            <p class="form-hint" id="cgpaScaleHint">Choose the scale used by your institution.</p>
+          </div>
+        </div>
+        <div class="honhaar-choice-grid" data-annual-fields hidden>
+          <div class="form-group">
+            <label for="annualObtained">Obtained marks</label>
+            <input id="annualObtained" name="annualObtained" type="number" min="0" step="any" inputmode="decimal" disabled required aria-describedby="annualObtainedError">
+            <p class="form-error" id="annualObtainedError" data-error-for="annualObtained"></p>
+          </div>
+          <div class="form-group">
+            <label for="annualTotal">Total marks</label>
+            <input id="annualTotal" name="annualTotal" type="number" min="0.001" step="any" value="100" inputmode="decimal" disabled required aria-describedby="annualTotalError">
+            <p class="form-error" id="annualTotalError" data-error-for="annualTotal"></p>
+          </div>
+        </div>
+      </section>
+
+      <div class="honhaar-errors" data-error-summary role="alert" tabindex="-1" hidden></div>
+      <div class="honhaar-actions">
+        <button class="btn btn-primary" type="submit" data-calculate-button>Calculate my aggregate</button>
+        <button class="btn btn-secondary" type="reset">Reset</button>
+      </div>
+    </form>
+
+    <section class="honhaar-result" data-honhaar-result aria-live="polite" aria-atomic="true" tabindex="-1" hidden></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <a class="brand-logo" href="/"><span class="logo-icon" aria-hidden="true">AS</span><span class="logo-text">Ahmad Saleem Mentorship</span></a>
+        <p class="footer-desc">Helping students build practical digital skills through focused courses, useful tools, and real-world learning.</p>
+      </div>
+      <div class="footer-col"><span class="footer-kicker">Explore</span><h4 class="footer-heading">Platform</h4><ul class="footer-links"><li><a href="/">Home <span aria-hidden="true">→</span></a></li><li><a href="/tools">Tools <span aria-hidden="true">→</span></a></li></ul></div>
+      <div class="footer-col"><span class="footer-kicker">Students</span><h4 class="footer-heading">Get started</h4><ul class="footer-links"><li><a href="/register">Create account <span aria-hidden="true">→</span></a></li><li><a href="/login">Student login <span aria-hidden="true">→</span></a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Mentor Ahmad Saleem. All rights reserved.</p><p>Built for practical, project-based learning.</p></div>
+  </footer>
+  <script src="/app-ui.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/honhaar-policy.js"></script>
+  <script src="/honhaar-scholarship-2026.js"></script>
+</body>
+</html>

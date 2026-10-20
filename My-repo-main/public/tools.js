@@ -11,6 +11,14 @@
       available: true
     },
     {
+      id: 'honhaar-scholarship-2026',
+      name: 'Honhaar Scholarship 2026 Calculator',
+      description: 'Estimate your academic aggregate or continuing-student percentage.',
+      icon: '🎓',
+      route: '/tools/honhaar-scholarship-2026',
+      available: true
+    },
+    {
       id: 'merge-pdf',
       name: 'Merge PDF',
       description: 'Combine multiple PDF files into one document.',

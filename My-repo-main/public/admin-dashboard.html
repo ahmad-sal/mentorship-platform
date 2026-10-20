@@ -73,6 +73,20 @@
       background: var(--primary-subtle);
       color: var(--primary);
     }
+    .ads-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 1rem; }
+    .ad-unit-card { min-width: 0; padding: 1.1rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-surface); box-shadow: var(--shadow-sm); }
+    .ad-unit-card h2 { margin: 0; font-size: 1.05rem; }
+    .ad-unit-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: .8rem; margin-bottom: .9rem; }
+    .ad-unit-dimensions, .ad-unit-timestamp { color: var(--text-muted); font-size: .78rem; }
+    .ad-unit-status { display: inline-flex; align-items: center; min-height: 1.6rem; padding: .15rem .55rem; border-radius: 999px; background: var(--primary-subtle); color: var(--primary); font-size: .75rem; font-weight: 800; white-space: nowrap; }
+    .ad-unit-toggle { display: flex; align-items: center; gap: .55rem; margin: .8rem 0; font-size: .86rem; font-weight: 700; }
+    .ad-unit-editor { display: block; width: 100%; min-height: 170px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .78rem; line-height: 1.5; }
+    .ad-unit-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+    .ad-unit-message { min-height: 1.25rem; margin: .65rem 0 0; font-size: .82rem; }
+    .ad-unit-message[data-kind="error"] { color: var(--danger); }
+    .ad-unit-message[data-kind="success"] { color: var(--success); }
+    .ad-security-note { margin-bottom: 1rem; }
+    @media (max-width: 600px) { .ad-unit-actions > button { flex: 1 1 100%; } }
     .table-container {
       background: var(--bg-surface);
       border: 1px solid var(--border-color);
@@ -215,11 +229,14 @@
 
       <nav class="sidebar-group">
         <span class="sidebar-label">Administration</span>
-        <a class="sidebar-link active" href="/admin/dashboard">
+        <a class="sidebar-link active" id="sidebarDashboard" href="/admin/dashboard">
           <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
         </a>
         <a class="sidebar-link" href="/admin/progress">
           <i data-lucide="bar-chart"></i><span>Student progress</span>
+        </a>
+        <a class="sidebar-link" id="sidebarRunningAds" href="/admin/dashboard?tab=ads">
+          <i data-lucide="megaphone"></i><span>Running Ads</span>
         </a>
       </nav>
 
@@ -298,6 +315,7 @@
       <button class="tab-btn active" id="tabSubmissions" onclick="switchTab('submissions')"><i data-lucide="upload"></i> Submissions Queue</button>
       <button class="tab-btn" id="tabCourses" onclick="switchTab('courses')"><i data-lucide="book-open"></i> Course Management</button>
       <button class="tab-btn" id="tabStudents" onclick="switchTab('students')"><i data-lucide="user"></i> Registered Students</button>
+      <button class="tab-btn" id="tabAds" onclick="switchTab('ads')"><i data-lucide="megaphone"></i> Running Ads</button>
     </div>
 
     <!-- TAB 1: Submissions Review Queue -->
@@ -361,6 +379,23 @@
           </tbody>
         </table>
       </div>
+    </section>
+
+    <section id="sectionAds" style="display: none;" aria-labelledby="adsHeading">
+      <div class="admin-header">
+        <div>
+          <span class="section-kicker">Central advertising</span>
+          <h2 id="adsHeading" style="font-size:1.35rem; font-weight:800;">Running Ads</h2>
+          <p class="muted">Each unit has its own draft and published configuration. Saving a draft never changes the live code.</p>
+        </div>
+        <button class="btn btn-secondary" type="button" id="reloadAdsButton"><i data-lucide="refresh-cw"></i> Reload units</button>
+      </div>
+      <div class="card ad-security-note">
+        <strong>Every catalog unit is live across the site.</strong>
+        <span class="muted">Banners and Native Banner run in separate placement frames so each unit keeps its own provider globals. Pop Under opens the saved code in a popup on the first eligible button click of each page (with an in-page fallback if the browser blocks popups). Social Bar is injected once per page, and a Smart Link URL becomes a labelled sponsored link. Saving and publishing a unit updates every placement that uses it. No ad is loaded into admin screens.</span>
+      </div>
+      <div id="adsLoadMessage" class="muted" role="status" aria-live="polite">Ad configuration has not been loaded from the server yet. Editors below are available but unsaved.</div>
+      <div id="adUnitsGrid" class="ads-grid"></div>
     </section>
       </div>
     </div>
@@ -462,6 +497,7 @@
 
   <script src="/Mentor.js"></script>
   <script src="/app-ui.js"></script>
+  <script src="/ad-catalog.js"></script>
   <script>
     let activeSubmissionId = null;
     let currentQuestionsCourseId = null;
@@ -484,12 +520,221 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('sectionSubmissions').style.display = tab === 'submissions' ? 'block' : 'none';
-      document.getElementById('sectionCourses').style.display = tab === 'courses' ? 'block' : 'none';
-      document.getElementById('sectionStudents').style.display = tab === 'students' ? 'block' : 'none';
+      const sections = {
+        submissions: 'sectionSubmissions',
+        courses: 'sectionCourses',
+        students: 'sectionStudents',
+        ads: 'sectionAds'
+      };
+      Object.keys(sections).forEach(name => {
+        document.getElementById(sections[name]).style.display = tab === name ? 'block' : 'none';
+      });
       const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
       if (activeBtn) activeBtn.classList.add('active');
+      document.getElementById('sidebarDashboard').classList.toggle('active', tab !== 'ads');
+      document.getElementById('sidebarRunningAds').classList.toggle('active', tab === 'ads');
+      if (tab === 'ads') loadAds();
     }
+
+    function adRequest(url, options) {
+      const method = options && options.method ? options.method : 'GET';
+      return fetch(url, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        ...options
+      }).then(async response => {
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json')
+          ? await response.json()
+          : { error: (await response.text()).slice(0, 300) };
+        if (!response.ok) {
+          const detail = result.error || `The server returned HTTP ${response.status}.`;
+          const endpointNote = response.status === 404
+            ? ` The deployed server does not currently provide ${method} ${url}; deploy the updated Express server and confirm its root directory is My-repo-main.`
+            : '';
+          throw new Error(`${detail} (HTTP ${response.status}, ${method} ${url}).${endpointNote}`);
+        }
+        if (!contentType.includes('application/json')) {
+          throw new Error(`Expected JSON from ${method} ${url}, but the server returned ${contentType || 'an unknown content type'}.`);
+        }
+        return result;
+      });
+    }
+
+    function setAdMessage(card, message, kind) {
+      const output = card.querySelector('[data-ad-message]');
+      output.textContent = message;
+      output.dataset.kind = kind || '';
+    }
+
+    function updateAdCard(card, ad) {
+      card.dataset.unitId = ad.unit_id;
+      card.querySelector('[data-ad-status]').textContent = ad.status;
+      card.querySelector('[data-ad-enabled]').checked = Boolean(ad.enabled);
+      card.querySelector('[data-ad-updated]').textContent = ad.updated_at
+        ? `Last updated ${new Date(ad.updated_at).toLocaleString()}`
+        : 'Not yet updated';
+      card.querySelector('[data-ad-published]').textContent = ad.published_at
+        ? `Last published ${new Date(ad.published_at).toLocaleString()}`
+        : 'Not published';
+      if (card.dataset.dirty !== 'true') {
+        card.querySelector('[data-ad-code]').value = ad.draft_code || ad.published_code || '';
+      }
+      card.dataset.loaded = 'true';
+    }
+
+    function createAdCard(unit) {
+      const card = document.createElement('article');
+      card.className = 'ad-unit-card';
+      card.dataset.unitId = unit.id;
+      card.dataset.loaded = 'false';
+      card.innerHTML = `
+        <div class="ad-unit-heading">
+          <div><h2></h2><span class="ad-unit-dimensions"></span></div>
+          <span class="ad-unit-status" data-ad-status></span>
+        </div>
+        <label class="ad-unit-toggle"><input type="checkbox" data-ad-enabled> Enable this ad unit</label>
+        <label for="ad-code-${unit.id}" style="display:block;font-weight:700;font-size:.86rem;margin-bottom:.35rem;">Provider code</label>
+        <textarea class="form-control ad-unit-editor" id="ad-code-${unit.id}" data-ad-code maxlength="100000" spellcheck="false" autocomplete="off" placeholder="Paste the complete provider code here."></textarea>
+        <div class="ad-unit-timestamp" data-ad-updated></div>
+        <div class="ad-unit-timestamp" data-ad-published></div>
+        <div class="ad-unit-actions">
+          <button class="btn btn-secondary btn-sm" type="button" data-action="save">Save Draft</button>
+          <button class="btn btn-primary btn-sm" type="button" data-action="publish">Save &amp; Publish</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-action="unpublish">Unpublish</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-action="remove">Remove code</button>
+        </div>
+        <p class="ad-unit-message" data-ad-message role="status" aria-live="polite"></p>`;
+      card.querySelector('h2').textContent = unit.name;
+      card.querySelector('.ad-unit-dimensions').textContent = unit.dimensions;
+      card.querySelector('[data-ad-status]').textContent = 'Not loaded';
+      card.querySelector('[data-ad-updated]').textContent = 'Not yet updated';
+      card.querySelector('[data-ad-published]').textContent = 'Not published';
+      return card;
+    }
+
+    async function loadAds(options) {
+      const grid = document.getElementById('adUnitsGrid');
+      const message = document.getElementById('adsLoadMessage');
+      const reloadButton = document.getElementById('reloadAdsButton');
+      if (reloadButton.disabled) return;
+      const buttonLabel = reloadButton.innerHTML;
+      reloadButton.disabled = true;
+      reloadButton.setAttribute('aria-busy', 'true');
+      reloadButton.innerHTML = '<span class="spinner" aria-hidden="true"></span> Loading units…';
+      message.textContent = 'Requesting the latest saved ad configurations…';
+      try {
+        const result = await adRequest('/api/admin/ads');
+        if (!Array.isArray(result.ads)) throw new Error('The ad endpoint returned an invalid response: expected an ads array.');
+        const byId = new Map(result.ads.map(ad => [ad.unit_id, ad]));
+        const missing = window.AD_UNIT_CATALOG.filter(unit => !byId.has(unit.id));
+        if (missing.length) {
+          throw new Error(`The server response is missing ${missing.length} ad unit(s): ${missing.map(unit => unit.name).join(', ')}. Apply the latest advertising migrations and redeploy the server.`);
+        }
+        let preserved = 0;
+        window.AD_UNIT_CATALOG.forEach(unit => {
+          let card = grid.querySelector(`[data-unit-id="${unit.id}"]`);
+          if (!card) {
+            card = createAdCard(unit);
+            grid.appendChild(card);
+          }
+          const preserveEdit = card.dataset.dirty === 'true';
+          const localCode = card.querySelector('[data-ad-code]').value;
+          updateAdCard(card, byId.get(unit.id));
+          if (preserveEdit) {
+            card.querySelector('[data-ad-code]').value = localCode;
+            preserved += 1;
+          }
+        });
+        message.textContent = preserved
+          ? `Latest saved configurations loaded. Unsaved edits were preserved in ${preserved} unit(s); save them to persist.`
+          : 'Latest saved configurations loaded successfully.';
+        if (window.app && app.renderIcons) app.renderIcons();
+      } catch (error) {
+        message.textContent = `${error.message} Configuration editors remain available; changes are not saved until the server confirms success.`;
+      } finally {
+        reloadButton.disabled = false;
+        reloadButton.removeAttribute('aria-busy');
+        reloadButton.innerHTML = buttonLabel;
+      }
+    }
+
+    async function saveAdDraft(card) {
+      const unitId = card.dataset.unitId;
+      const result = await adRequest(`/api/admin/ads/${encodeURIComponent(unitId)}/draft`, {
+        method: 'PUT',
+        body: JSON.stringify({ code: card.querySelector('[data-ad-code]').value })
+      });
+      updateAdCard(card, result.ad);
+      card.dataset.dirty = 'false';
+      setAdMessage(card, 'Draft saved. Published code is unchanged.', 'success');
+      return result.ad;
+    }
+
+    document.getElementById('reloadAdsButton').addEventListener('click', () => loadAds({ preserveUnsaved: true }));
+    document.getElementById('adUnitsGrid').addEventListener('input', event => {
+      if (event.target.matches('[data-ad-code]')) event.target.closest('.ad-unit-card').dataset.dirty = 'true';
+    });
+    document.getElementById('adUnitsGrid').addEventListener('change', async event => {
+      if (!event.target.matches('[data-ad-enabled]')) return;
+      const card = event.target.closest('.ad-unit-card');
+      const checkbox = event.target;
+      checkbox.disabled = true;
+      try {
+        const result = await adRequest(`/api/admin/ads/${encodeURIComponent(card.dataset.unitId)}/enabled`, {
+          method: 'PATCH',
+          body: JSON.stringify({ enabled: checkbox.checked })
+        });
+        updateAdCard(card, result.ad);
+        setAdMessage(card, checkbox.checked ? 'Ad unit enabled.' : 'Ad unit disabled; no placements will render.', 'success');
+      } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        setAdMessage(card, error.message, 'error');
+      } finally {
+        checkbox.disabled = false;
+      }
+    });
+
+    document.getElementById('adUnitsGrid').addEventListener('click', async event => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const card = button.closest('.ad-unit-card');
+      const action = button.dataset.action;
+      button.disabled = true;
+      try {
+        if (action === 'save') {
+          await saveAdDraft(card);
+        } else if (action === 'publish') {
+          await saveAdDraft(card);
+          const result = await adRequest(`/api/admin/ads/${encodeURIComponent(card.dataset.unitId)}/publish`, { method: 'POST', body: '{}' });
+          updateAdCard(card, result.ad);
+          setAdMessage(card, 'Published and enabled. Public placements will use this configuration on their next load.', 'success');
+        } else if (action === 'unpublish') {
+          if (!window.confirm('Unpublish this ad unit? Its current published code will stop appearing on public pages.')) return;
+          const result = await adRequest(`/api/admin/ads/${encodeURIComponent(card.dataset.unitId)}/unpublish`, { method: 'POST', body: '{}' });
+          updateAdCard(card, result.ad);
+          setAdMessage(card, 'Unpublished. The saved draft is retained.', 'success');
+        } else if (action === 'remove') {
+          if (!window.confirm('Remove the draft and published code for this ad unit? This cannot be undone.')) return;
+          await adRequest(`/api/admin/ads/${encodeURIComponent(card.dataset.unitId)}`, { method: 'DELETE' });
+          card.dataset.dirty = 'false';
+          updateAdCard(card, {
+            unit_id: card.dataset.unitId,
+            enabled: false,
+            draft_code: null,
+            published_code: null,
+            updated_at: new Date().toISOString(),
+            published_at: null,
+            status: 'Disabled'
+          });
+          setAdMessage(card, 'Draft and published code removed; the unit was disabled.', 'success');
+        }
+      } catch (error) {
+        setAdMessage(card, error.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    });
 
     async function loadAdminData() {
       try {
@@ -889,7 +1134,10 @@
       window.location.href = '/admin/login';
     }
 
+    window.AD_UNIT_CATALOG.forEach(unit => document.getElementById('adUnitsGrid').appendChild(createAdCard(unit)));
     loadAdminData();
+    const initialTab = new URLSearchParams(window.location.search).get('tab');
+    if (initialTab === 'ads') switchTab('ads');
   </script>
 </body>
 </html>

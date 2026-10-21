@@ -1064,7 +1064,11 @@ app.get('/api/ads', async (req, res) => {
   // returns zero rows. Read it with the server-only service-role client
   // (never exposed to the browser); the published view already hides drafts,
   // disabled units and every admin-only column.
-  const client = supabase.supabaseAdmin || supabase;
+  const client = supabase.supabaseAdmin;
+  if (!client) {
+    console.error('Published ad configuration could not be loaded: SUPABASE_SERVICE_ROLE_KEY is not configured.');
+    return res.status(503).json({ error: 'Advertising is temporarily unavailable because server ad access is not configured.' });
+  }
   try {
     const { data, error } = await client
       .from('published_ad_units')

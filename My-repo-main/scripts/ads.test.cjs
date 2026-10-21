@@ -209,7 +209,8 @@ test('public ad API reads the published view with the server-only service role c
 
   assert.ok(route, 'GET /api/ads is registered');
   assert.match(route[0], /Cache-Control', 'no-store'/);
-  assert.match(route[0], /const client = supabase\.supabaseAdmin \|\| supabase;/);
+  assert.match(route[0], /const client = supabase\.supabaseAdmin;/);
+  assert.match(route[0], /if \(!client\)[\s\S]*?return res\.status\(503\)\.json/);
   assert.match(route[0], /\.from\('published_ad_units'\)/);
   assert.doesNotMatch(route[0], /\.from\('ad_unit_configurations'\)/);
   assert.doesNotMatch(route[0], /draft_code/);

@@ -511,12 +511,14 @@
   // means the ad never cancels, duplicates or delays the original action.
   // Keyed by the click event so a file-picker button's nested input click does
   // not overwrite the original trigger before the outer event finishes bubbling.
+  // Programmatic input.click() events are untrusted and must not open an ad
+  // before the browser handles the native file picker.
   var clickTriggers = typeof WeakMap === 'function' ? new WeakMap() : null;
   var fallbackPopupTrigger = null;
 
   document.addEventListener('click', function (event) {
     var trigger = null;
-    if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+    if (event.isTrusted && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
       trigger = findPopupTrigger(event);
     }
     if (clickTriggers) clickTriggers.set(event, trigger);

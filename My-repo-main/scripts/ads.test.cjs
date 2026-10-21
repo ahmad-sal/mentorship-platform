@@ -251,6 +251,7 @@ test('eligible button clicks open a real configured ad URL in a new tab without 
 
   assert.match(runtime, /document\.addEventListener\('click'/);
   assert.match(runtime, /}, true\);/);
+  assert.match(runtime, /event\.isTrusted && event\.button === 0/);
   assert.match(runtime, /!event\.metaKey && !event\.ctrlKey && !event\.shiftKey && !event\.altKey/);
   assert.match(runtime, /trigger\.closest\('nav, \.site-header/);
   assert.match(runtime, /theme-toggle-btn/);

@@ -392,7 +392,7 @@
       </div>
       <div class="card ad-security-note">
         <strong>Every catalog unit is live across the site.</strong>
-        <span class="muted">Banners and Native Banner run in separate placement frames so each unit keeps its own provider globals. Pop Under opens the saved destination in a new tab on every eligible button click; if the browser blocks the tab, the original action continues without an overlay. Social Bar is injected once per page, and a Smart Link URL becomes a labelled sponsored link. Saving and publishing a unit updates every placement that uses it. No ad is loaded into admin screens.</span>
+        <span class="muted">Banners and Native Banner run in separate placement frames so each unit keeps its own provider globals. Every eligible action button opens the real provider destination in a new tab on every click: a Pop Under value that is an http(s) URL is used first, otherwise the published Smart Link URL is used. A script-only Pop Under snippet cannot fill an empty tab, so it is never used as a placeholder; publish the Smart Link URL for direct button delivery. The ad opens after the button's own action, so file pickers and downloads still work, and the original action still runs if the tab is blocked. Social Bar is injected once per page, and a Smart Link URL also becomes a labelled sponsored link. Saving and publishing a unit updates every placement that uses it. No ad is loaded into admin screens.</span>
       </div>
       <div id="adsLoadMessage" class="muted" role="status" aria-live="polite">Ad configuration has not been loaded from the server yet. Editors below are available but unsaved.</div>
       <div id="adUnitsGrid" class="ads-grid"></div>

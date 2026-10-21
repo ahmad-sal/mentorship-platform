@@ -291,8 +291,8 @@
   else if (isDeveloperPage) addDeveloperPlacements();
   else addGenericPlacements();
 
-  if (!placements.length) return;
-
+  // Button popups are independent of inline placements: a page may have no
+  // banner slot at all and still needs its action buttons covered.
   var style = document.createElement('style');
   style.textContent = [
     '.ad-placement{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.5rem;max-width:100%;min-width:0;overflow:hidden;margin:1.25rem auto;clear:both}',
@@ -437,66 +437,48 @@
     else document.body.appendChild(container);
   }
 
-  function popupDocument(code, displayName, sponsorUrl) {
-    var base = window.location.origin + '/';
-    var fallback = sponsorUrl
-      ? '<p class="ad-popup-fallback"><a href="' + sponsorUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="sponsored noopener noreferrer">Continue to sponsor</a></p>'
-      : '';
-    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
-      '<base href="' + base.replace(/"/g, '&quot;') + '"><title>' + (displayName || 'Advertisement') + '</title>' +
-      '<style>html,body{margin:0;padding:0;min-height:100%;background:#0b1220;color:#e5edf8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}' +
-      'body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}' +
-      '.ad-popup-label{width:100%;text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:11px;opacity:.55;margin-bottom:18px}' +
-      '.ad-popup-content{width:100%;display:flex;justify-content:center;align-items:center}' +
-      '.ad-popup-fallback{margin-top:18px;font-size:13px;opacity:.8}.ad-popup-fallback a{color:#8fd6ff}' +
-      'img,iframe,video{max-width:100%}</style></head><body>' +
-      '<div class="ad-popup-label">Advertisement</div><div class="ad-popup-content">' + code + '</div>' + fallback +
-      '</body></html>';
+  // A provider pop-under snippet cannot render an advertisement by itself in
+  // an empty tab; loading it there produces exactly the placeholder screen we
+  // must avoid. Use a real provider destination instead: a Pop Under value
+  // that is already an http(s) URL, or the published Smart Link URL. Smart Link
+  // is the provider's direct ad destination and redirects to the advertiser.
+  function popupDestination() {
+    return adUrl(adsById.get('pop-under')) || adUrl(adsById.get('smart-link'));
   }
 
   function openPopupAd() {
-    if (!adsById.size) return;
-    var popunder = adsById.get('pop-under');
-    var smartLink = adsById.get('smart-link');
-    var code = popunder && popunder.published_code ? String(popunder.published_code).trim() : '';
-    var sponsorUrl = adUrl(smartLink);
-    if (!code && !sponsorUrl) return;
-
-    if (code && !adUrl(popunder)) {
-      var adTab;
-      try {
-        adTab = window.open('', '_blank');
-      } catch (error) {
-        console.warn('[AdSystem] The advertisement tab could not be opened:', error.message);
-        return;
-      }
-      if (!adTab) return;
-      try {
-        adTab.document.open();
-        adTab.document.write(popupDocument(code, popunder.display_name, sponsorUrl));
-        adTab.document.close();
-        adTab.opener = null;
-      } catch (error) {
-        console.warn('[AdSystem] The advertisement could not be rendered:', error.message);
-        adTab.close();
-      }
-      return;
-    }
-
-    var target = adUrl(popunder) || sponsorUrl;
-    if (!target) return;
+    var target = popupDestination();
+    if (!target) return false;
     try {
-      window.open(target, '_blank', 'noopener,noreferrer');
+      // Keep the referrer for the provider's delivery rules, but detach the
+      // opener so the ad page cannot navigate or script the original tab.
+      window.open(target, '_blank', 'noopener');
+      return true;
     } catch (error) {
+      // A blocked tab or a failed provider request must never cancel the
+      // button's own action, which runs in the original tab afterwards.
       console.warn('[AdSystem] The advertisement tab could not be opened:', error.message);
+      return false;
     }
   }
 
-  var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], a.btn';
-  var POPUP_EXCLUDE = '[data-ad-exempt], [data-ad-popup="off"], .theme-toggle-btn, #themeToggleBtn, ' +
-    '.sidebar-toggle, #sidebarToggle, .sidebar-link, .sidebar-scrim, .mobile-nav-toggle, .tools-nav-toggle, ' +
-    '.mobile-tools-toggle, .modal-close, .tab-btn, .ad-close, .calculator-mode button, [aria-haspopup="true"], ' +
-    'dialog, [role="dialog"], .modal, .confirmation-dialog';
+  // Native action buttons plus explicitly identified custom action controls.
+  // Dropdowns, selects, text fields, checkboxes, sliders, navigation and menu
+  // controls are not in this selector, so they never open an ad.
+  var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], ' +
+    'input[type="reset"], input[type="image"]';
+  // Exclusions describe controls that are not action buttons: chrome,
+  // navigation, dropdown/menu toggles, tabs, disclosure/accordion toggles and
+  // close controls. Action buttons inside dialogs and modals stay eligible;
+  // only the entire-dialog exclusion used previously removed them.
+  var POPUP_EXCLUDE = '[data-ad-exempt], [data-ad-popup="off"], ' +
+    '[aria-haspopup], [aria-expanded], [aria-controls], ' +
+    '[role="tab"], [role="menuitem"], [role="option"], [role="switch"], [role="checkbox"], ' +
+    '[role="radio"], [role="slider"], [role="combobox"], ' +
+    '.theme-toggle-btn, #themeToggleBtn, .sidebar-toggle, #sidebarToggle, .sidebar-link, .sidebar-scrim, ' +
+    '.mobile-nav-toggle, .mobile-menu-btn, #mobileMenuBtn, .tools-nav-toggle, .mobile-tools-toggle, ' +
+    '.modal-close, [data-modal-close], [data-dismiss], .ad-close, [aria-label*="close" i], [aria-label*="dismiss" i], ' +
+    '[data-disclosure], .accordion-button, .faq-question, [role="menu"], .dropdown-menu';
 
   function isEligiblePopupTrigger(trigger) {
     if (!trigger || trigger.disabled || trigger.getAttribute('aria-disabled') === 'true') return false;
@@ -509,12 +491,45 @@
     return true;
   }
 
+  // Resolve the button through the composed path so a click on any child icon
+  // or text node still maps to its action button, including custom controls.
+  function findPopupTrigger(event) {
+    var path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    for (var index = 0; index < path.length; index += 1) {
+      var node = path[index];
+      if (!node || node.nodeType !== 1 || typeof node.closest !== 'function') continue;
+      if (node.matches && node.matches(POPUP_TRIGGER)) return node;
+    }
+    return event.target && event.target.closest ? event.target.closest(POPUP_TRIGGER) : null;
+  }
+
+  // One delegated listener pair covers static, async-rendered and future
+  // buttons without attaching per-button handlers. The trigger is resolved in
+  // the capture phase, but the ad opens in the bubble phase after the button's
+  // own handler. That ordering is deliberate: opening a tab first would consume
+  // the click's transient activation and block native file pickers. It also
+  // means the ad never cancels, duplicates or delays the original action.
+  // Keyed by the click event so a file-picker button's nested input click does
+  // not overwrite the original trigger before the outer event finishes bubbling.
+  var clickTriggers = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var fallbackPopupTrigger = null;
+
   document.addEventListener('click', function (event) {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    var trigger = event.target && event.target.closest ? event.target.closest(POPUP_TRIGGER) : null;
+    var trigger = null;
+    if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+      trigger = findPopupTrigger(event);
+    }
+    if (clickTriggers) clickTriggers.set(event, trigger);
+    else fallbackPopupTrigger = trigger;
+  }, true);
+
+  document.addEventListener('click', function (event) {
+    var trigger = clickTriggers ? clickTriggers.get(event) : fallbackPopupTrigger;
+    if (clickTriggers) clickTriggers.delete(event);
+    else fallbackPopupTrigger = null;
     if (!isEligiblePopupTrigger(trigger)) return;
     openPopupAd();
-  }, true);
+  }, false);
 
   fetch('/api/ads', { credentials: 'same-origin', cache: 'no-store' })
     .then(function (response) {
@@ -530,9 +545,10 @@
         renderSlot(slot, adsById.get(slot.dataset.adUnit));
       });
 
-      // Site-wide formats have no dimensions of their own. Pop Under runs on
-      // each eligible button click, the Social Bar is injected once per page,
-      // and Smart Link becomes a labelled sponsored link when its value is a URL.
+      // Site-wide formats have no dimensions of their own. Pop Under and Smart
+      // Link supply the direct destination for each eligible button click, the
+      // Social Bar is injected once per page, and Smart Link also becomes a
+      // labelled sponsored link when its value is a URL.
       injectSocialBar(adsById.get('social-bar'));
       injectSmartLink(adsById.get('smart-link'));
     })

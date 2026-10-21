@@ -18,6 +18,7 @@
   var continuingNotice = document.querySelector('[data-continuing-notice]');
   var medicalNotice = document.querySelector('[data-medical-notice]');
   var result = document.querySelector('[data-honhaar-result]');
+  var resultContent = result.querySelector('[data-result-content]');
   var errorSummary = document.querySelector('[data-error-summary]');
   var calculateButton = document.querySelector('[data-calculate-button]');
   var formControls = Array.from(form.querySelectorAll('input, select'));
@@ -52,6 +53,11 @@
     control.setAttribute('aria-invalid', 'true');
   }
 
+  function resetResult() {
+    resultContent.innerHTML = '<p class="honhaar-result-empty">Your estimate will appear here after you complete the required fields and calculate.</p>' +
+      '<p class="honhaar-result-note">This tool provides an academic estimate only. Final eligibility is subject to the official programme criteria.</p>';
+  }
+
   function updateControls() {
     var isFirstYear = semester.value === 'firstYear';
     var isContinuing = semester.value === 'continuing';
@@ -82,8 +88,8 @@
     setSection(cgpaFields, isContinuing && resultSystem.value === 'cgpa' && !isMedical);
     setSection(annualFields, isContinuing && (resultSystem.value === 'annual' || isMedicalContinuing));
     medicalNotice.hidden = !isMedical;
-    calculateButton.textContent = isContinuing ? 'Calculate my percentage' : 'Calculate my aggregate';
-    result.hidden = true;
+    calculateButton.textContent = isContinuing ? 'Calculate My Percentage' : 'Calculate My Aggregate';
+    resetResult();
     clearErrors();
   }
 
@@ -123,29 +129,36 @@
 
   function showResult(data, firstYear) {
     var status;
+    var metricLabel;
+    var metric;
+    var breakdown;
+    var successMessage;
     if (firstYear) {
       status = data.threshold === null
         ? 'No academic threshold is defined for this institution and stream combination.'
         : (data.passed ? 'The academic threshold is met.' : 'The academic threshold is not met.');
-      result.innerHTML = '<h2>Academic estimate</h2>' +
-        '<dl class="honhaar-result-values">' +
-        '<div><dt>Calculated aggregate</dt><dd>' + format(data.aggregate) + '</dd></div>' +
-        '<div><dt>Intermediate percentage checked</dt><dd>' + format(data.intermediatePercentage) + '</dd></div>' +
-        '<div><dt>Minimum threshold</dt><dd>' + (data.threshold === null ? 'Not applicable' : format(data.threshold)) + '</dd></div>' +
-        '</dl><p class="honhaar-result-status">' + status + '</p>';
+      metricLabel = 'Calculated aggregate';
+      metric = format(data.aggregate);
+      breakdown = '<div><dt>Intermediate percentage checked</dt><dd>' + format(data.intermediatePercentage) + '</dd></div>' +
+        '<div><dt>Minimum threshold</dt><dd>' + (data.threshold === null ? 'Not applicable' : format(data.threshold)) + '</dd></div>';
     } else {
       status = !data.eligibleInstitution
         ? 'Federal/private universities are not eligible for continuing students.'
         : (data.passed ? 'The academic threshold is met.' : 'The academic threshold is not met.');
-      result.innerHTML = '<h2>Academic estimate</h2>' +
-        '<dl class="honhaar-result-values">' +
-        '<div><dt>Calculated percentage</dt><dd>' + format(data.percentage) + '</dd></div>' +
-        '<div><dt>Measure checked</dt><dd>' + data.measure + '</dd></div>' +
-        '<div><dt>Minimum threshold</dt><dd>' + (data.threshold === null ? 'Not applicable' : format(data.threshold)) + '</dd></div>' +
-        '</dl><p class="honhaar-result-status">' + status + '</p>';
+      metricLabel = 'Calculated percentage';
+      metric = format(data.percentage);
+      breakdown = '<div><dt>Measure checked</dt><dd>' + data.measure + '</dd></div>' +
+        '<div><dt>Minimum threshold</dt><dd>' + (data.threshold === null ? 'Not applicable' : format(data.threshold)) + '</dd></div>';
     }
-    result.insertAdjacentHTML('beforeend', '<p class="honhaar-result-note">This is an academic estimate only. Final eligibility is subject to the official programme criteria.</p>');
-    result.hidden = false;
+    successMessage = data.passed
+      ? '<div class="honhaar-result-success" role="status"><span class="honhaar-result-celebration" aria-hidden="true">🎉</span><h3>Congratulations!</h3><p>Your Academic Threshold is Met!</p></div>'
+      : '';
+    resultContent.innerHTML = '<h2>Academic estimate</h2>' +
+      '<div class="honhaar-result-metric"><span>' + metricLabel + '</span><strong>' + metric + '</strong></div>' +
+      '<dl class="honhaar-result-values">' + breakdown + '</dl>' +
+      successMessage +
+      (data.passed ? '' : '<p class="honhaar-result-status">' + status + '</p>') +
+      '<p class="honhaar-result-note">This is an academic estimate only. Final eligibility is subject to the official programme criteria.</p>';
   }
 
   form.addEventListener('change', function (event) {
@@ -153,17 +166,19 @@
       updateControls();
     } else {
       clearFieldError(event.target);
+      resetResult();
     }
   });
 
   form.addEventListener('input', function (event) {
     clearFieldError(event.target);
+    resetResult();
   });
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();
     clearErrors();
-    result.hidden = true;
+    resetResult();
     var errors = [];
     var isFirstYear = semester.value === 'firstYear';
     if (!semester.value) {
@@ -242,7 +257,6 @@
   form.addEventListener('reset', function () {
     window.setTimeout(function () {
       updateControls();
-      result.hidden = true;
       clearErrors();
     }, 0);
   });

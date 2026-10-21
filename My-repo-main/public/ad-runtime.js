@@ -49,7 +49,6 @@
   };
   var placements = [];
   var adsById = new Map();
-  var popupShown = false;
   var socialBarInjected = false;
   var smartLinkInjected = false;
 
@@ -311,11 +310,6 @@
     '.ad-smart-link span{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;opacity:.62;margin-bottom:.2rem}',
     '.ad-smart-link a{font-weight:700;text-decoration:underline}',
     '.ad-social-bar{max-width:100%}',
-    '.ad-popup-backdrop{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(4,8,16,.72)}',
-    '.ad-popup{width:min(920px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;border-radius:14px;background:#0b1220;color:#e5edf8;box-shadow:0 30px 90px rgba(0,0,0,.55)}',
-    '.ad-popup__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem .9rem;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;background:#111c30}',
-    '.ad-popup__close{border:0;border-radius:999px;padding:.35rem .7rem;font:inherit;font-weight:800;cursor:pointer;background:#e5edf8;color:#0b1220}',
-    '.ad-popup iframe{width:100%;height:min(600px,76vh);border:0;background:#fff}',
     '@media(max-width:767px){.ad-placement-desktop{display:none!important}}',
     '@media(min-width:768px){.ad-placement-mobile{display:none!important}}',
     '@media(max-width:900px){.ad-placement-sidebar{display:none!important}}'
@@ -460,94 +454,49 @@
       '</body></html>';
   }
 
-  function showPopupFallback(ad, sponsorUrl) {
-    var existing = document.querySelector('.ad-popup-backdrop');
-    if (existing) return;
-    var backdrop = document.createElement('div');
-    backdrop.className = 'ad-popup-backdrop';
-    backdrop.setAttribute('role', 'dialog');
-    backdrop.setAttribute('aria-modal', 'true');
-    backdrop.setAttribute('aria-label', 'Advertisement');
-    backdrop.innerHTML = '<div class="ad-popup"><div class="ad-popup__bar"><span>Advertisement</span>' +
-      '<button type="button" class="ad-popup__close">Close</button></div><iframe title="Advertisement" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe></div>';
-    var frame = backdrop.querySelector('iframe');
-    frame.srcdoc = frameDocument(ad && ad.published_code ? ad.published_code : '<p style="font-family:sans-serif;padding:2rem">Advertisement unavailable.</p>');
-    function close() {
-      if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
-      document.removeEventListener('keydown', onKey);
-    }
-    function onKey(event) {
-      if (event.key === 'Escape') close();
-    }
-    backdrop.querySelector('.ad-popup__close').addEventListener('click', close);
-    backdrop.addEventListener('click', function (event) {
-      if (event.target === backdrop) close();
-    });
-    document.addEventListener('keydown', onKey);
-    document.body.appendChild(backdrop);
-    if (!sponsorUrl) return;
-    var sponsor = document.createElement('a');
-    sponsor.href = sponsorUrl;
-    sponsor.target = '_blank';
-    sponsor.rel = 'sponsored noopener noreferrer';
-    sponsor.textContent = 'Continue to sponsor';
-    sponsor.style.cssText = 'display:block;text-align:center;padding:.65rem;color:#8fd6ff;font-size:.8rem';
-    backdrop.querySelector('.ad-popup').appendChild(sponsor);
-  }
-
   function openPopupAd() {
-    if (popupShown) return;
-    var noAds = !adsById.size;
-    if (noAds) return;
+    if (!adsById.size) return;
     var popunder = adsById.get('pop-under');
     var smartLink = adsById.get('smart-link');
     var code = popunder && popunder.published_code ? String(popunder.published_code).trim() : '';
     var sponsorUrl = adUrl(smartLink);
     if (!code && !sponsorUrl) return;
 
-    popupShown = true;
-    var width = Math.min(980, Math.max(360, window.screen.availWidth - 60));
-    var height = Math.min(760, Math.max(420, window.screen.availHeight - 80));
-    var left = Math.max(0, Math.round((window.screen.availWidth - width) / 2));
-    var top = Math.max(0, Math.round((window.screen.availHeight - height) / 2));
-    var popup = window.open('', 'mentorAdPopup_' + Date.now(),
-      'popup=yes,width=' + width + ',height=' + height + ',left=' + left + ',top=' + top + ',resizable=yes,scrollbars=yes');
-
-    if (!popup) {
-      showPopupFallback(popunder, sponsorUrl);
-      return;
-    }
-    try { popup.opener = null; } catch (error) { /* older browsers */ }
-
     if (code && !adUrl(popunder)) {
+      var adTab;
       try {
-        popup.document.open();
-        popup.document.write(popupDocument(code, popunder.display_name, sponsorUrl));
-        popup.document.close();
-        return;
+        adTab = window.open('', '_blank');
       } catch (error) {
-        showPopupFallback(popunder, sponsorUrl);
+        console.warn('[AdSystem] The advertisement tab could not be opened:', error.message);
         return;
       }
+      if (!adTab) return;
+      try {
+        adTab.document.open();
+        adTab.document.write(popupDocument(code, popunder.display_name, sponsorUrl));
+        adTab.document.close();
+        adTab.opener = null;
+      } catch (error) {
+        console.warn('[AdSystem] The advertisement could not be rendered:', error.message);
+        adTab.close();
+      }
+      return;
     }
 
     var target = adUrl(popunder) || sponsorUrl;
-    if (target) {
-      try {
-        popup.location.href = target;
-      } catch (error) {
-        showPopupFallback(popunder, sponsorUrl);
-      }
-    } else {
-      popup.close();
-      popupShown = false;
+    if (!target) return;
+    try {
+      window.open(target, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.warn('[AdSystem] The advertisement tab could not be opened:', error.message);
     }
   }
 
   var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], a.btn';
   var POPUP_EXCLUDE = '[data-ad-exempt], [data-ad-popup="off"], .theme-toggle-btn, #themeToggleBtn, ' +
     '.sidebar-toggle, #sidebarToggle, .sidebar-link, .sidebar-scrim, .mobile-nav-toggle, .tools-nav-toggle, ' +
-    '.mobile-tools-toggle, .modal-close, .tab-btn, .ad-close, .calculator-mode button, [aria-haspopup="true"]';
+    '.mobile-tools-toggle, .modal-close, .tab-btn, .ad-close, .calculator-mode button, [aria-haspopup="true"], ' +
+    'dialog, [role="dialog"], .modal, .confirmation-dialog';
 
   function isEligiblePopupTrigger(trigger) {
     if (!trigger || trigger.disabled || trigger.getAttribute('aria-disabled') === 'true') return false;
@@ -561,11 +510,11 @@
   }
 
   document.addEventListener('click', function (event) {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     var trigger = event.target && event.target.closest ? event.target.closest(POPUP_TRIGGER) : null;
     if (!isEligiblePopupTrigger(trigger)) return;
     openPopupAd();
-  }, false);
+  }, true);
 
   fetch('/api/ads', { credentials: 'same-origin', cache: 'no-store' })
     .then(function (response) {
@@ -581,10 +530,9 @@
         renderSlot(slot, adsById.get(slot.dataset.adUnit));
       });
 
-      // Site-wide formats have no dimensions of their own. Pop Under runs only
-      // from a real button click (see the delegated listener above), the Social
-      // Bar is injected once into the page, and Smart Link becomes a labelled
-      // sponsored link when its saved value is a URL.
+      // Site-wide formats have no dimensions of their own. Pop Under runs on
+      // each eligible button click, the Social Bar is injected once per page,
+      // and Smart Link becomes a labelled sponsored link when its value is a URL.
       injectSocialBar(adsById.get('social-bar'));
       injectSmartLink(adsById.get('smart-link'));
     })

@@ -12,8 +12,8 @@
     },
     {
       id: 'honhaar-scholarship-2026',
-      name: 'Honhaar Scholarship 2026 Calculator',
-      description: 'Estimate your academic aggregate or continuing-student percentage.',
+      name: 'Calculate Your Honhaar Scholarship 2026 Aggregate',
+      description: 'Estimate your first-year academic aggregate or continuing-student percentage.',
       icon: '🎓',
       route: '/tools/honhaar-scholarship-2026',
       available: true

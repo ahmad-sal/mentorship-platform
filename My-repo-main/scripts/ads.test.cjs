@@ -244,18 +244,21 @@ test('every catalog unit has an execution strategy, including site-wide formats'
   assert.match(runtime, /openPopupAd/);
 });
 
-test('button clicks open the configured popup without cancelling the click', () => {
+test('eligible button clicks open configured ads in a new tab without cancelling actions', () => {
   const root = path.join(__dirname, '..');
   const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
 
   assert.match(runtime, /document\.addEventListener\('click'/);
-  assert.match(runtime, /event\.defaultPrevented/);
+  assert.match(runtime, /}, true\);/);
   assert.match(runtime, /event\.metaKey \|\| event\.ctrlKey \|\| event\.shiftKey \|\| event\.altKey/);
   assert.match(runtime, /trigger\.closest\('nav, \.site-header/);
   assert.match(runtime, /theme-toggle-btn/);
-  assert.match(runtime, /window\.open\('', 'mentorAdPopup_'/);
-  assert.match(runtime, /popup\.opener = null/);
-  assert.match(runtime, /showPopupFallback/);
+  assert.match(runtime, /window\.open\('', '_blank'\)/);
+  assert.match(runtime, /window\.open\(target, '_blank', 'noopener,noreferrer'\)/);
+  assert.match(runtime, /openPopupAd\(\);\s*\}, true\);/);
+  assert.match(runtime, /adTab\.opener = null/);
+  assert.doesNotMatch(runtime, /popupShown|popup=yes|showPopupFallback|event\.defaultPrevented/);
+  assert.match(runtime, /dialog, \[role="dialog"\], \.modal, \.confirmation-dialog/);
   assert.doesNotMatch(runtime, /event\.preventDefault\(\)/);
 });
 

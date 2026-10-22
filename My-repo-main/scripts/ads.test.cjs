@@ -393,6 +393,7 @@ test('tool pages restrict click ads to requested controls and keep excluded acti
     "'button[type=\"reset\"]'",
     "'/tools/merge-pdf': [",
     "'button[data-action=\"merge\"]'",
+    "'button[data-action=\"add-more\"]'",
     "'/tools/split-pdf': [",
     "'button[data-action=\"apply-range\"]'",
     "'/tools/compress-pdf': [",
@@ -421,6 +422,33 @@ test('tool pages restrict click ads to requested controls and keep excluded acti
   assert.doesNotMatch(runtime, /button\[data-action="deselect-all"\]/);
   assert.doesNotMatch(runtime, /button\[data-action="replace"\]/);
   assert.doesNotMatch(runtime, /button\[data-select-pdf\]/);
+});
+
+test('Merge PDF popup ads target only the existing merge and add-more buttons', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const page = fs.readFileSync(path.join(root, 'public', 'merge-pdf.html'), 'utf8');
+  const mergePdfTriggers = runtime.match(/'\/tools\/merge-pdf': \[([\s\S]*?)\n    \]/);
+
+  assert.ok(mergePdfTriggers);
+  assert.match(mergePdfTriggers[1], /button\[data-action="merge"\]/);
+  assert.match(mergePdfTriggers[1], /button\[data-action="add-more"\]/);
+  assert.doesNotMatch(mergePdfTriggers[1], /data-upload-area|role="button"/);
+  assert.match(page, /data-upload-area[^>]*role="button"/);
+  assert.match(page, /data-action="add-more"/);
+  assert.match(page, /data-action="merge"/);
+  assert.doesNotMatch(page, /data-upload-area[^>]*data-ad-popup="on"/);
+});
+
+test('Edit PDF download is eligible for the existing popup ad', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const page = fs.readFileSync(path.join(root, 'public', 'additive-pdf.html'), 'utf8');
+  const editPdfTriggers = runtime.match(/'\/tools\/additive-pdf': \[([\s\S]*?)\n    \]/);
+
+  assert.ok(editPdfTriggers);
+  assert.match(editPdfTriggers[1], /a\[data-download\]/);
+  assert.match(page, /<a\b[^>]*data-download[^>]*>Download PDF<\/a>/);
 });
 
 test('scholarship and QR pages add only their requested inline advertisement placements', () => {

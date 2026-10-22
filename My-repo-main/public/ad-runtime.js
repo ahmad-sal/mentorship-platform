@@ -630,6 +630,7 @@
     ],
     '/tools/merge-pdf': [
       'button[data-action="merge"]',
+      'button[data-action="add-more"]',
       'a.merge-download[data-action="download"]'
     ],
     '/tools/split-pdf': [
@@ -686,7 +687,8 @@
       'button[data-tool="draw"]',
       'button[data-tool="arrow"]',
       'button[data-tool="shape"]',
-      'button[data-save]'
+      'button[data-save]',
+      'a[data-download]'
     ],
     '/tools/lock-unlock-pdf': [
       'button[data-submit]',

@@ -344,6 +344,19 @@ test('every course detail page opts its requested controls into click ads', () =
   });
 });
 
+test('Live Classes pages place a banner before the playlist card and enable requested click ads', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const practicalClasses = fs.readFileSync(path.join(root, 'practical-classes.html'), 'utf8');
+
+  assert.match(runtime, /function addPracticalClassPlacements\(\)\s*\{\s*addGenericPlacements\(\);[\s\S]*?var playlistHeading = main\.querySelector\('\.playlist-heading'\);[\s\S]*?var playlistCard = playlistHeading && playlistHeading\.closest\('\.card'\);[\s\S]*?placeBefore\(playlistCard, 'banner-468x60', 'live-classes-before-playlist'\)/);
+  assert.match(runtime, /path === '\/practical-classes\.html' \|\| path === '\/student\/practical-classes'\) addPracticalClassPlacements\(\)/);
+  assert.match(practicalClasses, /class="btn btn-primary" href="\/student\/dashboard" data-ad-popup="on">[\s\S]*?Open your workspace/i);
+  assert.match(practicalClasses, /class="btn btn-secondary" href="\/register" data-ad-popup="on">Create student account/i);
+  assert.match(practicalClasses, /<h2 id="playlistTitle">Course video playlist<\/h2>/);
+  assert.match(practicalClasses, /id="playlistThumbnail"/);
+});
+
 test('button coverage is central, dynamic, and excludes non-action controls', () => {
   const root = path.join(__dirname, '..');
   const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');

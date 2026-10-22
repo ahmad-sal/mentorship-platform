@@ -385,11 +385,20 @@
     }
   }
 
+  function addPracticalClassPlacements() {
+    addGenericPlacements();
+    var main = document.querySelector('main') || document.body;
+    var playlistHeading = main.querySelector('.playlist-heading');
+    var playlistCard = playlistHeading && playlistHeading.closest('.card');
+    if (playlistCard) placeBefore(playlistCard, 'banner-468x60', 'live-classes-before-playlist');
+  }
+
   if (isToolPage && path !== '/tools') addToolPlacements();
   else if (path === '/tools') addToolLandingPlacements();
   else if (isHomePage) addHomePlacements();
   else if (isCoursePage) addCoursePlacements();
   else if (isDeveloperPage) addDeveloperPlacements();
+  else if (path === '/practical-classes.html' || path === '/student/practical-classes') addPracticalClassPlacements();
   else addGenericPlacements();
 
   // Button popups are independent of inline placements: a page may have no

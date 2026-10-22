@@ -301,6 +301,29 @@ test('homepage placements cover the requested sections and keep side ads respons
   assert.match(homepage, /href="\/login" data-ad-popup="on">I already have an account/);
 });
 
+test('courses view reuses its three existing top slots and adds the requested placements', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const mentor = fs.readFileSync(path.join(root, 'Mentor.js'), 'utf8');
+
+  assert.match(runtime, /var topSlots = \[belowHeader, responsiveTop\[0\], responsiveTop\[1\]\]/);
+  assert.match(runtime, /courses\.insertBefore\(topRow, coursesContainer\)/);
+  assert.match(runtime, /topRow\.appendChild\(slot\)/);
+  assert.match(runtime, /position\.placeholder\.parentNode\.insertBefore\(position\.slot, position\.placeholder\.nextSibling\)/);
+  assert.match(runtime, /courses-after-listing/);
+  assert.match(runtime, /placeAfter\(trackFit, 'banner-468x60', 'courses-after-track-fit'\)/);
+  assert.match(runtime, /\.ad-placement-courses-top-row\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(runtime, /@media\(max-width:767px\)\{\.ad-placement-courses-top-row\{grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(runtime, /#viewCourses a\.course-card, #viewCourses \.middle-banner a\[href="\/register"\]/);
+  assert.match(runtime, /#viewCourses \.middle-banner a\[href="\/register"\]/);
+  [
+    'course-youtube-automation.html',
+    'course-canva.html',
+    'course-wordpress.html',
+    'course-artificial-intelligence.html'
+  ].forEach((coursePage) => assert.ok(mentor.includes(`page: '${coursePage}'`), `${coursePage} keeps its existing course URL`));
+});
+
 test('button coverage is central, dynamic, and excludes non-action controls', () => {
   const root = path.join(__dirname, '..');
   const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');

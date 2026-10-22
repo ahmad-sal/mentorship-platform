@@ -86,11 +86,13 @@
 
   function addResponsiveTop(anchor) {
     var desktop = placeAfter(anchor, 'banner-728x90', 'top-desktop', 'ad-placement-desktop');
+    var mobile;
     if (desktop) {
-      placeAfter(desktop, 'banner-320x50', 'top-mobile', 'ad-placement-mobile');
+      mobile = placeAfter(desktop, 'banner-320x50', 'top-mobile', 'ad-placement-mobile');
     } else {
-      placeAfter(anchor, 'banner-320x50', 'top-mobile', 'ad-placement-mobile');
+      mobile = placeAfter(anchor, 'banner-320x50', 'top-mobile', 'ad-placement-mobile');
     }
+    return [desktop, mobile];
   }
 
   function addLowerStack(anchor, names, before) {
@@ -193,10 +195,10 @@
     var home = main.querySelector('#viewHome') || main;
     var hero = home.querySelector('.hero-surface') || home.firstElementChild || home;
     var header = document.querySelector('.site-header');
-    if (header) placeAfter(header, 'banner-468x60', 'home-below-header');
+    var belowHeader = header && placeAfter(header, 'banner-468x60', 'home-below-header');
 
     // Keep the existing responsive banner between the hero and course strip.
-    addResponsiveTop(hero);
+    var responsiveTop = addResponsiveTop(hero);
 
     var marquee = home.querySelector('.home-marquee');
     if (marquee) placeAfter(marquee, 'banner-468x60', 'home-below-course-strip');
@@ -254,8 +256,58 @@
 
     var courses = main.querySelector('#viewCourses');
     if (courses) {
+      var coursesContainer = courses.querySelector('.main-container');
+      var coursesHeading = courses.querySelector('.page-heading');
       var courseGrid = courses.querySelector('.course-grid');
-      if (courseGrid) placeBefore(courseGrid, 'native-banner', 'home-courses');
+      if (courseGrid) {
+        placeBefore(courseGrid, 'native-banner', 'home-courses');
+        placeAfter(courseGrid, 'banner-468x60', 'courses-after-listing');
+      }
+
+      var trackFit = courses.querySelector('.middle-banner');
+      if (trackFit) placeAfter(trackFit, 'banner-468x60', 'courses-after-track-fit');
+
+      if (coursesContainer && coursesHeading && belowHeader) {
+        var topSlots = [belowHeader, responsiveTop[0], responsiveTop[1]].filter(Boolean);
+        var topRow = document.createElement('div');
+        topRow.className = 'ad-placement-courses-top-row';
+        topRow.setAttribute('aria-label', 'Course page advertisements');
+        courses.insertBefore(topRow, coursesContainer);
+
+        var originalPositions = topSlots.map(function (slot) {
+          var placeholder = document.createComment('ad placement position');
+          slot.parentNode.insertBefore(placeholder, slot);
+          return { slot: slot, placeholder: placeholder };
+        });
+        var coursesActive = null;
+
+        function syncCourseTopRow() {
+          var active = courses.classList.contains('active');
+          if (active === coursesActive) return;
+          coursesActive = active;
+
+          if (active) {
+            topSlots.forEach(function (slot) {
+              topRow.appendChild(slot);
+            });
+            return;
+          }
+
+          originalPositions.forEach(function (position) {
+            if (position.placeholder.parentNode) {
+              position.placeholder.parentNode.insertBefore(position.slot, position.placeholder.nextSibling);
+            }
+          });
+        }
+
+        syncCourseTopRow();
+        if (typeof MutationObserver === 'function') {
+          new MutationObserver(syncCourseTopRow).observe(courses, {
+            attributes: true,
+            attributeFilter: ['class']
+          });
+        }
+      }
     }
   }
 
@@ -353,10 +405,13 @@
     '.ad-placement[data-ad-unit="banner-160x300"] iframe{width:160px;height:300px}',
     '.ad-placement[data-ad-unit="banner-160x600"] iframe{width:160px;height:600px}',
     '.ad-placement[data-ad-unit="native-banner"] iframe{width:100%;height:250px}',
+    '.ad-placement-courses-top-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:.75rem;width:min(100%,1220px);box-sizing:border-box;margin:.5rem auto;padding-inline:clamp(1rem,4vw,1.75rem)}',
+    '.ad-placement-courses-top-row>.ad-placement:not([hidden]){display:flex!important;width:100%;margin:0;min-width:0}',
     '.ad-smart-link{display:block;width:min(720px,100%);margin:1.25rem auto;padding:.65rem 1rem;border:1px solid rgba(127,127,127,.28);border-radius:12px;text-align:center;font-size:.82rem}',
     '.ad-smart-link span{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;opacity:.62;margin-bottom:.2rem}',
     '.ad-smart-link a{font-weight:700;text-decoration:underline}',
     '.ad-social-bar{max-width:100%}',
+    '@media(max-width:767px){.ad-placement-courses-top-row{grid-template-columns:minmax(0,1fr);gap:.5rem}}',
     '@media(max-width:767px){.ad-placement-desktop{display:none!important}}',
     '@media(min-width:768px){.ad-placement-mobile{display:none!important}}',
     '@media(max-width:900px){.ad-placement-sidebar{display:none!important}}',
@@ -516,7 +571,7 @@
   // Dropdowns, selects, text fields, checkboxes, sliders, navigation and menu
   // controls are not in this selector, so they never open an ad.
   var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], ' +
-    'a[data-ad-popup="on"], ' +
+    'a[data-ad-popup="on"], #viewCourses a.course-card, #viewCourses .middle-banner a[href="/register"], ' +
     'input[type="reset"], input[type="image"]';
   // Exclusions describe controls that are not action buttons: chrome,
   // navigation, dropdown/menu toggles, tabs, disclosure/accordion toggles and

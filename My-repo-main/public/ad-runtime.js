@@ -314,6 +314,8 @@
   function addCoursePlacements() {
     var main = document.querySelector('main') || document.body;
     var hero = main.querySelector('.course-hero') || main.firstElementChild || main;
+    var navActions = main.querySelector('.course-nav-actions');
+    if (navActions) placeBefore(navActions, 'banner-468x60', 'course-nav-actions');
     addResponsiveTop(hero);
 
     var introduction = main.querySelector('#introduction');

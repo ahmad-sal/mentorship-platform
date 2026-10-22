@@ -324,6 +324,26 @@ test('courses view reuses its three existing top slots and adds the requested pl
   ].forEach((coursePage) => assert.ok(mentor.includes(`page: '${coursePage}'`), `${coursePage} keeps its existing course URL`));
 });
 
+test('every course detail page opts its requested controls into click ads', () => {
+  const root = path.join(__dirname, '..');
+  const pages = [
+    'course-artificial-intelligence.html',
+    'course-canva.html',
+    'course-wordpress.html',
+    'course-youtube-automation.html'
+  ];
+
+  pages.forEach((page) => {
+    const html = fs.readFileSync(path.join(root, page), 'utf8');
+
+    assert.match(html, /class="btn course-back-btn" href="\/#viewCourses" data-ad-popup="on"/, `${page} keeps the courses destination`);
+    assert.match(html, /class="btn course-live-btn"\s+href="practical-classes\.html\?course=[^"]+" data-ad-popup="on"/, `${page} keeps the live classes destination`);
+    assert.match(html, /class="btn btn-primary btn-lg" href="\/register" data-ad-popup="on">Enroll in this track/, `${page} enables the hero enrollment action`);
+    assert.match(html, /class="btn btn-primary btn-block mt-3" href="\/register" data-ad-popup="on">Enroll in this track/, `${page} enables the Track Facts enrollment action`);
+    assert.match(html, /class="btn btn-secondary btn-block mt-2" href="practical-classes\.html\?course=[^"]+" data-ad-popup="on">[\s\S]*?Open video playlist/, `${page} keeps the playlist destination`);
+  });
+});
+
 test('button coverage is central, dynamic, and excludes non-action controls', () => {
   const root = path.join(__dirname, '..');
   const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');

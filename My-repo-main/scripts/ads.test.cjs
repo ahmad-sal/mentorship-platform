@@ -268,6 +268,39 @@ test('eligible button clicks open a real configured ad URL in a new tab without 
   assert.doesNotMatch(runtime, /\.preventDefault\(|\.stopPropagation\(/);
 });
 
+test('homepage placements cover the requested sections and keep side ads responsive', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const homepage = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+
+  [
+    /placeAfter\(header, 'banner-468x60', 'home-below-header'\)/,
+    /addResponsiveTop\(hero\)/,
+    /placeAfter\(anchor, 'banner-728x90', 'top-desktop'/,
+    /placeAfter\(marquee, 'banner-468x60', 'home-below-course-strip'\)/,
+    /placeAfter\(mentorshipSection, 'banner-468x60', 'home-after-mentorship'\)/,
+    /placeBefore\(process\.closest\('\.section-block'\) \|\| process, 'banner-468x60', 'home-before-process'\)/,
+    /placeBefore\(workspace, 'banner-468x60', 'home-before-workspace'\)/,
+    /placeBefore\(mentorSection, 'banner-468x60', 'home-before-mentor'\)/,
+    /placeAfter\(mentorSection, 'banner-468x60', 'home-after-mentor'\)/,
+    /placeAfter\(faq, 'banner-468x60', 'home-after-faq'\)/,
+    /appendTo\(main, 'banner-160x600', 'home-left-rail'/,
+    /appendTo\(main, 'banner-160x600', 'home-right-rail'/
+  ].forEach((pattern) => assert.match(runtime, pattern));
+
+  assert.match(runtime, /@media\(min-width:1700px\) and \(min-height:701px\)/);
+  assert.match(runtime, /@media\(max-width:1699px\), \(max-height:700px\)/);
+  assert.match(runtime, /classList\.toggle\('ad-placement-home-side-visible', home\.classList\.contains\('active'\)\)/);
+  assert.match(homepage, /id="heroExploreBtn" data-ad-popup="on"/);
+  assert.match(homepage, /id="navCoursesBtn" data-ad-popup="on"/);
+  assert.match(homepage, /onclick="app\.navigate\('courses'\)" data-ad-popup="on">[\s\S]*?Browse tracks/i);
+  assert.match(homepage, /href="\/register" data-ad-popup="on">[\s\S]*?Create free account/i);
+  assert.match(homepage, /href="\/register" data-ad-popup="on">[\s\S]*?Start learning/i);
+  assert.match(homepage, /href="https:\/\/wa\.me\/923327451571" target="_blank" rel="noopener noreferrer" data-ad-popup="on"/);
+  assert.match(homepage, /href="\/register" data-ad-popup="on">[\s\S]*?Create student account/i);
+  assert.match(homepage, /href="\/login" data-ad-popup="on">I already have an account/);
+});
+
 test('button coverage is central, dynamic, and excludes non-action controls', () => {
   const root = path.join(__dirname, '..');
   const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');

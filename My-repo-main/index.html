@@ -28,7 +28,7 @@
 
       <nav class="desktop-nav" id="desktopNav" aria-label="Primary">
         <button class="nav-link active" type="button" onclick="app.navigate('home')" id="navHomeBtn">Home</button>
-        <button class="nav-link" type="button" onclick="app.navigate('courses')" id="navCoursesBtn">Courses</button>
+        <button class="nav-link" type="button" onclick="app.navigate('courses')" id="navCoursesBtn" data-ad-popup="on">Courses</button>
         <div class="tools-nav-item" data-tools-nav>
           <a class="nav-link" href="/tools" aria-haspopup="true" aria-expanded="false">Tools</a>
           <div class="tools-dropdown" id="toolsDropdown" hidden>
@@ -64,7 +64,7 @@
     <div class="mobile-drawer" id="mobileDrawer">
       <div class="mobile-drawer-inner">
         <button class="mobile-nav-item" type="button" onclick="app.navigate('home')"><i data-lucide="graduation-cap"></i> Home</button>
-        <button class="mobile-nav-item" type="button" onclick="app.navigate('courses')"><i data-lucide="book-open"></i> Courses</button>
+        <button class="mobile-nav-item" type="button" onclick="app.navigate('courses')" data-ad-popup="on"><i data-lucide="book-open"></i> Courses</button>
         <a class="mobile-nav-item" href="/tools">🧰 Tools</a>
         <a class="mobile-nav-item" href="/meet-developer"><i data-lucide="user"></i> Developer Team</a>
         <div class="mobile-auth-links">
@@ -113,11 +113,11 @@
               </p>
 
               <div class="hero-actions">
-                <button class="btn btn-primary btn-lg" type="button" onclick="app.navigate('courses')" id="heroExploreBtn">
+                <button class="btn btn-primary btn-lg" type="button" onclick="app.navigate('courses')" id="heroExploreBtn" data-ad-popup="on">
                   <span>Explore course tracks</span>
                   <i data-lucide="arrow-right"></i>
                 </button>
-                <a class="btn btn-glass btn-lg" href="/register">
+                <a class="btn btn-glass btn-lg" href="/register" data-ad-popup="on">
                   <i data-lucide="user-plus"></i>
                   <span>Create free account</span>
                 </a>
@@ -190,7 +190,7 @@
                 Every track is built around practical deliverables rather than passive theory.
               </p>
             </div>
-            <button class="btn btn-outline" type="button" onclick="app.navigate('courses')">
+            <button class="btn btn-outline" type="button" onclick="app.navigate('courses')" data-ad-popup="on">
               Browse tracks <i data-lucide="arrow-right"></i>
             </button>
           </div>
@@ -265,7 +265,7 @@
                   The platform keeps a mentor in the loop at the moments that matter — not just at
                   the end. Your answers and files reach a real review queue.
                 </p>
-                <a class="btn btn-white mt-3" href="/register">
+                <a class="btn btn-white mt-3" href="/register" data-ad-popup="on">
                   Start learning <i data-lucide="arrow-right"></i>
                 </a>
               </div>
@@ -419,7 +419,7 @@
               <h2 class="mentor-name">Ahmad Saleem</h2>
               <p class="mentor-role">Digital Skills Instructor &amp; Creator</p>
               <div class="row mt-3">
-                <a class="btn btn-secondary btn-sm" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer">
+                <a class="btn btn-secondary btn-sm" href="https://wa.me/923327451571" target="_blank" rel="noopener noreferrer" data-ad-popup="on">
                   <i data-lucide="phone"></i> Message on WhatsApp
                 </a>
               </div>
@@ -472,10 +472,10 @@
               for practical progress.
             </p>
             <div class="row" style="justify-content:center; margin-top:1.5rem;">
-              <a class="btn btn-white btn-lg" href="/register">
+              <a class="btn btn-white btn-lg" href="/register" data-ad-popup="on">
                 Create student account <i data-lucide="arrow-right"></i>
               </a>
-              <a class="btn btn-glass btn-lg" href="/login">I already have an account</a>
+              <a class="btn btn-glass btn-lg" href="/login" data-ad-popup="on">I already have an account</a>
             </div>
             <p class="tiny mt-3" data-enroll-note hidden style="color:#ffd9a8;">
               <i data-lucide="alert-circle"></i>

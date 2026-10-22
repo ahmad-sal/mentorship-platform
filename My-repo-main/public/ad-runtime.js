@@ -192,7 +192,54 @@
     var main = document.querySelector('main') || document.body;
     var home = main.querySelector('#viewHome') || main;
     var hero = home.querySelector('.hero-surface') || home.firstElementChild || home;
+    var header = document.querySelector('.site-header');
+    if (header) placeAfter(header, 'banner-468x60', 'home-below-header');
+
+    // Keep the existing responsive banner between the hero and course strip.
     addResponsiveTop(hero);
+
+    var marquee = home.querySelector('.home-marquee');
+    if (marquee) placeAfter(marquee, 'banner-468x60', 'home-below-course-strip');
+
+    var mentorship = home.querySelector('.mentorship-highlight');
+    var mentorshipSection = mentorship && mentorship.closest('.section-block');
+    if (mentorshipSection) placeAfter(mentorshipSection, 'banner-468x60', 'home-after-mentorship');
+
+    var process = home.querySelector('#howItWorks');
+    if (process) placeBefore(process.closest('.section-block') || process, 'banner-468x60', 'home-before-process');
+
+    var workspace = Array.prototype.find.call(home.querySelectorAll('.section-block'), function (section) {
+      var kicker = section.querySelector('.section-kicker');
+      return kicker && kicker.textContent.trim().toLowerCase() === 'your workspace';
+    });
+    if (workspace) placeBefore(workspace, 'banner-468x60', 'home-before-workspace');
+
+    var mentor = home.querySelector('.mentor-panel');
+    var mentorSection = mentor && mentor.closest('.section-block');
+    if (mentorSection) {
+      placeBefore(mentorSection, 'banner-468x60', 'home-before-mentor');
+      placeAfter(mentorSection, 'banner-468x60', 'home-after-mentor');
+    }
+
+    var faq = home.querySelector('#faq');
+    if (faq) placeAfter(faq, 'banner-468x60', 'home-after-faq');
+
+    var homeSidePlacements = [
+      appendTo(main, 'banner-160x600', 'home-left-rail', 'ad-placement-home-side ad-placement-home-side-left'),
+      appendTo(main, 'banner-160x600', 'home-right-rail', 'ad-placement-home-side ad-placement-home-side-right')
+    ].filter(Boolean);
+    var syncHomeSideVisibility = function () {
+      homeSidePlacements.forEach(function (slot) {
+        slot.classList.toggle('ad-placement-home-side-visible', home.classList.contains('active'));
+      });
+    };
+    syncHomeSideVisibility();
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver(syncHomeSideVisibility).observe(home, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
 
     var contentAnchor = home.querySelector('.middle-banner') ||
       home.querySelector('.stats-strip') ||
@@ -312,7 +359,10 @@
     '.ad-social-bar{max-width:100%}',
     '@media(max-width:767px){.ad-placement-desktop{display:none!important}}',
     '@media(min-width:768px){.ad-placement-mobile{display:none!important}}',
-    '@media(max-width:900px){.ad-placement-sidebar{display:none!important}}'
+    '@media(max-width:900px){.ad-placement-sidebar{display:none!important}}',
+    '.ad-placement-home-side{display:none!important}',
+    '@media(min-width:1700px) and (min-height:701px){.ad-placement-home-side-visible{display:flex!important;position:fixed;top:50%;z-index:20;width:160px;margin:0;transform:translateY(-50%)}.ad-placement-home-side-left{left:calc((100vw - 1220px)/2 - 170px)}.ad-placement-home-side-right{right:calc((100vw - 1220px)/2 - 170px)}}',
+    '@media(max-width:1699px), (max-height:700px){.ad-placement-home-side{display:none!important}}'
   ].join('');
   document.head.appendChild(style);
 
@@ -466,6 +516,7 @@
   // Dropdowns, selects, text fields, checkboxes, sliders, navigation and menu
   // controls are not in this selector, so they never open an ad.
   var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], ' +
+    'a[data-ad-popup="on"], ' +
     'input[type="reset"], input[type="image"]';
   // Exclusions describe controls that are not action buttons: chrome,
   // navigation, dropdown/menu toggles, tabs, disclosure/accordion toggles and
@@ -482,8 +533,10 @@
 
   function isEligiblePopupTrigger(trigger) {
     if (!trigger || trigger.disabled || trigger.getAttribute('aria-disabled') === 'true') return false;
-    if (trigger.closest(POPUP_EXCLUDE)) return false;
-    if (trigger.closest('nav, .site-header, .app-sidebar, .app-topbar, .tools-dropdown, .mobile-tools-list, .skip-link')) return false;
+    if (trigger.closest('[data-ad-exempt], [data-ad-popup="off"]')) return false;
+    var explicitlyEnabled = trigger.getAttribute('data-ad-popup') === 'on';
+    if (!explicitlyEnabled && trigger.closest(POPUP_EXCLUDE)) return false;
+    if (!explicitlyEnabled && trigger.closest('nav, .site-header, .app-sidebar, .app-topbar, .tools-dropdown, .mobile-tools-list, .skip-link')) return false;
     if (trigger.tagName === 'A') {
       var href = trigger.getAttribute('href') || '';
       if (!href || href.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(href)) return false;

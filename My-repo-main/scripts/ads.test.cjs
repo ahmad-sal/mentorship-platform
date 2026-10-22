@@ -374,6 +374,64 @@ test('button coverage is central, dynamic, and excludes non-action controls', ()
   assert.doesNotMatch(runtime, /if \(!placements\.length\) return;/);
   assert.doesNotMatch(runtime, /querySelectorAll\(POPUP_TRIGGER\)|addEventListener\('click'.*forEach/);
   assert.doesNotMatch(runtime, /dataset\.adBound|adHandlerAttached|button\.dataset/);
+  assert.match(runtime, /if \(isToolPage\) return isToolPopupTrigger\(trigger\)/);
+  assert.match(runtime, /document\.addEventListener\('change'/);
+  assert.match(runtime, /event\.isTrusted \|\| !isEligibleToolChange\(event\.target\)/);
+});
+
+test('tool pages restrict click ads to requested controls and keep excluded actions untriggered', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+
+  [
+    "'/tools': [",
+    "'[data-tools-grid] a.tools-card'",
+    "'/tools/calculator': [",
+    "'.calculator-key[data-action=\"equals\"]'",
+    "'/tools/honhaar-scholarship-2026': [",
+    "'button[data-calculate-button]'",
+    "'button[type=\"reset\"]'",
+    "'/tools/merge-pdf': [",
+    "'button[data-action=\"merge\"]'",
+    "'/tools/split-pdf': [",
+    "'button[data-action=\"apply-range\"]'",
+    "'/tools/compress-pdf': [",
+    "'/tools/compress-image': [",
+    "'/tools/upscale-image': [",
+    "'/tools/remove-background': [",
+    "'button[data-brush-mode=\"keep\"]'",
+    "'/tools/blur-face': [",
+    "'[data-mode-controls] input[type=\"radio\"]'",
+    "'/tools/qr-code-generator': [",
+    "'[data-template-grid] button[data-choice]'",
+    "'input[type=\"color\"][data-option]'",
+    "'/tools/additive-pdf': [",
+    "'button[data-add-text]'",
+    "'button[data-add-image]'",
+    "'button[data-save]'",
+    "'/tools/lock-unlock-pdf': [",
+    "'/tools/converter-suite': [",
+    "'[data-level-section] input[type=\"radio\"]'",
+    "'input[data-custom-background-color]'",
+    "'select[data-shape-type]'"
+  ].forEach((snippet) => assert.ok(runtime.includes(snippet), `runtime includes ${snippet}`));
+
+  assert.match(runtime, /trigger\.matches\('a\.tools-breadcrumb\[href="\/tools"\]'\)/);
+  assert.doesNotMatch(runtime, /button\[data-action="select-all"\]/);
+  assert.doesNotMatch(runtime, /button\[data-action="deselect-all"\]/);
+  assert.doesNotMatch(runtime, /button\[data-action="replace"\]/);
+  assert.doesNotMatch(runtime, /button\[data-select-pdf\]/);
+});
+
+test('scholarship and QR pages add only their requested inline advertisement placements', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+
+  assert.match(runtime, /className = 'ad-placement-honhaar-row'/);
+  assert.match(runtime, /makeSlot\('banner-300x250', 'after-eligibility-' \+ position\)/);
+  assert.match(runtime, /placeAfter\(preview, 'banner-300x250', 'qr-preview-below'\)/);
+  assert.match(runtime, /\.ad-placement-honhaar-row\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(runtime, /@media\(max-width:767px\)\{\.ad-placement-honhaar-row\{grid-template-columns:minmax\(0,1fr\)/);
 });
 
 test('dimensions stay centralized and every slot reads the same shared unit record', () => {

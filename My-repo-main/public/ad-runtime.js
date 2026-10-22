@@ -138,7 +138,15 @@
 
     if (path === '/tools/honhaar-scholarship-2026') {
       var notice = main.querySelector('.honhaar-notice');
-      if (notice) placeAfter(notice, 'native-banner', 'after-eligibility');
+      if (notice && notice.parentNode) {
+        var scholarshipRow = document.createElement('div');
+        scholarshipRow.className = 'ad-placement-honhaar-row';
+        scholarshipRow.setAttribute('aria-label', 'Scholarship advertisements');
+        ['first', 'second', 'third'].forEach(function (position) {
+          scholarshipRow.appendChild(makeSlot('banner-300x250', 'after-eligibility-' + position));
+        });
+        notice.parentNode.insertBefore(scholarshipRow, notice.nextSibling);
+      }
       var result = main.querySelector('[data-honhaar-result]');
       if (result) {
         var resultSlot = placeAfter(result, 'banner-300x250', 'after-result', 'ad-placement-after-result');
@@ -152,6 +160,11 @@
         ['banner-400x60', 'tool-final']
       ], false);
       return;
+    }
+
+    if (path === '/tools/qr-code-generator') {
+      var preview = main.querySelector('[data-preview-frame]');
+      if (preview) placeAfter(preview, 'banner-300x250', 'qr-preview-below');
     }
 
     var recommendations = main.querySelector('[data-tools-recommendations]');
@@ -418,11 +431,15 @@
     '.ad-placement[data-ad-unit="native-banner"] iframe{width:100%;height:250px}',
     '.ad-placement-courses-top-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:.75rem;width:min(100%,1220px);box-sizing:border-box;margin:.5rem auto;padding-inline:clamp(1rem,4vw,1.75rem)}',
     '.ad-placement-courses-top-row>.ad-placement:not([hidden]){display:flex!important;width:100%;margin:0;min-width:0}',
+    '.ad-placement-honhaar-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:.75rem;width:min(100%,1220px);box-sizing:border-box;margin:1rem auto}',
+    '.ad-placement-honhaar-row>.ad-placement:not([hidden]){display:flex!important;width:100%;margin:0;min-width:0}',
+    '.ad-placement-honhaar-row iframe{width:min(300px,100%);height:250px}',
     '.ad-smart-link{display:block;width:min(720px,100%);margin:1.25rem auto;padding:.65rem 1rem;border:1px solid rgba(127,127,127,.28);border-radius:12px;text-align:center;font-size:.82rem}',
     '.ad-smart-link span{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;opacity:.62;margin-bottom:.2rem}',
     '.ad-smart-link a{font-weight:700;text-decoration:underline}',
     '.ad-social-bar{max-width:100%}',
     '@media(max-width:767px){.ad-placement-courses-top-row{grid-template-columns:minmax(0,1fr);gap:.5rem}}',
+    '@media(max-width:767px){.ad-placement-honhaar-row{grid-template-columns:minmax(0,1fr);gap:.5rem}}',
     '@media(max-width:767px){.ad-placement-desktop{display:none!important}}',
     '@media(min-width:768px){.ad-placement-mobile{display:none!important}}',
     '@media(max-width:900px){.ad-placement-sidebar{display:none!important}}',
@@ -578,11 +595,12 @@
     }
   }
 
-  // Native action buttons plus explicitly identified custom action controls.
-  // Dropdowns, selects, text fields, checkboxes, sliders, navigation and menu
-  // controls are not in this selector, so they never open an ad.
+  // The candidate selector stays broad so dynamically rendered tool actions
+  // are discoverable; tool-page eligibility is restricted by the allowlists below.
   var POPUP_TRIGGER = 'button, [role="button"], input[type="submit"], input[type="button"], ' +
-    'a[data-ad-popup="on"], #viewCourses a.course-card, #viewCourses .middle-banner a[href="/register"], ' +
+    'a[data-ad-popup="on"], a.tools-card, a.tools-dropdown-link, a.mobile-tool-item, ' +
+    'a.tools-breadcrumb[href="/tools"], a[data-action="download"], a[data-download], ' +
+    '#viewCourses a.course-card, #viewCourses .middle-banner a[href="/register"], ' +
     'input[type="reset"], input[type="image"]';
   // Exclusions describe controls that are not action buttons: chrome,
   // navigation, dropdown/menu toggles, tabs, disclosure/accordion toggles and
@@ -597,9 +615,118 @@
     '.modal-close, [data-modal-close], [data-dismiss], .ad-close, [aria-label*="close" i], [aria-label*="dismiss" i], ' +
     '[data-disclosure], .accordion-button, .faq-question, [role="menu"], .dropdown-menu';
 
+  var TOOL_CLICK_TRIGGERS = {
+    '/tools': [
+      '[data-tools-grid] a.tools-card',
+      '[data-tools-menu] a.tools-dropdown-link',
+      '[data-tools-mobile-menu] a.mobile-tool-item'
+    ],
+    '/tools/calculator': [
+      '.calculator-key[data-action="equals"]',
+    ],
+    '/tools/honhaar-scholarship-2026': [
+      'button[data-calculate-button]',
+      'button[type="reset"]'
+    ],
+    '/tools/merge-pdf': [
+      'button[data-action="merge"]',
+      'a.merge-download[data-action="download"]'
+    ],
+    '/tools/split-pdf': [
+      'button[data-action="apply-range"]',
+      'button[data-action="split"]',
+      'a.split-download[data-action="download"]'
+    ],
+    '/tools/compress-pdf': [
+      'button[data-action="compress"]',
+      'a.compress-download[data-action="download"]'
+    ],
+    '/tools/compress-image': [
+      'button[data-action="compress"]',
+      'a.compress-download[data-action="download"]'
+    ],
+    '/tools/upscale-image': [
+      'button[data-action="retry"]',
+      'a.upscale-download[data-action="download"]'
+    ],
+    '/tools/remove-background': [
+      'button.remove-background-mode[data-mode="automatic"]',
+      'button.remove-background-mode[data-mode="manual"]',
+      'button[data-brush-mode="keep"]',
+      'button[data-brush-mode="remove"]',
+      'button[data-action="undo"]',
+      'button[data-action="reset"]',
+      'button[data-action="finalize"]',
+      'button[data-action="retry"]',
+      'button[data-background-color]',
+      'a[data-action="download"]'
+    ],
+    '/tools/blur-face': [
+      'button[data-action="original"]',
+      'button[data-action="add-area"]',
+      'button[data-action="blur"]',
+      'a[data-action="download"]'
+    ],
+    '/tools/qr-code-generator': [
+      '[data-type-step] button[data-type]',
+      'button[data-action="customize"]',
+      '[data-template-grid] button[data-choice]',
+      '[data-frame-grid] button[data-choice]',
+      '[data-body-grid] button[data-choice]',
+      '[data-outer-grid] button[data-choice]',
+      '[data-inner-grid] button[data-choice]',
+      'button[data-bg-preset]',
+      'button[data-logo]',
+      'button[data-action="remove-logo"]',
+      'a[data-action="download"]'
+    ],
+    '/tools/additive-pdf': [
+      'button[data-add-text]',
+      'button[data-add-image]',
+      'button[data-tool="draw"]',
+      'button[data-tool="arrow"]',
+      'button[data-tool="shape"]',
+      'button[data-save]'
+    ],
+    '/tools/lock-unlock-pdf': [
+      'button[data-submit]',
+      'a[data-download]'
+    ],
+    '/tools/converter-suite': [
+      'button[data-convert]',
+      'a[data-download]'
+    ]
+  };
+
+  var TOOL_CHANGE_TRIGGERS = {
+    '/tools/compress-pdf': ['[data-level-section] input[type="radio"]'],
+    '/tools/compress-image': ['[data-level-section] input[type="radio"]'],
+    '/tools/blur-face': ['[data-mode-controls] input[type="radio"]'],
+    '/tools/remove-background': ['input[data-custom-background-color]'],
+    '/tools/qr-code-generator': [
+      'input[type="color"][data-option]',
+      'select[data-option="backgroundMode"]',
+      'select[data-option="gradientDirection"]'
+    ],
+    '/tools/additive-pdf': ['select[data-shape-type]']
+  };
+
+  function matchesAny(trigger, selectors) {
+    return selectors.some(function (selector) {
+      return trigger.matches(selector);
+    });
+  }
+
+  function isToolPopupTrigger(trigger) {
+    if (trigger.closest('[data-ad-exempt], [data-ad-popup="off"]')) return false;
+    if (trigger.matches('a.tools-breadcrumb[href="/tools"]')) return true;
+    return matchesAny(trigger, TOOL_CLICK_TRIGGERS[path] || []);
+  }
+
   function isEligiblePopupTrigger(trigger) {
     if (!trigger || trigger.disabled || trigger.getAttribute('aria-disabled') === 'true') return false;
     if (trigger.closest('[data-ad-exempt], [data-ad-popup="off"]')) return false;
+    if (isToolPage) return isToolPopupTrigger(trigger);
     var explicitlyEnabled = trigger.getAttribute('data-ad-popup') === 'on';
     if (!explicitlyEnabled && trigger.closest(POPUP_EXCLUDE)) return false;
     if (!explicitlyEnabled && trigger.closest('nav, .site-header, .app-sidebar, .app-topbar, .tools-dropdown, .mobile-tools-list, .skip-link')) return false;
@@ -608,6 +735,16 @@
       if (!href || href.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(href)) return false;
     }
     return true;
+  }
+
+  function isEligibleToolChange(trigger) {
+    if (!isToolPage || !trigger || trigger.disabled ||
+      trigger.getAttribute('aria-disabled') === 'true' ||
+      trigger.closest('[data-ad-exempt], [data-ad-popup="off"]')) return false;
+    if (path === '/tools/additive-pdf' && trigger.matches('select[data-shape-type]')) {
+      return trigger.value === 'arrow';
+    }
+    return matchesAny(trigger, TOOL_CHANGE_TRIGGERS[path] || []);
   }
 
   // Resolve the button through the composed path so a click on any child icon
@@ -649,6 +786,11 @@
     if (clickTriggers) clickTriggers.delete(event);
     else fallbackPopupTrigger = null;
     if (!isEligiblePopupTrigger(trigger)) return;
+    openPopupAd();
+  }, false);
+
+  document.addEventListener('change', function (event) {
+    if (!event.isTrusted || !isEligibleToolChange(event.target)) return;
     openPopupAd();
   }, false);
 

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Important Videos | Admin</title>
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/important-videos.css">
+</head>
+<body class="light-theme">
+  <div class="app-shell">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Administration navigation">
+      <a class="brand-logo" href="/" aria-label="Ahmad Saleem Mentorship — home">
+        <span class="logo-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+        <span class="logo-text">Ahmad Saleem</span>
+      </a>
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Administration</span>
+        <a class="sidebar-link" href="/admin/dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+        <a class="sidebar-link" href="/admin/progress"><i data-lucide="bar-chart"></i><span>Student progress</span></a>
+        <a class="sidebar-link" href="/admin/dashboard?tab=ads"><i data-lucide="megaphone"></i><span>Running Ads</span></a>
+        <a class="sidebar-link active" href="/admin/important-videos" aria-current="page"><i data-lucide="clapperboard"></i><span>Important Videos</span></a>
+      </nav>
+      <nav class="sidebar-group">
+        <span class="sidebar-label">Platform</span>
+        <a class="sidebar-link" href="/"><i data-lucide="compass"></i><span>Public site</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="avatar avatar-sm" aria-hidden="true">AS</span>
+          <span class="sidebar-user__meta"><span class="sidebar-user__name">Administrator</span><span class="sidebar-user__role">Mentor access</span></span>
+        </div>
+        <button class="sidebar-link mt-2" id="logoutButton" type="button" style="border:none; width:100%;">
+          <i data-lucide="log-out"></i><span>Log out</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <span class="app-topbar__title">Important Videos</span>
+        <span class="app-topbar__spacer"></span>
+        <a class="btn btn-secondary btn-sm" href="/admin/dashboard">Dashboard</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
+          <span id="themeIcon" aria-hidden="true"></span>
+          <span class="theme-label" id="themeLabel">Dark Mode</span>
+        </button>
+      </header>
+
+      <main class="app-content iv-admin-page">
+        <div class="iv-admin-heading">
+          <div>
+            <span class="section-kicker">Video library management</span>
+            <h1>Important Videos</h1>
+            <p>Create and manage published tutorials. Draft records are private and do not appear on the public site.</p>
+          </div>
+          <button class="btn btn-primary" id="newVideoButton" type="button">＋ New video</button>
+        </div>
+
+        <div id="adminMessage" class="iv-admin-message" role="status" aria-live="polite" hidden></div>
+        <section class="iv-admin-layout" aria-label="Manage video records">
+          <div class="iv-admin-list-panel card">
+            <div class="iv-admin-section-heading">
+              <div><h2>Video records</h2><p id="adminListStatus" class="muted">Loading records…</p></div>
+              <button id="refreshVideosButton" class="btn btn-secondary btn-sm" type="button">Refresh</button>
+            </div>
+            <div id="adminVideoList" class="iv-admin-list"></div>
+          </div>
+
+          <section class="iv-admin-form-panel card" aria-labelledby="formHeading">
+            <div class="iv-admin-section-heading">
+              <div>
+                <span class="section-kicker">Edit details</span>
+                <h2 id="formHeading">New video</h2>
+              </div>
+            </div>
+            <form id="videoForm" novalidate>
+              <input type="hidden" name="record_id" id="recordId">
+              <div class="iv-admin-fields">
+                <div class="iv-field iv-field--wide">
+                  <label for="videoTitle">Video title <span aria-hidden="true">*</span></label>
+                  <input class="form-control" id="videoTitle" name="title" type="text" maxlength="180" required>
+                </div>
+                <div class="iv-field">
+                  <label for="videoSlug">Route identifier</label>
+                  <input class="form-control" id="videoSlug" name="slug" type="text" maxlength="120" autocomplete="off">
+                  <small>Lowercase letters, numbers, and hyphens.</small>
+                </div>
+                <div class="iv-field">
+                  <label for="videoCategory">Category <span class="muted">(optional)</span></label>
+                  <input class="form-control" id="videoCategory" name="category" type="text" maxlength="80" placeholder="AI tools">
+                </div>
+                <div class="iv-field iv-field--wide">
+                  <label for="videoDescription">Short description</label>
+                  <textarea class="form-control" id="videoDescription" name="description" rows="3" maxlength="1200"></textarea>
+                </div>
+                <div class="iv-field iv-field--wide">
+                  <label for="videoDetails">How to Use / Benefits details</label>
+                  <textarea class="form-control" id="videoDetails" name="details" rows="8" maxlength="20000" placeholder="Use plain text with headings or line breaks."></textarea>
+                  <small>Displayed as plain text on the public pages; HTML and scripts are not accepted.</small>
+                </div>
+                <div class="iv-field">
+                  <label for="thumbnailFile">Thumbnail image</label>
+                  <input class="form-control" id="thumbnailFile" name="thumbnail" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp">
+                  <small>JPEG, PNG, or WebP, up to 8 MB. Leave empty to keep the current thumbnail.</small>
+                  <div id="thumbnailCurrent" class="iv-current-media"></div>
+                  <img id="thumbnailPreview" class="iv-upload-preview" alt="Selected thumbnail preview" hidden>
+                </div>
+                <div class="iv-field">
+                  <label for="videoFile">Video file</label>
+                  <input class="form-control" id="videoFile" name="video" type="file" accept="video/mp4,.mp4">
+                  <small>MP4, up to 200 MB. Leave empty to keep the current video.</small>
+                  <div id="videoCurrent" class="iv-current-media"></div>
+                  <div id="videoSelection" class="iv-file-selection" aria-live="polite"></div>
+                </div>
+                <div class="iv-field">
+                  <label for="videoStatus">Publication status</label>
+                  <select class="form-control" id="videoStatus" name="status">
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                  <small>Publishing requires a title, uploaded thumbnail, and uploaded video.</small>
+                </div>
+                <div class="iv-field">
+                  <label for="videoOrder">Display order</label>
+                  <input class="form-control" id="videoOrder" name="display_order" type="number" min="0" max="100000" step="1" value="0">
+                </div>
+              </div>
+              <div class="iv-upload-progress" id="uploadProgressWrap" hidden>
+                <progress id="uploadProgress" max="100" value="0">0%</progress>
+                <span id="uploadProgressLabel">Uploading…</span>
+              </div>
+              <div class="iv-form-actions">
+                <button class="btn btn-primary" id="saveVideoButton" type="submit">Save video</button>
+                <button class="btn btn-secondary" id="cancelEditButton" type="button">Clear form</button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="/Mentor.js"></script>
+  <script src="/app-ui.js"></script>
+  <script src="/admin-important-videos.js"></script>
+</body>
+</html>

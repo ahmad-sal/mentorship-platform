@@ -367,6 +367,29 @@
     ], Boolean(footer));
   }
 
+  function addImportantVideosPlacements() {
+    var header = document.querySelector('.site-header');
+    if (header && header.parentNode) {
+      var row = document.createElement('div');
+      row.className = 'ad-placement-important-videos-row';
+      row.setAttribute('aria-label', 'Important Videos advertisements');
+      row.hidden = true;
+      ['first', 'second', 'third'].forEach(function (column) {
+        row.appendChild(makeSlot('banner-468x60', 'important-videos-' + column));
+      });
+      header.parentNode.insertBefore(row, header.nextSibling);
+    }
+
+    var footer = pageFooter();
+    if (footer) {
+      addLowerStack(footer, [
+        ['banner-300x250', 'page-lower'],
+        ['banner-468x60', 'page-mid'],
+        ['banner-400x60', 'page-final']
+      ], true);
+    }
+  }
+
   // Pages with their own layouts (auth, dashboard, practical classes, 404 and
   // any future page) still receive a complete, unit-driven ad set.
   function addGenericPlacements() {
@@ -411,6 +434,7 @@
   else if (isHomePage) addHomePlacements();
   else if (isCoursePage) addCoursePlacements();
   else if (isDeveloperPage) addDeveloperPlacements();
+  else if (path === '/important-videos') addImportantVideosPlacements();
   else if (path === '/practical-classes.html' || path === '/student/practical-classes') addPracticalClassPlacements();
   else addGenericPlacements();
 
@@ -434,6 +458,10 @@
     '.ad-placement-honhaar-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:.75rem;width:min(100%,1220px);box-sizing:border-box;margin:1rem auto}',
     '.ad-placement-honhaar-row>.ad-placement:not([hidden]){display:flex!important;width:100%;margin:0;min-width:0}',
     '.ad-placement-honhaar-row iframe{width:min(300px,100%);height:250px}',
+    '.ad-placement-important-videos-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:.5rem;width:min(100%,1220px);box-sizing:border-box;margin:.5rem auto;padding-inline:clamp(.5rem,2vw,1.75rem)}',
+    '.ad-placement-important-videos-row[hidden]{display:none!important}',
+    '.ad-placement-important-videos-row>.ad-placement:not([hidden]){display:flex!important;width:100%;margin:0;min-width:0}',
+    '.ad-placement-important-videos-row iframe{width:min(468px,100%);height:60px}',
     '.ad-smart-link{display:block;width:min(720px,100%);margin:1.25rem auto;padding:.65rem 1rem;border:1px solid rgba(127,127,127,.28);border-radius:12px;text-align:center;font-size:.82rem}',
     '.ad-smart-link span{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:.66rem;opacity:.62;margin-bottom:.2rem}',
     '.ad-smart-link a{font-weight:700;text-decoration:underline}',
@@ -481,6 +509,8 @@
   function renderSlot(slot, ad) {
     var size = INLINE_SIZES[slot.dataset.adUnit];
     if (!ad || !ad.published_code || !size) return;
+    var videoAdRow = slot.closest('.ad-placement-important-videos-row');
+    if (videoAdRow) videoAdRow.hidden = false;
 
     var frame = document.createElement('iframe');
     frame.title = (ad.display_name || 'Advertisement') + ' advertisement';

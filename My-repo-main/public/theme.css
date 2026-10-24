@@ -1224,6 +1224,35 @@ input[type='file'] { padding: 0.55rem 0.65rem; font-size: 0.85rem; cursor: point
 #themeIcon { display: inline-flex; color: var(--primary); }
 #themeIcon svg { width: 16px; height: 16px; }
 
+@media (min-width: 1161px) {
+  .nav-container { gap: 0.5rem; }
+  .brand-logo { flex: 0 0 auto; }
+  .desktop-nav {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: 0.1rem;
+  }
+  .desktop-nav > .nav-link,
+  .desktop-nav > .tools-nav-item > .nav-link {
+    padding-inline: 0.5rem;
+    white-space: nowrap;
+  }
+  .nav-actions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+  .desktop-auth-links {
+    flex: 0 0 auto;
+    gap: 0.35rem;
+  }
+  .theme-toggle-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
 .mobile-menu-btn {
   display: none;
   align-items: center;
@@ -1246,7 +1275,8 @@ input[type='file'] { padding: 0.55rem 0.65rem; font-size: 0.85rem; cursor: point
   transition: max-height var(--motion-ui) var(--ease-out), border-top-width var(--motion-ui) var(--ease-out);
 }
 .mobile-drawer.open {
-  max-height: 26rem;
+  max-height: min(32rem, calc(100vh - var(--header-h)));
+  overflow-y: auto;
   border-top-width: 1px;
 }
 .mobile-drawer-inner {
@@ -3888,6 +3918,14 @@ body.dark .whatsapp-contact { color: #4ade9f; }
   .print-matrix-btn { width: 100%; justify-content: center; }
   .data-table { min-width: 40rem; }
   h1 { font-size: clamp(1.55rem, 6.4vw, 2rem); }
+}
+
+@media (max-width: 1160px) {
+  .desktop-nav,
+  .desktop-auth-links,
+  .nav-divider { display: none; }
+  .mobile-menu-btn { display: inline-flex; }
+  .nav-actions { flex-wrap: nowrap; }
 }
 
 @media (max-width: 620px) {

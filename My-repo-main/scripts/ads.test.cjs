@@ -484,3 +484,19 @@ test('generic layouts cover dashboards, auth pages, 404 and future pages', () =>
   assert.match(runtime, /querySelector\('\.workspace-section, section, \.card, \.auth-card, \.nf-card'\)/);
   assert.match(runtime, /pageFooter\(\)/);
 });
+
+test('Important Videos uses only its three-column top row and keeps ads out of the hero-library gap', () => {
+  const root = path.join(__dirname, '..');
+  const runtime = fs.readFileSync(path.join(root, 'public', 'ad-runtime.js'), 'utf8');
+  const placement = runtime.match(/function addImportantVideosPlacements\(\) \{([\s\S]*?)\n  \}/);
+
+  assert.ok(placement);
+  assert.match(placement[1], /ad-placement-important-videos-row/);
+  assert.match(placement[1], /makeSlot\('banner-468x60', 'important-videos-' \+ column\)/);
+  assert.match(placement[1], /header\.parentNode\.insertBefore\(row, header\.nextSibling\)/);
+  assert.doesNotMatch(placement[1], /addResponsiveTop|page-content|native-banner/);
+  assert.match(runtime, /\.ad-placement-important-videos-row\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(runtime, /\.ad-placement-important-videos-row iframe\{width:min\(468px,100%\);height:60px\}/);
+  assert.match(runtime, /\.ad-placement-important-videos-row\[hidden\]\{display:none!important\}/);
+  assert.match(runtime, /else if \(path === '\/important-videos'\) addImportantVideosPlacements\(\)/);
+});

@@ -1169,7 +1169,7 @@ async function streamPublishedUpdateFile(req, res, requestedDisposition) {
   try {
     const { data: update, error } = await client
       .from('important_videos')
-      .select('id, content_type, status, file_url, original_filename, file_mime_type')
+      .select('id, content_type, status, file_url, file_public_id, original_filename, file_mime_type')
       .eq('id', req.params.id)
       .eq('content_type', 'file')
       .eq('status', 'published')
@@ -1184,6 +1184,10 @@ async function streamPublishedUpdateFile(req, res, requestedDisposition) {
     if (fileUrl.protocol !== 'https:' || fileUrl.hostname !== 'res.cloudinary.com' ||
         !cloudName || !fileUrl.pathname.startsWith(`/${cloudName}/raw/upload/`)) {
       console.error('File update download was rejected because its stored URL is outside the configured Cloudinary raw storage.');
+      return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
+    }
+    if (!update.file_public_id) {
+      console.error('Published file update has no Cloudinary public ID for signed delivery.');
       return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
     }
 
@@ -1213,7 +1217,12 @@ async function streamPublishedUpdateFile(req, res, requestedDisposition) {
     res.set('Content-Disposition', `${disposition}; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`);
     res.set('X-Content-Type-Options', 'nosniff');
 
-    const upstreamRequest = https.get(fileUrl, (upstream) => {
+    const signedDownloadUrl = cloudinary.utils.private_download_url(
+      update.file_public_id,
+      '',
+      { resource_type: 'raw', type: 'upload', attachment: true }
+    );
+    const upstreamRequest = https.get(signedDownloadUrl, (upstream) => {
       if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
         upstream.resume();
         console.error('Cloudinary returned an unsuccessful response for a published file update:', upstream.statusCode);

@@ -272,6 +272,10 @@ test('file download is published-only, streamed, and returns a safe original att
   assert.ok(streaming);
   assert.match(streaming[0], /\.eq\('content_type', 'file'\)/);
   assert.match(streaming[0], /\.eq\('status', 'published'\)/);
+  assert.match(streaming[0], /file_url, file_public_id, original_filename/);
+  assert.match(streaming[0], /cloudinary\.utils\.private_download_url\([\s\S]*?resource_type: 'raw', type: 'upload', attachment: true/);
+  assert.match(streaming[0], /https\.get\(signedDownloadUrl/);
+  assert.doesNotMatch(streaming[0], /https\.get\(fileUrl/);
   assert.match(streaming[0], /Content-Disposition/);
   assert.match(streaming[0], /upstream\.pipe\(res\)/);
   assert.match(streaming[0], /res\.set\('X-Content-Type-Options', 'nosniff'\)/);

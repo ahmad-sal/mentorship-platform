@@ -498,5 +498,5 @@ test('Important Videos uses only its three-column top row and keeps ads out of t
   assert.match(runtime, /\.ad-placement-important-videos-row\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(runtime, /\.ad-placement-important-videos-row iframe\{width:min\(468px,100%\);height:60px\}/);
   assert.match(runtime, /\.ad-placement-important-videos-row\[hidden\]\{display:none!important\}/);
-  assert.match(runtime, /else if \(path === '\/important-videos'\) addImportantVideosPlacements\(\)/);
+  assert.match(runtime, /else if \(path === '\/important-videos' \|\| path === '\/important-updates'\) addImportantVideosPlacements\(\)/);
 });

@@ -53,6 +53,11 @@
 .iv-card h3 { margin: 0 0 0.5rem; font-size: 1.12rem; line-height: 1.4; letter-spacing: -0.02em; }
 .iv-card-description { margin: 0 0 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .iv-watch { width: 100%; min-height: 48px; display: flex; justify-content: center; align-items: center; gap: 0.55rem; border: 0; border-radius: 12px; color: #fff; background: var(--primary); font: inherit; font-weight: 800; text-decoration: none; transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
+.iv-update-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+.iv-download { color: var(--primary); background: var(--primary-subtle); }
+.iv-download:hover { color: var(--primary); }
+.iv-file-icon { display: grid; place-items: center; width: min(7rem, 42%); min-height: 5rem; padding: 0.7rem; border: 1px solid rgba(255,255,255,.24); border-radius: 16px; color: #fff; background: rgba(99,102,241,.82); font-size: clamp(1.05rem, 3vw, 1.6rem); font-weight: 800; letter-spacing: .04em; overflow-wrap: anywhere; text-align: center; }
+.iv-file-type { margin: -0.5rem 0 0.9rem; color: var(--text-tertiary); font-size: 0.78rem; line-height: 1.5; overflow-wrap: anywhere; }
 .iv-watch:hover { filter: brightness(1.08); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(79, 70, 229, 0.2); }
 .iv-watch:focus-visible,
 .iv-details-toggle:focus-visible,
@@ -93,6 +98,8 @@
 .iv-admin-record-info { min-width: 0; }
 .iv-admin-record-info h3 { margin: 0 0 0.25rem; font-size: 0.9rem; line-height: 1.4; overflow-wrap: anywhere; }
 .iv-admin-record-info p { margin: 0 0 0.35rem; color: var(--text-tertiary); font-size: 0.73rem; overflow-wrap: anywhere; }
+.iv-admin-record-info .iv-admin-description { margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem; }
+.iv-type-badge { margin: 0 0.3rem 0.3rem 0; }
 .iv-status-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.22rem 0.52rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; }
 .iv-status-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .iv-status-badge--draft { color: #85570a; background: #fff2ce; }

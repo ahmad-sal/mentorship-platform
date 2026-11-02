@@ -372,7 +372,7 @@
     if (header && header.parentNode) {
       var row = document.createElement('div');
       row.className = 'ad-placement-important-videos-row';
-      row.setAttribute('aria-label', 'Important Videos advertisements');
+      row.setAttribute('aria-label', 'Important Updates advertisements');
       row.hidden = true;
       ['first', 'second', 'third'].forEach(function (column) {
         row.appendChild(makeSlot('banner-468x60', 'important-videos-' + column));
@@ -434,7 +434,7 @@
   else if (isHomePage) addHomePlacements();
   else if (isCoursePage) addCoursePlacements();
   else if (isDeveloperPage) addDeveloperPlacements();
-  else if (path === '/important-videos') addImportantVideosPlacements();
+  else if (path === '/important-videos' || path === '/important-updates') addImportantVideosPlacements();
   else if (path === '/practical-classes.html' || path === '/student/practical-classes') addPracticalClassPlacements();
   else addGenericPlacements();
 

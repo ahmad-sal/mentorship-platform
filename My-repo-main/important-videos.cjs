@@ -1,3 +1,5 @@
+const path = require('node:path');
+
 const MAX_TITLE_LENGTH = 180;
 const MAX_SLUG_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 1200;
@@ -5,6 +7,23 @@ const MAX_DETAILS_LENGTH = 20000;
 const MAX_CATEGORY_LENGTH = 80;
 const MAX_THUMBNAIL_BYTES = 8 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+const MAX_UPDATE_FILE_BYTES = 50 * 1024 * 1024;
+
+const UPDATE_FILE_TYPES = Object.freeze({
+  '.pdf': ['application/pdf'],
+  '.doc': ['application/msword', 'application/vnd.ms-word'],
+  '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  '.ppt': ['application/vnd.ms-powerpoint', 'application/mspowerpoint'],
+  '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  '.xls': ['application/vnd.ms-excel', 'application/msexcel'],
+  '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  '.zip': ['application/zip', 'application/x-zip-compressed'],
+  '.txt': ['text/plain'],
+  '.jpg': ['image/jpeg'],
+  '.jpeg': ['image/jpeg'],
+  '.png': ['image/png'],
+  '.webp': ['image/webp']
+});
 
 function slugify(value) {
   return String(value || '')
@@ -19,6 +38,9 @@ function slugify(value) {
 }
 
 function normalizeVideoInput(input) {
+  const contentType = input.content_type === undefined || input.content_type === ''
+    ? 'video'
+    : input.content_type;
   const title = typeof input.title === 'string' ? input.title.trim() : '';
   const description = typeof input.description === 'string' ? input.description.trim() : '';
   const details = typeof input.details === 'string' ? input.details.trim() : '';
@@ -47,11 +69,15 @@ function normalizeVideoInput(input) {
   if (!status) {
     throw new Error('Choose Draft or Published as the publication status.');
   }
+  if (contentType !== 'video' && contentType !== 'file') {
+    throw new Error('Choose Video Update or File Update as the update type.');
+  }
   if (!Number.isInteger(displayOrder) || displayOrder < 0 || displayOrder > 100000) {
     throw new Error('Display order must be a whole number between 0 and 100000.');
   }
 
   return {
+    content_type: contentType,
     title,
     slug,
     description,
@@ -60,6 +86,64 @@ function normalizeVideoInput(input) {
     status,
     display_order: displayOrder
   };
+}
+
+function sanitizeOriginalFilename(value) {
+  const leaf = String(value || '').replace(/\\/g, '/').split('/').pop() || '';
+  const cleaned = leaf
+    .normalize('NFC')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[<>:"|?*]/g, '_')
+    .trim()
+    .replace(/^\.+/, '');
+  return cleaned.slice(0, 180);
+}
+
+function validateUpdateFileMetadata(file) {
+  const originalFilename = sanitizeOriginalFilename(file && file.originalname);
+  const extension = path.extname(originalFilename).toLowerCase();
+  const acceptedMimeTypes = UPDATE_FILE_TYPES[extension];
+  if (!originalFilename || !acceptedMimeTypes) {
+    throw new Error('Choose a supported PDF, Office document, ZIP, text, or image file.');
+  }
+  if (!acceptedMimeTypes.includes(String(file.mimetype || '').toLowerCase())) {
+    throw new Error('The file extension and MIME type do not match a supported format.');
+  }
+  if (!Number.isSafeInteger(file.size) || file.size <= 0) throw new Error('The update file must not be empty.');
+  if (file.size > MAX_UPDATE_FILE_BYTES) {
+    throw new Error(`The update file must be ${Math.round(MAX_UPDATE_FILE_BYTES / (1024 * 1024))} MB or smaller.`);
+  }
+  return {
+    originalFilename,
+    extension,
+    mimeType: String(file.mimetype).toLowerCase()
+  };
+}
+
+function hasExpectedUpdateFileSignature(buffer, extension) {
+  if (!Buffer.isBuffer(buffer)) return false;
+  const startsWith = (signature) => buffer.length >= signature.length && buffer.subarray(0, signature.length).equals(signature);
+  const isZip = startsWith(Buffer.from([0x50, 0x4b, 0x03, 0x04])) ||
+    startsWith(Buffer.from([0x50, 0x4b, 0x05, 0x06])) ||
+    startsWith(Buffer.from([0x50, 0x4b, 0x07, 0x08]));
+  if (['.docx', '.pptx', '.xlsx', '.zip'].includes(extension)) return isZip;
+  if (['.doc', '.ppt', '.xls'].includes(extension)) {
+    return startsWith(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]));
+  }
+  if (extension === '.pdf') return buffer.subarray(0, 5).toString('ascii') === '%PDF-';
+  if (extension === '.png') return startsWith(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (extension === '.jpg' || extension === '.jpeg') return startsWith(Buffer.from([0xff, 0xd8, 0xff]));
+  if (extension === '.webp') return buffer.length >= 12 &&
+    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+  if (extension === '.txt') {
+    if (!buffer.length) return false;
+    for (const byte of buffer) {
+      if (byte === 0 || byte === 0x7f || byte < 0x20 && byte !== 0x09 && byte !== 0x0a && byte !== 0x0d) return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 function hasMp4Signature(buffer) {
@@ -95,8 +179,13 @@ module.exports = {
   MAX_CATEGORY_LENGTH,
   MAX_THUMBNAIL_BYTES,
   MAX_VIDEO_BYTES,
+  MAX_UPDATE_FILE_BYTES,
+  UPDATE_FILE_TYPES,
   slugify,
   normalizeVideoInput,
+  sanitizeOriginalFilename,
+  validateUpdateFileMetadata,
+  hasExpectedUpdateFileSignature,
   hasMp4Signature,
   uploadLargeWithCallback
 };

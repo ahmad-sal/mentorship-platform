@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
+const https = require('https');
 const sharp = require('sharp');
 const {
   MAX_DOCUMENT_BYTES,
@@ -51,6 +52,9 @@ const {
   MAX_VIDEO_BYTES,
   normalizeVideoInput,
   hasMp4Signature,
+  sanitizeOriginalFilename,
+  validateUpdateFileMetadata,
+  hasExpectedUpdateFileSignature,
   uploadLargeWithCallback
 } = require('./important-videos.cjs');
 
@@ -283,11 +287,11 @@ app.get('/meet-developer', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'meet-developer.html'));
 });
 
-app.get('/important-videos', (req, res) => {
+app.get(['/important-videos', '/important-updates'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'important-videos.html'));
 });
 
-app.get('/important-videos/:slug', (req, res) => {
+app.get(['/important-videos/:slug', '/important-updates/:slug'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'important-videos.html'));
 });
 
@@ -897,7 +901,7 @@ app.get(['/admin/dashboard', '/admin-dashboard', '/admin-dashboard.html', '/admi
   res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
 });
 
-app.get('/admin/important-videos', protectAdminPage('/admin/important-videos'), (req, res) => {
+app.get(['/admin/important-videos', '/admin/important-updates'], protectAdminPage('/admin/important-updates'), (req, res) => {
   res.sendFile(path.join(__dirname, 'private', 'admin-important-videos.html'));
 });
 
@@ -1106,7 +1110,7 @@ app.get('/api/ads', async (req, res) => {
 function getImportantVideosClient(res) {
   const client = supabase.supabaseAdmin;
   if (!client) {
-    res.status(503).json({ error: 'Important Videos requires SUPABASE_SERVICE_ROLE_KEY on the server.' });
+    res.status(503).json({ error: 'Important Updates requires server-side Supabase access.' });
     return null;
   }
   return client;
@@ -1119,17 +1123,18 @@ app.get('/api/important-videos', async (req, res) => {
   try {
     const { data, error } = await client
       .from('important_videos')
-      .select('id, title, slug, description, details, category, thumbnail_url, status, display_order, created_at, updated_at, published_at')
+      .select('id, content_type, title, slug, description, details, category, thumbnail_url, video_url, file_url, original_filename, file_mime_type, file_size, file_uploaded_at, status, display_order, created_at, updated_at, published_at')
       .eq('status', 'published')
-      .not('thumbnail_url', 'is', null)
-      .not('video_url', 'is', null)
       .order('display_order', { ascending: true })
       .order('published_at', { ascending: false });
     if (error) throw error;
-    return res.json({ videos: data || [] });
+    const updates = (data || []).filter((update) => update.content_type === 'file'
+      ? Boolean(update.file_url && update.original_filename)
+      : Boolean(update.thumbnail_url && update.video_url));
+    return res.json({ updates, videos: updates.filter((update) => update.content_type !== 'file') });
   } catch (error) {
-    console.error('Published Important Videos could not be loaded:', error);
-    return res.status(503).json({ error: 'Important Videos are temporarily unavailable. Confirm the database migration has been applied.' });
+    console.error('Published Important Updates could not be loaded:', error);
+    return res.status(503).json({ error: 'Important Updates are temporarily unavailable. Confirm the database migration has been applied.' });
   }
 });
 
@@ -1140,9 +1145,10 @@ app.get('/api/important-videos/:slug', async (req, res) => {
   try {
     const { data, error } = await client
       .from('important_videos')
-      .select('id, title, slug, description, details, category, thumbnail_url, video_url, display_order, published_at')
+      .select('id, content_type, title, slug, description, details, category, thumbnail_url, video_url, display_order, published_at')
       .eq('slug', req.params.slug)
       .eq('status', 'published')
+      .eq('content_type', 'video')
       .not('thumbnail_url', 'is', null)
       .not('video_url', 'is', null)
       .maybeSingle();
@@ -1150,10 +1156,99 @@ app.get('/api/important-videos/:slug', async (req, res) => {
     if (!data) return res.status(404).json({ error: 'This video is unavailable.' });
     return res.json({ video: data });
   } catch (error) {
-    console.error('Published Important Video could not be loaded:', error);
+    console.error('Published video update could not be loaded:', error);
     return res.status(503).json({ error: 'This video is temporarily unavailable.' });
   }
 });
+
+async function streamPublishedUpdateFile(req, res, requestedDisposition) {
+  res.set('Cache-Control', 'private, no-store');
+  if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'This file update is unavailable.' });
+  const client = getImportantVideosClient(res);
+  if (!client) return;
+  try {
+    const { data: update, error } = await client
+      .from('important_videos')
+      .select('id, content_type, status, file_url, original_filename, file_mime_type')
+      .eq('id', req.params.id)
+      .eq('content_type', 'file')
+      .eq('status', 'published')
+      .maybeSingle();
+    if (error) throw error;
+    if (!update || !update.file_url || !update.original_filename) {
+      return res.status(404).json({ error: 'This file update is unavailable.' });
+    }
+
+    const fileUrl = new URL(update.file_url);
+    const cloudName = cloudinary.config().cloud_name || process.env.CLOUDINARY_CLOUD_NAME;
+    if (fileUrl.protocol !== 'https:' || fileUrl.hostname !== 'res.cloudinary.com' ||
+        !cloudName || !fileUrl.pathname.startsWith(`/${cloudName}/raw/upload/`)) {
+      console.error('File update download was rejected because its stored URL is outside the configured Cloudinary raw storage.');
+      return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
+    }
+
+    const filename = sanitizeOriginalFilename(update.original_filename) || 'update-file';
+    const fallbackFilename = filename.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
+    const encodedFilename = encodeURIComponent(filename).replace(/['()*]/g, (character) =>
+      `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+    const inlineTypes = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'text/plain']);
+    if (requestedDisposition === 'inline' && !inlineTypes.has(update.file_mime_type)) {
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[character]);
+      const encodedId = encodeURIComponent(update.id);
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'");
+      res.set('X-Content-Type-Options', 'nosniff');
+      return res.send(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>File update</title><body><main><h1>This file cannot be previewed in your browser</h1><p>${escapeHtml(filename)}</p><p><a href="/api/important-updates/${encodedId}/download">Download this file</a></p></main></body></html>`);
+    }
+    const disposition = requestedDisposition === 'inline' && inlineTypes.has(update.file_mime_type)
+      ? 'inline'
+      : 'attachment';
+    res.set('Content-Type', update.file_mime_type || 'application/octet-stream');
+    res.set('Content-Disposition', `${disposition}; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`);
+    res.set('X-Content-Type-Options', 'nosniff');
+
+    const upstreamRequest = https.get(fileUrl, (upstream) => {
+      if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
+        upstream.resume();
+        console.error('Cloudinary returned an unsuccessful response for a published file update:', upstream.statusCode);
+        if (!res.headersSent) return res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+        return res.destroy();
+      }
+      if (/^\d+$/.test(upstream.headers['content-length'] || '')) {
+        res.set('Content-Length', upstream.headers['content-length']);
+      }
+      upstream.on('error', (error) => {
+        console.error('File update stream failed:', error.message);
+        if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+        else res.destroy(error);
+      });
+      upstream.pipe(res);
+    });
+    upstreamRequest.setTimeout(30000, () => {
+      upstreamRequest.destroy(new Error('File update request timed out.'));
+    });
+    upstreamRequest.on('error', (error) => {
+      console.error('File update request failed:', error.message);
+      if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+      else res.destroy(error);
+    });
+    res.on('close', () => {
+      if (!res.writableEnded) upstreamRequest.destroy();
+    });
+  } catch (error) {
+    console.error('Published file update could not be streamed:', error);
+    if (!res.headersSent) return res.status(503).json({ error: 'The file is temporarily unavailable.' });
+  }
+}
+
+app.get('/api/important-updates/:id/open', (req, res) => streamPublishedUpdateFile(req, res, 'inline'));
+app.get('/api/important-updates/:id/download', (req, res) => streamPublishedUpdateFile(req, res, 'attachment'));
 
 app.get('/api/capacity', async (req, res) => {
   try {
@@ -1201,7 +1296,7 @@ function requireSameOriginAdMutation(req, res, next) {
   return next();
 }
 
-const IMPORTANT_VIDEO_TEMP_DIR = path.join(os.tmpdir(), 'mentorship-important-video-uploads');
+const IMPORTANT_VIDEO_TEMP_DIR = path.join(os.tmpdir(), 'mentorship-important-update-uploads');
 const importantVideoUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, callback) => {
@@ -1211,14 +1306,15 @@ const importantVideoUpload = multer({
   }),
   limits: {
     fileSize: MAX_VIDEO_BYTES,
-    files: 2,
+    files: 3,
     fields: 10,
     fieldNameSize: 50,
     fieldSize: 25000
   }
 }).fields([
   { name: 'thumbnail', maxCount: 1 },
-  { name: 'video', maxCount: 1 }
+  { name: 'video', maxCount: 1 },
+  { name: 'file', maxCount: 1 }
 ]);
 
 function receiveImportantVideoFiles(req, res, next) {
@@ -1226,11 +1322,11 @@ function receiveImportantVideoFiles(req, res, next) {
     if (error) {
       if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
-          return res.status(413).json({ error: `The video upload must be ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))} MB or smaller.` });
+          return res.status(413).json({ error: `The upload exceeds the server's ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))} MB request limit.` });
         }
-        return res.status(400).json({ error: 'Choose at most one thumbnail and one video file.' });
+        return res.status(400).json({ error: 'Choose at most one thumbnail, one video, and one update file.' });
       }
-      console.error('Important Video upload could not be received:', error);
+      console.error('Important Update upload could not be received:', error);
       return res.status(500).json({ error: 'The upload could not be received. Check the server upload directory and try again.' });
     }
 
@@ -1241,7 +1337,7 @@ function receiveImportantVideoFiles(req, res, next) {
       Object.values(req.files || {}).flat().forEach((file) => {
         fs.unlink(file.path, (unlinkError) => {
           if (unlinkError && unlinkError.code !== 'ENOENT') {
-            console.error('Temporary Important Video upload could not be removed:', unlinkError.message);
+            console.error('Temporary Important Update upload could not be removed:', unlinkError.message);
           }
         });
       });
@@ -1279,7 +1375,7 @@ async function uploadImportantVideoMedia(file, kind) {
       error.statusCode = 400;
       throw error;
     }
-  } else {
+  } else if (kind === 'video') {
     if (file.mimetype !== 'video/mp4') {
       const error = new Error('Video must be an MP4 file.');
       error.statusCode = 400;
@@ -1297,6 +1393,73 @@ async function uploadImportantVideoMedia(file, kind) {
       error.statusCode = 400;
       throw error;
     }
+  } else {
+    let metadata;
+    let validated;
+    try {
+      validated = validateUpdateFileMetadata(file);
+    } catch (error) {
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const header = Buffer.alloc(Math.min(file.size, 8192));
+    const descriptor = fs.openSync(file.path, 'r');
+    let bytesRead;
+    try {
+      bytesRead = fs.readSync(descriptor, header, 0, header.length, 0);
+    } finally {
+      fs.closeSync(descriptor);
+    }
+    if (!hasExpectedUpdateFileSignature(header.subarray(0, bytesRead), validated.extension)) {
+      const error = new Error('The file contents do not match the selected file type.');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (validated.mimeType.startsWith('image/')) {
+      let imageMetadata;
+      try {
+        imageMetadata = await sharp(file.path).metadata();
+      } catch (error) {
+        const invalidImage = new Error('The image update is not a readable image file.');
+        invalidImage.statusCode = 400;
+        throw invalidImage;
+      }
+      const expectedFormat = validated.extension === '.jpg' || validated.extension === '.jpeg' ? 'jpeg' : validated.extension.slice(1);
+      if (imageMetadata.format !== expectedFormat) {
+        const error = new Error('The image contents do not match the selected file extension.');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+    const publicId = crypto.randomUUID() + validated.extension;
+    const options = {
+      folder: 'mentorship/important-updates',
+      public_id: publicId,
+      overwrite: false,
+      unique_filename: false,
+      resource_type: 'raw'
+    };
+    let result;
+    try {
+      result = await cloudinary.uploader.upload(file.path, options);
+    } catch (error) {
+      error.importantVideoUploadProvider = 'cloudinary';
+      throw error;
+    }
+    if (!result || !result.secure_url || !result.public_id) {
+      const error = new Error('Cloudinary upload completed without a secure URL and public asset ID.');
+      error.importantVideoUploadProvider = 'cloudinary';
+      throw error;
+    }
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      kind: 'file',
+      originalFilename: validated.originalFilename,
+      mimeType: validated.mimeType,
+      size: file.size
+    };
   }
 
   const publicId = crypto.randomUUID();
@@ -1333,7 +1496,7 @@ async function uploadImportantVideoMedia(file, kind) {
 
 async function destroyImportantVideoMedia(media) {
   const result = await cloudinary.uploader.destroy(media.publicId, {
-    resource_type: media.kind === 'thumbnail' ? 'image' : 'video',
+    resource_type: media.kind === 'thumbnail' ? 'image' : media.kind === 'file' ? 'raw' : 'video',
     invalidate: true
   });
   if (!result || result.result !== 'ok' && result.result !== 'not found') {
@@ -1343,9 +1506,23 @@ async function destroyImportantVideoMedia(media) {
 
 async function cleanImportantVideoMedia(mediaItems, context) {
   const failures = [];
+  const client = supabase.supabaseAdmin;
   for (const media of mediaItems) {
     if (!media || !media.publicId) continue;
     try {
+      const referenceColumn = media.kind === 'thumbnail' ? 'thumbnail_public_id'
+        : media.kind === 'file' ? 'file_public_id' : 'video_public_id';
+      if (client) {
+        const { data: references, error: referenceError } = await client
+          .from('important_videos')
+          .select('id')
+          .eq(referenceColumn, media.publicId)
+          .limit(1);
+        if (referenceError) throw referenceError;
+        if (references && references.length) continue;
+      } else {
+        throw new Error('Supabase reference check is unavailable.');
+      }
       await destroyImportantVideoMedia(media);
     } catch (error) {
       console.error(`Important Video media cleanup failed (${context}):`, error.message);
@@ -1369,23 +1546,45 @@ async function persistImportantVideo(req, res, existing) {
   const files = req.files || {};
   const uploadedMedia = [];
   const current = existing || {};
+  const isFileUpdate = input.content_type === 'file';
+  if (existing && existing.content_type && existing.content_type !== input.content_type) {
+    return res.status(400).json({ error: 'An update type cannot be changed after creation. Create a new update instead.' });
+  }
+  if ((isFileUpdate && files.video && files.video.length) ||
+      (!isFileUpdate && files.file && files.file.length)) {
+    return res.status(400).json({ error: 'The selected upload does not match the update type.' });
+  }
   try {
     const thumbnail = files.thumbnail && files.thumbnail[0]
       ? await uploadImportantVideoMedia(files.thumbnail[0], 'thumbnail')
       : null;
     if (thumbnail) uploadedMedia.push(thumbnail);
 
-    const video = files.video && files.video[0]
+    const video = !isFileUpdate && files.video && files.video[0]
       ? await uploadImportantVideoMedia(files.video[0], 'video')
       : null;
     if (video) uploadedMedia.push(video);
+    const file = isFileUpdate && files.file && files.file[0]
+      ? await uploadImportantVideoMedia(files.file[0], 'file')
+      : null;
+    if (file) uploadedMedia.push(file);
 
-    const thumbnailUrl = thumbnail ? thumbnail.url : current.thumbnail_url || null;
-    const thumbnailPublicId = thumbnail ? thumbnail.publicId : current.thumbnail_public_id || null;
-    const videoUrl = video ? video.url : current.video_url || null;
-    const videoPublicId = video ? video.publicId : current.video_public_id || null;
-    if (input.status === 'published' && (!thumbnailUrl || !videoUrl)) {
-      const error = new Error('Upload both a thumbnail and a video before publishing.');
+    const thumbnailUrl = thumbnail ? thumbnail.url
+      : current.content_type === input.content_type ? current.thumbnail_url || null : null;
+    const thumbnailPublicId = thumbnail ? thumbnail.publicId
+      : current.content_type === input.content_type ? current.thumbnail_public_id || null : null;
+    const videoUrl = !isFileUpdate ? video ? video.url
+      : current.content_type === 'video' ? current.video_url || null : null : null;
+    const videoPublicId = !isFileUpdate ? video ? video.publicId
+      : current.content_type === 'video' ? current.video_public_id || null : null : null;
+    const fileUrl = isFileUpdate ? file ? file.url
+      : current.content_type === 'file' ? current.file_url || null : null : null;
+    const filePublicId = isFileUpdate ? file ? file.publicId
+      : current.content_type === 'file' ? current.file_public_id || null : null : null;
+    if (input.status === 'published' && (isFileUpdate ? !fileUrl : !thumbnailUrl || !videoUrl)) {
+      const error = new Error(isFileUpdate
+        ? 'Upload an update file before publishing.'
+        : 'Upload both a thumbnail and a video before publishing.');
       error.statusCode = 400;
       throw error;
     }
@@ -1397,6 +1596,20 @@ async function persistImportantVideo(req, res, existing) {
       thumbnail_public_id: thumbnailPublicId,
       video_url: videoUrl,
       video_public_id: videoPublicId,
+      file_url: fileUrl,
+      file_public_id: filePublicId,
+      original_filename: isFileUpdate
+        ? file ? file.originalFilename : current.original_filename || null
+        : null,
+      file_mime_type: isFileUpdate
+        ? file ? file.mimeType : current.file_mime_type || null
+        : null,
+      file_size: isFileUpdate
+        ? file ? file.size : current.file_size || null
+        : null,
+      file_uploaded_at: isFileUpdate
+        ? file ? now : current.file_uploaded_at || null
+        : null,
       updated_by: req.session.user.id,
       updated_at: now,
       published_at: input.status === 'published'
@@ -1425,14 +1638,17 @@ async function persistImportantVideo(req, res, existing) {
     if (video && current.video_public_id) {
       replacedMedia.push({ kind: 'video', publicId: current.video_public_id });
     }
+    if (file && current.file_public_id) {
+      replacedMedia.push({ kind: 'file', publicId: current.file_public_id });
+    }
     const cleanupWarnings = await cleanImportantVideoMedia(replacedMedia, `replacing record ${data.id}`);
-    return res.json({ video: data, cleanupWarnings });
+    return res.json({ update: data, video: data, cleanupWarnings });
   } catch (error) {
     const cleanupWarnings = await cleanImportantVideoMedia(uploadedMedia, 'failed save');
     if (error.statusCode === 400 || error.statusCode === 409) {
       return res.status(error.statusCode).json({ error: error.message, cleanupWarnings });
     }
-    console.error('Important Video could not be saved:', {
+    console.error('Important Update could not be saved:', {
       name: error.name || 'Error',
       code: error.code || null,
       httpCode: error.http_code || error.statusCode || null,
@@ -1447,18 +1663,18 @@ async function persistImportantVideo(req, res, existing) {
     }
     if (error.code === 'PGRST205' || error.code === 'PGRST204') {
       return res.status(503).json({
-        error: 'The Important Videos database schema is unavailable. Apply migrations/004_important_videos.sql to the configured Supabase project, then reload its schema cache.',
+        error: 'The Important Updates database schema is unavailable. Apply migrations/004_important_videos.sql and migrations/005_important_updates_files.sql to the configured Supabase project, then reload its schema cache.',
         cleanupWarnings
       });
     }
     if (error.code === '42501') {
       return res.status(503).json({
-        error: 'Supabase denied the video save. Verify the server database role and Important Videos table grants.',
+        error: 'Supabase denied the update save. Verify the server database role and Important Updates table grants.',
         cleanupWarnings
       });
     }
     return res.status(500).json({
-      error: 'The video could not be saved. Check the database and media-storage configuration, then try again.',
+      error: 'The update could not be saved. Check the database and media-storage configuration, then try again.',
       cleanupWarnings
     });
   }
@@ -1475,10 +1691,10 @@ app.get('/api/admin/important-videos', requireAdmin, async (req, res) => {
       .order('display_order', { ascending: true })
       .order('updated_at', { ascending: false });
     if (error) throw error;
-    return res.json({ videos: data || [] });
+    return res.json({ updates: data || [], videos: data || [] });
   } catch (error) {
-    console.error('Admin Important Videos could not be loaded:', error);
-    return res.status(503).json({ error: 'Videos could not be loaded. Confirm the Important Videos database migration has been applied.' });
+    console.error('Admin Important Updates could not be loaded:', error);
+    return res.status(503).json({ error: 'Updates could not be loaded. Confirm migrations/004_important_videos.sql and migrations/005_important_updates_files.sql have been applied.' });
   }
 });
 
@@ -1496,7 +1712,7 @@ app.post('/api/admin/important-videos', requireAdmin, requireSameOriginAdMutatio
 
 app.put('/api/admin/important-videos/:id', requireAdmin, requireSameOriginAdMutation, receiveImportantVideoFiles, async (req, res) => {
   try {
-    if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Video record not found.' });
+    if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Update record not found.' });
     const client = getImportantVideosClient(res);
     if (!client) return;
     const { data: existing, error } = await client
@@ -1505,18 +1721,18 @@ app.put('/api/admin/important-videos/:id', requireAdmin, requireSameOriginAdMuta
       .eq('id', req.params.id)
       .maybeSingle();
     if (error) throw error;
-    if (!existing) return res.status(404).json({ error: 'Video record not found.' });
+    if (!existing) return res.status(404).json({ error: 'Update record not found.' });
     return await persistImportantVideo(req, res, existing);
   } catch (error) {
-    console.error('Important Video could not be loaded for editing:', error);
-    return res.status(500).json({ error: 'The video could not be loaded for editing.' });
+    console.error('Important Update could not be loaded for editing:', error);
+    return res.status(500).json({ error: 'The update could not be loaded for editing.' });
   } finally {
     if (req.cleanupImportantVideoFiles) req.cleanupImportantVideoFiles();
   }
 });
 
 app.patch('/api/admin/important-videos/:id/status', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
-  if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Video record not found.' });
+  if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Update record not found.' });
   const client = getImportantVideosClient(res);
   if (!client) return;
   const status = req.body && req.body.status;
@@ -1526,13 +1742,17 @@ app.patch('/api/admin/important-videos/:id/status', requireAdmin, requireSameOri
   try {
     const { data: existing, error: readError } = await client
       .from('important_videos')
-      .select('id, status, thumbnail_url, video_url, published_at')
+      .select('id, content_type, status, thumbnail_url, video_url, file_url, original_filename, published_at')
       .eq('id', req.params.id)
       .maybeSingle();
     if (readError) throw readError;
-    if (!existing) return res.status(404).json({ error: 'Video record not found.' });
-    if (status === 'published' && (!existing.thumbnail_url || !existing.video_url)) {
-      return res.status(400).json({ error: 'Upload both a thumbnail and a video before publishing.' });
+    if (!existing) return res.status(404).json({ error: 'Update record not found.' });
+    if (status === 'published' && (existing.content_type === 'file'
+      ? !existing.file_url || !existing.original_filename
+      : !existing.thumbnail_url || !existing.video_url)) {
+      return res.status(400).json({ error: existing.content_type === 'file'
+        ? 'Upload an update file before publishing.'
+        : 'Upload both a thumbnail and a video before publishing.' });
     }
     const now = new Date().toISOString();
     const { data, error } = await client
@@ -1549,35 +1769,36 @@ app.patch('/api/admin/important-videos/:id/status', requireAdmin, requireSameOri
       .select('*')
       .single();
     if (error) throw error;
-    return res.json({ video: data });
+    return res.json({ update: data, video: data });
   } catch (error) {
-    console.error('Important Video publication status could not be updated:', error);
+    console.error('Important Update publication status could not be updated:', error);
     return res.status(500).json({ error: 'Publication status could not be updated.' });
   }
 });
 
 app.delete('/api/admin/important-videos/:id', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
-  if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Video record not found.' });
+  if (!validImportantVideoId(req.params.id)) return res.status(404).json({ error: 'Update record not found.' });
   const client = getImportantVideosClient(res);
   if (!client) return;
   try {
     const { data: existing, error: readError } = await client
       .from('important_videos')
-      .select('id, thumbnail_public_id, video_public_id')
+      .select('id, thumbnail_public_id, video_public_id, file_public_id')
       .eq('id', req.params.id)
       .maybeSingle();
     if (readError) throw readError;
-    if (!existing) return res.status(404).json({ error: 'Video record not found.' });
+    if (!existing) return res.status(404).json({ error: 'Update record not found.' });
     const { error } = await client.from('important_videos').delete().eq('id', existing.id);
     if (error) throw error;
     const cleanupWarnings = await cleanImportantVideoMedia([
       existing.thumbnail_public_id && { kind: 'thumbnail', publicId: existing.thumbnail_public_id },
-      existing.video_public_id && { kind: 'video', publicId: existing.video_public_id }
+      existing.video_public_id && { kind: 'video', publicId: existing.video_public_id },
+      existing.file_public_id && { kind: 'file', publicId: existing.file_public_id }
     ], `deleting record ${existing.id}`);
-    return res.json({ message: 'Video deleted.', cleanupWarnings });
+    return res.json({ message: 'Update deleted.', cleanupWarnings });
   } catch (error) {
-    console.error('Important Video could not be deleted:', error);
-    return res.status(500).json({ error: 'The video could not be deleted. Check the server logs for storage cleanup failures.' });
+    console.error('Important Update could not be deleted:', error);
+    return res.status(500).json({ error: 'The update could not be deleted. Check the server logs for storage cleanup failures.' });
   }
 });
 

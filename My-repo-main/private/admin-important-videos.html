@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Important Videos | Admin</title>
+  <title>Important Updates | Admin</title>
   <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
         <a class="sidebar-link" href="/admin/dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
         <a class="sidebar-link" href="/admin/progress"><i data-lucide="bar-chart"></i><span>Student progress</span></a>
         <a class="sidebar-link" href="/admin/dashboard?tab=ads"><i data-lucide="megaphone"></i><span>Running Ads</span></a>
-        <a class="sidebar-link active" href="/admin/important-videos" aria-current="page"><i data-lucide="clapperboard"></i><span>Important Videos</span></a>
+        <a class="sidebar-link active" href="/admin/important-updates" aria-current="page"><i data-lucide="clapperboard"></i><span>Important Updates</span></a>
       </nav>
       <nav class="sidebar-group">
         <span class="sidebar-label">Platform</span>
@@ -46,7 +46,7 @@
         <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="appSidebar" aria-label="Toggle navigation">
           <i data-lucide="panel-left"></i>
         </button>
-        <span class="app-topbar__title">Important Videos</span>
+        <span class="app-topbar__title">Important Updates</span>
         <span class="app-topbar__spacer"></span>
         <a class="btn btn-secondary btn-sm" href="/admin/dashboard">Dashboard</a>
         <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle colour theme">
@@ -58,18 +58,18 @@
       <main class="app-content iv-admin-page">
         <div class="iv-admin-heading">
           <div>
-            <span class="section-kicker">Video library management</span>
-            <h1>Important Videos</h1>
-            <p>Create and manage published tutorials. Draft records are private and do not appear on the public site.</p>
+            <span class="section-kicker">Important Updates Management</span>
+            <h1>Important Updates</h1>
+            <p>Create and manage published video and file updates. Draft records are private and do not appear on the public site.</p>
           </div>
-          <button class="btn btn-primary" id="newVideoButton" type="button">＋ New video</button>
+          <button class="btn btn-primary" id="newVideoButton" type="button">＋ New Updates</button>
         </div>
 
         <div id="adminMessage" class="iv-admin-message" role="status" aria-live="polite" hidden></div>
-        <section class="iv-admin-layout" aria-label="Manage video records">
+        <section class="iv-admin-layout" aria-label="Manage update records">
           <div class="iv-admin-list-panel card">
             <div class="iv-admin-section-heading">
-              <div><h2>Video records</h2><p id="adminListStatus" class="muted">Loading records…</p></div>
+              <div><h2>Updates Records</h2><p id="adminListStatus" class="muted">Loading records…</p></div>
               <button id="refreshVideosButton" class="btn btn-secondary btn-sm" type="button">Refresh</button>
             </div>
             <div id="adminVideoList" class="iv-admin-list"></div>
@@ -79,17 +79,24 @@
             <div class="iv-admin-section-heading">
               <div>
                 <span class="section-kicker">Edit details</span>
-                <h2 id="formHeading">New video</h2>
+                <h2 id="formHeading">New Updates</h2>
               </div>
             </div>
             <form id="videoForm" novalidate>
               <input type="hidden" name="record_id" id="recordId">
               <div class="iv-admin-fields">
                 <div class="iv-field iv-field--wide">
-                  <label for="videoTitle">Video title <span aria-hidden="true">*</span></label>
+                  <label for="updateType">Update type</label>
+                  <select class="form-control" id="updateType" name="content_type">
+                    <option value="video">Video Update</option>
+                    <option value="file">File Update</option>
+                  </select>
+                </div>
+                <div class="iv-field iv-field--wide">
+                  <label for="videoTitle">Update title <span aria-hidden="true">*</span></label>
                   <input class="form-control" id="videoTitle" name="title" type="text" maxlength="180" required>
                 </div>
-                <div class="iv-field">
+                <div class="iv-field video-only">
                   <label for="videoSlug">Route identifier</label>
                   <input class="form-control" id="videoSlug" name="slug" type="text" maxlength="120" autocomplete="off">
                   <small>Lowercase letters, numbers, and hyphens.</small>
@@ -103,7 +110,7 @@
                   <textarea class="form-control" id="videoDescription" name="description" rows="3" maxlength="1200"></textarea>
                 </div>
                 <div class="iv-field iv-field--wide">
-                  <label for="videoDetails">How to Use / Benefits details</label>
+                  <label for="videoDetails">Additional details (optional for video)</label>
                   <textarea class="form-control" id="videoDetails" name="details" rows="8" maxlength="20000" placeholder="Use plain text with headings or line breaks."></textarea>
                   <small>Displayed as plain text on the public pages; HTML and scripts are not accepted.</small>
                 </div>
@@ -114,7 +121,14 @@
                   <div id="thumbnailCurrent" class="iv-current-media"></div>
                   <img id="thumbnailPreview" class="iv-upload-preview" alt="Selected thumbnail preview" hidden>
                 </div>
-                <div class="iv-field">
+                <div class="iv-field file-only" hidden>
+                  <label for="updateFile">Update file <span aria-hidden="true">*</span></label>
+                  <input class="form-control" id="updateFile" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,text/plain,image/jpeg,image/png,image/webp">
+                  <small>PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, ZIP, TXT, JPEG, PNG, or WebP; up to 50 MB. Leave empty to keep the current file.</small>
+                  <div id="fileCurrent" class="iv-current-media"></div>
+                  <div id="fileSelection" class="iv-file-selection" aria-live="polite"></div>
+                </div>
+                <div class="iv-field video-only">
                   <label for="videoFile">Video file</label>
                   <input class="form-control" id="videoFile" name="video" type="file" accept="video/mp4,.mp4">
                   <small>MP4, up to 200 MB. Leave empty to keep the current video.</small>
@@ -127,7 +141,7 @@
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
-                  <small>Publishing requires a title, uploaded thumbnail, and uploaded video.</small>
+                  <small>Publishing requires a title and an uploaded video or update file. Video thumbnails are required; file thumbnails are optional.</small>
                 </div>
                 <div class="iv-field">
                   <label for="videoOrder">Display order</label>
@@ -139,7 +153,7 @@
                 <span id="uploadProgressLabel">Uploading…</span>
               </div>
               <div class="iv-form-actions">
-                <button class="btn btn-primary" id="saveVideoButton" type="submit">Save video</button>
+                <button class="btn btn-primary" id="saveVideoButton" type="submit">Save Update</button>
                 <button class="btn btn-secondary" id="cancelEditButton" type="button">Clear form</button>
               </div>
             </form>

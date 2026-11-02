@@ -164,10 +164,6 @@
     download.setAttribute('download', update.original_filename || '');
     download.setAttribute('data-ad-popup', 'on');
     download.setAttribute('aria-label', `Download file: ${update.title}`);
-    download.addEventListener('click', function (event) {
-      event.preventDefault();
-      window.location.assign(download.href);
-    });
     actions.append(open, download);
     body.append(meta, title, description, fileType, actions);
     card.append(thumb, body);

@@ -291,6 +291,8 @@ test('only the requested Important Updates, Watch Video, benefits, Open File, an
   assert.match(script, /open\.setAttribute\('data-ad-popup', 'on'\)/);
   assert.match(script, /download\.setAttribute\('data-ad-popup', 'on'\)/);
   assert.match(script, /download\.href = `\/api\/important-updates\/\$\{encodeURIComponent\(update\.id\)\}\/download`/);
+  assert.match(script, /download\.setAttribute\('download', update\.original_filename \|\| ''\)/);
+  assert.doesNotMatch(script, /download\.addEventListener\('click'/);
   assert.match(script, /open\.target = '_blank'/);
   assert.doesNotMatch(script, /open\.setAttribute\('data-ad-popup', 'off'\)|download\.setAttribute\('data-ad-popup', 'off'\)/);
 });

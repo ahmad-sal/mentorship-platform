@@ -228,7 +228,7 @@
       throw new Error('Choose an MP4 video that is 200 MB or smaller.');
     }
     if (isFile && file && (file.size > 50 * 1024 * 1024 || !/\.(pdf|docx?|pptx?|xlsx?|zip|txt|jpe?g|png|webp)$/i.test(file.name))) {
-      throw new Error('Choose a supported document, ZIP, text, or image file that is 50 MB or smaller.');
+      throw new Error('Choose a supported document, ZIP, text, or image file that is 50 MiB or smaller.');
     }
     if (form.elements.status.value === 'published') {
       if (!form.elements.title.value.trim()) throw new Error('Enter a title before publishing.');
@@ -245,6 +245,8 @@
     const isFile = typeInput.value === 'file';
     fileOnlyFields.forEach((field) => { field.hidden = !isFile; });
     videoOnlyFields.forEach((field) => { field.hidden = isFile; });
+    videoInput.disabled = isFile;
+    fileInput.disabled = !isFile;
     if (isFile) {
       videoInput.value = '';
       videoSelection.textContent = '';
@@ -258,7 +260,99 @@
     document.getElementById('saveVideoButton').textContent = 'Save Update';
   }
 
-  function saveForm(event) {
+  async function uploadFileWithTus(file, progress, progressLabel) {
+    if (!window.tus || typeof window.tus.Upload !== 'function') {
+      throw new Error('The resumable upload client did not load. Refresh the page and try again.');
+    }
+    const session = await requestJson('/api/admin/important-updates/upload-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        original_filename: file.name,
+        file_mime_type: file.type,
+        file_size: file.size
+      })
+    });
+
+    return new Promise((resolve, reject) => {
+      const upload = new window.tus.Upload(file, {
+        endpoint: session.endpoint,
+        headers: { 'x-signature': session.token },
+        metadata: {
+          bucketName: session.bucket,
+          objectName: session.path,
+          contentType: file.type,
+          cacheControl: '3600'
+        },
+        chunkSize: 6 * 1024 * 1024,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        onError(error) {
+          const detail = String(error && error.message || 'Storage rejected the upload.')
+            .replace(/https?:\/\/\S+/gi, '[storage endpoint]')
+            .replace(/\b(api[_-]?key|api[_-]?secret|signature|token|authorization)\b([=:]\s*|%3D)[^\s&]+/gi, '$1=[redacted]')
+            .slice(0, 400);
+          reject(new Error(`Supabase resumable upload failed: ${detail}`));
+        },
+        onProgress(bytesUploaded, bytesTotal) {
+          const percentage = bytesTotal ? Math.round(bytesUploaded / bytesTotal * 100) : 0;
+          const uploadedMiB = (bytesUploaded / (1024 * 1024)).toFixed(1);
+          const totalMiB = (bytesTotal / (1024 * 1024)).toFixed(1);
+          progress.value = percentage;
+          progressLabel.textContent = `Uploading original file… ${percentage}% (${uploadedMiB} of ${totalMiB} MiB)`;
+        },
+        onSuccess() {
+          resolve({
+            path: session.path,
+            originalFilename: file.name,
+            mimeType: file.type,
+            size: file.size
+          });
+        }
+      });
+      upload.start();
+    });
+  }
+
+  function sendUpdateForm(data, id) {
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open(id ? 'PUT' : 'POST', id
+        ? `/api/admin/important-videos/${encodeURIComponent(id)}`
+        : '/api/admin/important-videos');
+      request.withCredentials = true;
+      request.setRequestHeader('Accept', 'application/json');
+      request.upload.addEventListener('progress', function (uploadEvent) {
+        if (!uploadEvent.lengthComputable) return;
+        const percentage = Math.round(uploadEvent.loaded / uploadEvent.total * 100);
+        document.getElementById('uploadProgress').value = percentage;
+        document.getElementById('uploadProgressLabel').textContent =
+          percentage < 100 ? `Uploading other selected media… ${percentage}%` : 'Saving update record…';
+      });
+      request.addEventListener('load', function () {
+        let result;
+        try {
+          result = JSON.parse(request.responseText || '{}');
+        } catch (error) {
+          reject(new Error('The server returned an unreadable response. Refresh the records to confirm the save status.'));
+          return;
+        }
+        if (request.status < 200 || request.status >= 300) {
+          const cleanup = result.cleanupWarnings && result.cleanupWarnings.length ? ` ${result.cleanupWarnings.join(' ')}` : '';
+          reject(new Error((result.error || `Save failed (HTTP ${request.status}).`) + cleanup));
+          return;
+        }
+        resolve(result);
+      });
+      request.addEventListener('error', function () {
+        reject(new Error('The save connection failed. Refresh the records to confirm whether the save completed.'));
+      });
+      request.send(data);
+    });
+  }
+
+  async function saveForm(event) {
     event.preventDefault();
     if (saving) return;
     try {
@@ -271,12 +365,8 @@
     const id = document.getElementById('recordId').value;
     const data = new FormData(form);
     data.set('content_type', typeInput.value);
-    const request = new XMLHttpRequest();
-    request.open(id ? 'PUT' : 'POST', id
-      ? `/api/admin/important-videos/${encodeURIComponent(id)}`
-      : '/api/admin/important-videos');
-    request.withCredentials = true;
-    request.setRequestHeader('Accept', 'application/json');
+    const selectedFile = typeInput.value === 'file' ? fileInput.files[0] : null;
+    data.delete('file');
     const progressWrap = document.getElementById('uploadProgressWrap');
     const progress = document.getElementById('uploadProgress');
     const progressLabel = document.getElementById('uploadProgressLabel');
@@ -285,43 +375,31 @@
     saveButton.disabled = true;
     progressWrap.hidden = false;
     progress.value = 0;
-    progressLabel.textContent = 'Uploading and saving…';
-    showMessage('Saving update and uploading selected media…', 'info');
+    progressLabel.textContent = 'Preparing upload…';
+    showMessage(selectedFile ? 'Uploading the original file to private Supabase Storage…' : 'Saving update…', 'info');
 
-    request.upload.addEventListener('progress', function (uploadEvent) {
-      if (!uploadEvent.lengthComputable) return;
-      const percentage = Math.round(uploadEvent.loaded / uploadEvent.total * 100);
-      progress.value = percentage;
-      progressLabel.textContent = percentage < 100 ? `Uploading… ${percentage}%` : 'Saving record…';
-    });
-    request.addEventListener('load', async function () {
-      saving = false;
-      saveButton.disabled = false;
-      progressWrap.hidden = true;
-      let result = {};
-      try {
-        result = JSON.parse(request.responseText || '{}');
-      } catch (error) {
-        showMessage('The server returned an unreadable response. Refresh the records to confirm the save status.', 'error');
-        return;
+    try {
+      if (selectedFile) {
+        const uploadedFile = await uploadFileWithTus(selectedFile, progress, progressLabel);
+        data.set('file_storage_path', uploadedFile.path);
+        data.set('file_original_filename', uploadedFile.originalFilename);
+        data.set('file_mime_type', uploadedFile.mimeType);
+        data.set('file_size', String(uploadedFile.size));
       }
-      if (request.status < 200 || request.status >= 300) {
-        const cleanup = result.cleanupWarnings && result.cleanupWarnings.length ? ` ${result.cleanupWarnings.join(' ')}` : '';
-        showMessage((result.error || `Save failed (HTTP ${request.status}).`) + cleanup, 'error');
-        return;
-      }
+      if (progress.value < 100) progress.value = 100;
+      progressLabel.textContent = 'Verifying file and saving update record…';
+      const result = await sendUpdateForm(data, id);
       const warnings = result.cleanupWarnings && result.cleanupWarnings.length ? ` ${result.cleanupWarnings.join(' ')}` : '';
       clearForm();
       showMessage(`“${(result.update || result.video).title}” saved successfully.${warnings}`, warnings ? 'warning' : 'success');
       await loadVideos();
-    });
-    request.addEventListener('error', function () {
+    } catch (error) {
+      showMessage(error.message, 'error');
+    } finally {
       saving = false;
       saveButton.disabled = false;
       progressWrap.hidden = true;
-      showMessage('The upload connection failed. Refresh the records to confirm whether the save completed.', 'error');
-    });
-    request.send(data);
+    }
   }
 
   let slugEdited = false;

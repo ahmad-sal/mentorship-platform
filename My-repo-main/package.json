@@ -33,6 +33,7 @@
     "qpdf-run": "0.2.1",
     "qr-code-styling": "^1.9.2",
     "sharp": "^0.33.5",
+    "tus-js-client": "^4.3.1",
     "yauzl": "^3.4.0"
   },
   "engines": {

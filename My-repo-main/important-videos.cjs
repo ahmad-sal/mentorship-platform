@@ -1,4 +1,5 @@
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const MAX_TITLE_LENGTH = 180;
 const MAX_SLUG_LENGTH = 120;
@@ -8,6 +9,7 @@ const MAX_CATEGORY_LENGTH = 80;
 const MAX_THUMBNAIL_BYTES = 8 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 const MAX_UPDATE_FILE_BYTES = 50 * 1024 * 1024;
+const IMPORTANT_UPDATE_STORAGE_BUCKET = 'important-updates-files';
 
 const UPDATE_FILE_TYPES = Object.freeze({
   '.pdf': ['application/pdf'],
@@ -104,20 +106,44 @@ function validateUpdateFileMetadata(file) {
   const extension = path.extname(originalFilename).toLowerCase();
   const acceptedMimeTypes = UPDATE_FILE_TYPES[extension];
   if (!originalFilename || !acceptedMimeTypes) {
-    throw new Error('Choose a supported PDF, Office document, ZIP, text, or image file.');
+    const detectedExtension = extension || 'no extension';
+    const supportedExtensions = Object.keys(UPDATE_FILE_TYPES).join(', ');
+    throw new Error(
+      `Choose a supported PDF, Office document, ZIP, text, or image file. Received: ${detectedExtension}. Supported extensions: ${supportedExtensions}.`
+    );
   }
   if (!acceptedMimeTypes.includes(String(file.mimetype || '').toLowerCase())) {
     throw new Error('The file extension and MIME type do not match a supported format.');
   }
   if (!Number.isSafeInteger(file.size) || file.size <= 0) throw new Error('The update file must not be empty.');
   if (file.size > MAX_UPDATE_FILE_BYTES) {
-    throw new Error(`The update file must be ${Math.round(MAX_UPDATE_FILE_BYTES / (1024 * 1024))} MB or smaller.`);
+    throw new Error(`The update file must be ${MAX_UPDATE_FILE_BYTES / (1024 * 1024)} MiB or smaller.`);
   }
   return {
     originalFilename,
     extension,
     mimeType: String(file.mimetype).toLowerCase()
   };
+}
+
+function createImportantUpdateStoragePath(extension, id = crypto.randomUUID()) {
+  if (!Object.prototype.hasOwnProperty.call(UPDATE_FILE_TYPES, extension)) {
+    throw new Error('The update file extension is not supported.');
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error('A valid update file identifier is required.');
+  }
+  return `important-updates/${id}${extension}`;
+}
+
+function isValidImportantUpdateStoragePath(value, extension) {
+  if (typeof value !== 'string' || !Object.prototype.hasOwnProperty.call(UPDATE_FILE_TYPES, extension)) {
+    return false;
+  }
+  const filename = path.posix.basename(value, path.posix.extname(value));
+  return path.posix.dirname(value) === 'important-updates' &&
+    path.posix.extname(value).toLowerCase() === extension &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(filename);
 }
 
 function hasExpectedUpdateFileSignature(buffer, extension) {
@@ -180,11 +206,14 @@ module.exports = {
   MAX_THUMBNAIL_BYTES,
   MAX_VIDEO_BYTES,
   MAX_UPDATE_FILE_BYTES,
+  IMPORTANT_UPDATE_STORAGE_BUCKET,
   UPDATE_FILE_TYPES,
   slugify,
   normalizeVideoInput,
   sanitizeOriginalFilename,
   validateUpdateFileMetadata,
+  createImportantUpdateStoragePath,
+  isValidImportantUpdateStoragePath,
   hasExpectedUpdateFileSignature,
   hasMp4Signature,
   uploadLargeWithCallback

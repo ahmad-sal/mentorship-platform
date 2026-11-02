@@ -124,7 +124,7 @@
                 <div class="iv-field file-only" hidden>
                   <label for="updateFile">Update file <span aria-hidden="true">*</span></label>
                   <input class="form-control" id="updateFile" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,text/plain,image/jpeg,image/png,image/webp">
-                  <small>PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, ZIP, TXT, JPEG, PNG, or WebP; up to 50 MB. Leave empty to keep the current file.</small>
+                  <small>PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, ZIP, TXT, JPEG, PNG, or WebP; up to 50 MiB per file. Files upload directly to private Supabase Storage with resumable transfer and are saved only after server verification. Leave empty to keep the current file.</small>
                   <div id="fileCurrent" class="iv-current-media"></div>
                   <div id="fileSelection" class="iv-file-selection" aria-live="polite"></div>
                 </div>
@@ -141,7 +141,7 @@
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
-                  <small>Publishing requires a title and an uploaded video or update file. Video thumbnails are required; file thumbnails are optional.</small>
+                  <small>Publishing requires a title and the media for that update type. Video Updates require a thumbnail and video; File Updates require an update file, while thumbnails are optional and video uploads do not apply.</small>
                 </div>
                 <div class="iv-field">
                   <label for="videoOrder">Display order</label>
@@ -164,6 +164,7 @@
   </div>
   <script src="/Mentor.js"></script>
   <script src="/app-ui.js"></script>
+  <script src="/vendor/tus.min.js"></script>
   <script src="/admin-important-videos.js"></script>
 </body>
 </html>

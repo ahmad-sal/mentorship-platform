@@ -8,11 +8,14 @@ const {
   MAX_DESCRIPTION_LENGTH,
   MAX_DETAILS_LENGTH,
   MAX_UPDATE_FILE_BYTES,
+  IMPORTANT_UPDATE_STORAGE_BUCKET,
   slugify,
   normalizeVideoInput,
   hasMp4Signature,
   sanitizeOriginalFilename,
   validateUpdateFileMetadata,
+  createImportantUpdateStoragePath,
+  isValidImportantUpdateStoragePath,
   hasExpectedUpdateFileSignature,
   uploadLargeWithCallback
 } = require('../important-videos.cjs');
@@ -85,11 +88,17 @@ test('update filenames are sanitized and supported file metadata is validated', 
   assert.equal(file.extension, '.pdf');
   assert.equal(file.mimeType, 'application/pdf');
   assert.equal(MAX_UPDATE_FILE_BYTES, 50 * 1024 * 1024);
+  assert.equal(IMPORTANT_UPDATE_STORAGE_BUCKET, 'important-updates-files');
   assert.throws(() => validateUpdateFileMetadata({
     originalname: 'payload.exe',
     mimetype: 'application/x-msdownload',
     size: 100
-  }), /supported PDF, Office document/);
+  }), /supported PDF, Office document[\s\S]*Received: \.exe[\s\S]*Supported extensions:/);
+  assert.throws(() => validateUpdateFileMetadata({
+    originalname: 'scan',
+    mimetype: 'image/jpeg',
+    size: 100
+  }), /Received: no extension/);
   assert.throws(() => validateUpdateFileMetadata({
     originalname: 'document.pdf',
     mimetype: 'text/plain',
@@ -99,8 +108,37 @@ test('update filenames are sanitized and supported file metadata is validated', 
     originalname: 'document.pdf',
     mimetype: 'application/pdf',
     size: MAX_UPDATE_FILE_BYTES + 1
-  }), /50 MB or smaller/);
+  }), /50 MiB or smaller/);
   assert.equal(sanitizeOriginalFilename('../../bad:name.pdf'), 'bad_name.pdf');
+});
+
+test('Supabase update object paths use unguessable UUIDs and the validated extension', () => {
+  const objectPath = createImportantUpdateStoragePath('.pdf', '7b4a9704-a72d-4c7f-9f60-a9f399b631ea');
+  assert.equal(objectPath, 'important-updates/7b4a9704-a72d-4c7f-9f60-a9f399b631ea.pdf');
+  assert.equal(isValidImportantUpdateStoragePath(objectPath, '.pdf'), true);
+  assert.equal(isValidImportantUpdateStoragePath('important-updates/other.pdf', '.pdf'), false);
+  assert.equal(isValidImportantUpdateStoragePath(`${objectPath}/../other.pdf`, '.pdf'), false);
+  assert.throws(() => createImportantUpdateStoragePath('.exe'), /extension is not supported/);
+});
+
+test('10, 11, 13, and 30 MiB update files fit the independent 50 MiB application limit', () => {
+  const fileAtProviderLimit = {
+    originalname: 'limit.pdf',
+    mimetype: 'application/pdf',
+    size: 10 * 1024 * 1024
+  };
+  assert.equal(validateUpdateFileMetadata(fileAtProviderLimit).mimeType, 'application/pdf');
+
+  for (const size of [11, 13, 30].map((megabytes) => megabytes * 1024 * 1024)) {
+    assert.equal(validateUpdateFileMetadata({
+      ...fileAtProviderLimit,
+      size
+    }).mimeType, 'application/pdf');
+  }
+  assert.equal(validateUpdateFileMetadata({
+    ...fileAtProviderLimit,
+    size: MAX_UPDATE_FILE_BYTES
+  }).mimeType, 'application/pdf');
 });
 
 test('file uploads verify file signatures rather than trusting their names', () => {
@@ -125,6 +163,30 @@ test('large Cloudinary uploads wait for the SDK callback response', async () => 
   };
 
   assert.equal(await uploadLargeWithCallback(uploader, 'video.mp4', { resource_type: 'video' }), expected);
+});
+
+test('file updates use signed Supabase TUS uploads and verify the stored original before saving', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server.cjs'), 'utf8');
+  const admin = fs.readFileSync(path.join(__dirname, '..', 'public', 'admin-important-videos.js'), 'utf8');
+  const mediaUpload = server.match(/async function uploadImportantVideoMedia\([\s\S]*?\n\}/);
+  assert.ok(mediaUpload);
+  assert.match(mediaUpload[0], /Update documents must use Supabase Storage resumable uploads/);
+  assert.doesNotMatch(mediaUpload[0], /resource_type: 'raw'/);
+  assert.match(server, /app\.post\('\/api\/admin\/important-updates\/upload-session', requireAdmin, requireSameOriginAdMutation/);
+  assert.match(server, /projectUrl\.pathname = '\/storage\/v1\/upload\/resumable\/sign'/);
+  assert.match(server, /\.createSignedUploadUrl\(objectPath, \{ upsert: false \}\)/);
+  assert.match(server, /const \{ data: fileInfo, error: infoError \} = await storage\.info\(objectPath\)/);
+  assert.match(server, /fileInfo\.contentType/);
+  assert.match(server, /Range: 'bytes=0-8191'/);
+  assert.match(server, /hasExpectedUpdateFileSignature\(header, metadata\.extension\)/);
+  assert.match(server, /verifySupabaseUpdateFile\(client, requestedPath, req\.body\)/);
+  assert.match(server, /originalname:\s*rawMetadata\s*&&\s*\(rawMetadata\.file_original_filename\s*\|\|\s*rawMetadata\.original_filename\)/);
+  assert.match(server, /file_storage_provider:[\s\S]*?file\.storageProvider/);
+  assert.match(admin, /new window\.tus\.Upload\(file/);
+  assert.match(admin, /'x-signature': session\.token/);
+  assert.match(admin, /chunkSize: 6 \* 1024 \* 1024/);
+  assert.match(admin, /onProgress\(bytesUploaded, bytesTotal\)/);
+  assert.match(admin, /data\.set\('file_storage_path', uploadedFile\.path\)/);
 });
 
 test('large Cloudinary uploads reject provider and stream errors', async () => {
@@ -243,25 +305,42 @@ test('file migration is additive and preserves existing video rows as video upda
   assert.doesNotMatch(migration, /\b(drop table|delete from public\.important_videos|truncate)\b/i);
 });
 
+test('storage-provider migration is additive and retains legacy Cloudinary records', () => {
+  const migration = fs.readFileSync(path.join(__dirname, '..', 'migrations', '006_important_updates_storage_provider.sql'), 'utf8');
+  assert.match(migration, /add column if not exists file_storage_provider text/i);
+  assert.match(migration, /file_storage_provider in \('cloudinary', 'supabase'\)/i);
+  assert.match(migration, /revoke select on public\.important_videos from anon, authenticated/i);
+  const publicColumns = migration.match(/grant select \(([\s\S]*?)\) on public\.important_videos to anon, authenticated/i);
+  assert.ok(publicColumns);
+  assert.doesNotMatch(publicColumns[1], /file_public_id|file_storage_provider/i);
+  assert.doesNotMatch(migration, /\b(drop table|drop column|delete from|truncate|update public\.important_videos)\b/i);
+});
+
 test('file updates can be created, edited without replacing media, published, and deleted safely', () => {
   const root = path.join(__dirname, '..');
   const server = fs.readFileSync(path.join(root, 'server.cjs'), 'utf8');
   const admin = fs.readFileSync(path.join(root, 'public', 'admin-important-videos.js'), 'utf8');
   const html = fs.readFileSync(path.join(root, 'private', 'admin-important-videos.html'), 'utf8');
-  const persistence = server.match(/async function persistImportantVideo\([\s\S]*?return res\.json\(\{ update: data, video: data, cleanupWarnings \}\);/);
+  const persistence = server.match(/async function persistImportantVideo\([\s\S]*?return res\.json\(\{ update: safeUpdate, video: safeUpdate, cleanupWarnings \}\);/);
   assert.ok(persistence);
   assert.match(persistence[0], /\.\.\.input/);
   assert.match(persistence[0], /const isFileUpdate = input\.content_type === 'file'/);
-  assert.match(persistence[0], /file \? file\.url[\s\S]*?current\.file_url/);
+  assert.match(persistence[0], /const fileUrl = isFileUpdate \? file[\s\S]*?\/api\/important-updates\/[\s\S]*?current\.file_url/);
   assert.match(persistence[0], /file_uploaded_at:[\s\S]*?current\.file_uploaded_at/);
   assert.match(server, /app\.post\('\/api\/admin\/important-videos', requireAdmin/);
   assert.match(server, /app\.put\('\/api\/admin\/important-videos\/:id', requireAdmin/);
   assert.match(server, /app\.patch\('\/api\/admin\/important-videos\/:id\/status', requireAdmin/);
   assert.match(server, /app\.delete\('\/api\/admin\/important-videos\/:id', requireAdmin/);
+  assert.match(server, /limits:\s*\{[\s\S]*?fields:\s*20/);
+  assert.match(server, /error\.code === 'LIMIT_FIELD_COUNT'[\s\S]*?too many fields/);
   assert.match(server, /\.eq\(referenceColumn, media\.publicId\)[\s\S]*?if \(references && references\.length\) continue/);
+  assert.match(server, /\.from\(IMPORTANT_UPDATE_STORAGE_BUCKET\)\s*\.remove\(\[media\.publicId\]\)/);
   assert.match(admin, /data\.set\('content_type', typeInput\.value\)/);
   assert.match(admin, /record\.content_type === 'file'/);
+  assert.match(admin, /videoInput\.disabled = isFile/);
+  assert.match(admin, /fileInput\.disabled = !isFile/);
   assert.match(html, /name="file" type="file"/);
+  assert.match(html, /File Updates require an update file[\s\S]*video uploads do not apply/);
 });
 
 test('file download is published-only, streamed, and returns a safe original attachment name', () => {
@@ -272,10 +351,12 @@ test('file download is published-only, streamed, and returns a safe original att
   assert.ok(streaming);
   assert.match(streaming[0], /\.eq\('content_type', 'file'\)/);
   assert.match(streaming[0], /\.eq\('status', 'published'\)/);
-  assert.match(streaming[0], /file_url, file_public_id, original_filename/);
-  assert.match(streaming[0], /cloudinary\.utils\.private_download_url\([\s\S]*?resource_type: 'raw', type: 'upload', attachment: true/);
-  assert.match(streaming[0], /https\.get\(signedDownloadUrl/);
-  assert.doesNotMatch(streaming[0], /https\.get\(fileUrl/);
+  assert.match(streaming[0], /file_url, file_public_id, file_storage_provider, original_filename/);
+  assert.match(streaming[0], /https\.get\(fileUrl/);
+  assert.doesNotMatch(streaming[0], /private_download_url|signedDownloadUrl/);
+  assert.match(streaming[0], /response: responseDetails/);
+  assert.match(streaming[0], /cloudinaryError: upstream\.headers\['x-cld-error'\]/);
+  assert.match(streaming[0], /Cloudinary denied delivery under its account security or access-control settings/);
   assert.match(streaming[0], /Content-Disposition/);
   assert.match(streaming[0], /upstream\.pipe\(res\)/);
   assert.match(streaming[0], /res\.set\('X-Content-Type-Options', 'nosniff'\)/);

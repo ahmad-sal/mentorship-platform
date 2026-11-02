@@ -54,6 +54,9 @@ const {
   hasMp4Signature,
   sanitizeOriginalFilename,
   validateUpdateFileMetadata,
+  createImportantUpdateStoragePath,
+  isValidImportantUpdateStoragePath,
+  IMPORTANT_UPDATE_STORAGE_BUCKET,
   hasExpectedUpdateFileSignature,
   uploadLargeWithCallback
 } = require('./important-videos.cjs');
@@ -293,6 +296,10 @@ app.get(['/important-videos', '/important-updates'], (req, res) => {
 
 app.get(['/important-videos/:slug', '/important-updates/:slug'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'important-videos.html'));
+});
+
+app.get('/vendor/tus.min.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'node_modules', 'tus-js-client', 'dist', 'tus.min.js'));
 });
 
 function registerConverterEndpoints(kind, fileLimit, concurrencyLimit, inspect, convert) {
@@ -1167,28 +1174,18 @@ async function streamPublishedUpdateFile(req, res, requestedDisposition) {
   const client = getImportantVideosClient(res);
   if (!client) return;
   try {
-    const { data: update, error } = await client
+    let updateQuery = client
       .from('important_videos')
-      .select('id, content_type, status, file_url, file_public_id, original_filename, file_mime_type')
+      .select('id, content_type, status, file_url, file_public_id, file_storage_provider, original_filename, file_mime_type')
       .eq('id', req.params.id)
-      .eq('content_type', 'file')
-      .eq('status', 'published')
-      .maybeSingle();
+      .eq('content_type', 'file');
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      updateQuery = updateQuery.eq('status', 'published');
+    }
+    const { data: update, error } = await updateQuery.maybeSingle();
     if (error) throw error;
     if (!update || !update.file_url || !update.original_filename) {
       return res.status(404).json({ error: 'This file update is unavailable.' });
-    }
-
-    const fileUrl = new URL(update.file_url);
-    const cloudName = cloudinary.config().cloud_name || process.env.CLOUDINARY_CLOUD_NAME;
-    if (fileUrl.protocol !== 'https:' || fileUrl.hostname !== 'res.cloudinary.com' ||
-        !cloudName || !fileUrl.pathname.startsWith(`/${cloudName}/raw/upload/`)) {
-      console.error('File update download was rejected because its stored URL is outside the configured Cloudinary raw storage.');
-      return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
-    }
-    if (!update.file_public_id) {
-      console.error('Published file update has no Cloudinary public ID for signed delivery.');
-      return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
     }
 
     const filename = sanitizeOriginalFilename(update.original_filename) || 'update-file';
@@ -1217,17 +1214,94 @@ async function streamPublishedUpdateFile(req, res, requestedDisposition) {
     res.set('Content-Disposition', `${disposition}; filename="${fallbackFilename}"; filename*=UTF-8''${encodedFilename}`);
     res.set('X-Content-Type-Options', 'nosniff');
 
-    const signedDownloadUrl = cloudinary.utils.private_download_url(
-      update.file_public_id,
-      '',
-      { resource_type: 'raw', type: 'upload', attachment: true }
-    );
-    const upstreamRequest = https.get(signedDownloadUrl, (upstream) => {
+    if (update.file_storage_provider === 'supabase') {
+      const extension = path.extname(filename).toLowerCase();
+      if (!isValidImportantUpdateStoragePath(update.file_public_id, extension)) {
+        console.error('Supabase file update was rejected because its stored object reference is invalid.');
+        return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
+      }
+      const { data: signedFile, error: signedError } = await client.storage
+        .from(IMPORTANT_UPDATE_STORAGE_BUCKET)
+        .createSignedUrl(update.file_public_id, 60);
+      if (signedError) throw signedError;
+      if (!signedFile || !signedFile.signedUrl) {
+        throw new Error('Supabase did not return a signed download URL.');
+      }
+      const supabaseFileUrl = new URL(signedFile.signedUrl);
+      if (supabaseFileUrl.protocol !== 'https:') {
+        throw new Error('Supabase returned an insecure file URL.');
+      }
+      const upstreamRequest = https.get(supabaseFileUrl, {
+        headers: req.get('range') ? { Range: req.get('range') } : {}
+      }, (upstream) => {
+        if (upstream.statusCode !== 200 && upstream.statusCode !== 206) {
+          upstream.resume();
+          console.error('Supabase Storage returned an unsuccessful response for a published file update:', {
+            statusCode: upstream.statusCode || null
+          });
+          if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+          else res.destroy();
+          return;
+        }
+        res.status(upstream.statusCode);
+        for (const headerName of ['content-length', 'content-range', 'accept-ranges']) {
+          if (upstream.headers[headerName]) res.set(headerName, upstream.headers[headerName]);
+        }
+        upstream.on('error', (error) => {
+          console.error('Supabase file update stream failed:', error.message);
+          if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+          else res.destroy(error);
+        });
+        upstream.pipe(res);
+      });
+      upstreamRequest.setTimeout(30000, () => {
+        upstreamRequest.destroy(new Error('Supabase file update request timed out.'));
+      });
+      upstreamRequest.on('error', (error) => {
+        console.error('Supabase file update request failed:', error.message);
+        if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+        else res.destroy(error);
+      });
+      res.on('close', () => {
+        if (!res.writableEnded) upstreamRequest.destroy();
+      });
+      return;
+    }
+
+    const fileUrl = new URL(update.file_url);
+    const cloudName = cloudinary.config().cloud_name || process.env.CLOUDINARY_CLOUD_NAME;
+    if (fileUrl.protocol !== 'https:' || fileUrl.hostname !== 'res.cloudinary.com' ||
+        !cloudName || !fileUrl.pathname.startsWith(`/${cloudName}/raw/upload/`)) {
+      console.error('File update download was rejected because its stored URL is outside the configured Cloudinary raw storage.');
+      return res.status(502).json({ error: 'The stored file is temporarily unavailable.' });
+    }
+    const upstreamRequest = https.get(fileUrl, (upstream) => {
       if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
-        upstream.resume();
-        console.error('Cloudinary returned an unsuccessful response for a published file update:', upstream.statusCode);
-        if (!res.headersSent) return res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
-        return res.destroy();
+        let responseDetails = '';
+        upstream.setEncoding('utf8');
+        upstream.on('data', (chunk) => {
+          if (responseDetails.length < 2048) responseDetails += chunk.slice(0, 2048 - responseDetails.length);
+        });
+        upstream.on('end', () => {
+          console.error('Cloudinary returned an unsuccessful response for a published file update:', {
+            statusCode: upstream.statusCode || null,
+            cloudinaryError: upstream.headers['x-cld-error'] || null,
+            response: responseDetails || null
+          });
+          if (!res.headersSent) {
+            const errorMessage = upstream.headers['x-cld-error'] === 'deny or ACL failure'
+              ? 'Cloudinary denied delivery under its account security or access-control settings. Please contact the site administrator.'
+              : 'The file could not be opened or downloaded. Please try again later.';
+            res.status(502).json({ error: errorMessage });
+          }
+          else res.destroy();
+        });
+        upstream.on('error', (error) => {
+          console.error('Cloudinary error response could not be read:', error.message);
+          if (!res.headersSent) res.status(502).json({ error: 'The file could not be opened or downloaded. Please try again later.' });
+          else res.destroy(error);
+        });
+        return;
       }
       if (/^\d+$/.test(upstream.headers['content-length'] || '')) {
         res.set('Content-Length', upstream.headers['content-length']);
@@ -1316,7 +1390,7 @@ const importantVideoUpload = multer({
   limits: {
     fileSize: MAX_VIDEO_BYTES,
     files: 3,
-    fields: 10,
+    fields: 20,
     fieldNameSize: 50,
     fieldSize: 25000
   }
@@ -1333,7 +1407,13 @@ function receiveImportantVideoFiles(req, res, next) {
         if (error.code === 'LIMIT_FILE_SIZE') {
           return res.status(413).json({ error: `The upload exceeds the server's ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))} MB request limit.` });
         }
-        return res.status(400).json({ error: 'Choose at most one thumbnail, one video, and one update file.' });
+        if (error.code === 'LIMIT_FIELD_COUNT') {
+          return res.status(400).json({ error: 'The update form contains too many fields. Refresh the page and try again.' });
+        }
+        if (error.code === 'LIMIT_FILE_COUNT' || error.code === 'LIMIT_UNEXPECTED_FILE') {
+          return res.status(400).json({ error: 'Choose at most one file for each supported upload field.' });
+        }
+        return res.status(400).json({ error: 'The upload form could not be processed. Refresh the page and try again.' });
       }
       console.error('Important Update upload could not be received:', error);
       return res.status(500).json({ error: 'The upload could not be received. Check the server upload directory and try again.' });
@@ -1356,6 +1436,59 @@ function receiveImportantVideoFiles(req, res, next) {
     return next();
   });
 }
+
+function getImportantUpdatesTusEndpoint() {
+  const projectUrl = new URL(process.env.SUPABASE_URL);
+  if (projectUrl.hostname.endsWith('.supabase.co')) {
+    projectUrl.hostname = projectUrl.hostname.replace(/\.supabase\.co$/, '.storage.supabase.co');
+  }
+  projectUrl.pathname = '/storage/v1/upload/resumable/sign';
+  projectUrl.search = '';
+  projectUrl.hash = '';
+  return projectUrl.toString();
+}
+
+app.post('/api/admin/important-updates/upload-session', requireAdmin, requireSameOriginAdMutation, async (req, res) => {
+  res.set('Cache-Control', 'no-store, private');
+  const client = getImportantVideosClient(res);
+  if (!client) return;
+  let metadata;
+  try {
+    metadata = validateUpdateFileMetadata({
+      originalname: req.body && req.body.original_filename,
+      mimetype: req.body && req.body.file_mime_type,
+      size: req.body && Number(req.body.file_size)
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  try {
+    const objectPath = createImportantUpdateStoragePath(metadata.extension);
+    const { data, error } = await client.storage
+      .from(IMPORTANT_UPDATE_STORAGE_BUCKET)
+      .createSignedUploadUrl(objectPath, { upsert: false });
+    if (error) throw error;
+    if (!data || !data.token || data.path !== objectPath) {
+      throw new Error('Supabase did not return a signed upload token for the expected object.');
+    }
+    return res.json({
+      bucket: IMPORTANT_UPDATE_STORAGE_BUCKET,
+      path: objectPath,
+      token: data.token,
+      endpoint: getImportantUpdatesTusEndpoint()
+    });
+  } catch (error) {
+    console.error('Important Update signed upload URL could not be created:', {
+      code: error.code || null,
+      statusCode: error.statusCode || null,
+      message: error.message || 'Unknown Supabase Storage error'
+    });
+    return res.status(503).json({
+      error: 'Supabase Storage could not prepare the upload. Verify that the private important-updates-files bucket exists and allows files up to 50 MiB.'
+    });
+  }
+});
 
 async function uploadImportantVideoMedia(file, kind) {
   if (kind === 'thumbnail') {
@@ -1403,72 +1536,9 @@ async function uploadImportantVideoMedia(file, kind) {
       throw error;
     }
   } else {
-    let metadata;
-    let validated;
-    try {
-      validated = validateUpdateFileMetadata(file);
-    } catch (error) {
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const header = Buffer.alloc(Math.min(file.size, 8192));
-    const descriptor = fs.openSync(file.path, 'r');
-    let bytesRead;
-    try {
-      bytesRead = fs.readSync(descriptor, header, 0, header.length, 0);
-    } finally {
-      fs.closeSync(descriptor);
-    }
-    if (!hasExpectedUpdateFileSignature(header.subarray(0, bytesRead), validated.extension)) {
-      const error = new Error('The file contents do not match the selected file type.');
-      error.statusCode = 400;
-      throw error;
-    }
-    if (validated.mimeType.startsWith('image/')) {
-      let imageMetadata;
-      try {
-        imageMetadata = await sharp(file.path).metadata();
-      } catch (error) {
-        const invalidImage = new Error('The image update is not a readable image file.');
-        invalidImage.statusCode = 400;
-        throw invalidImage;
-      }
-      const expectedFormat = validated.extension === '.jpg' || validated.extension === '.jpeg' ? 'jpeg' : validated.extension.slice(1);
-      if (imageMetadata.format !== expectedFormat) {
-        const error = new Error('The image contents do not match the selected file extension.');
-        error.statusCode = 400;
-        throw error;
-      }
-    }
-    const publicId = crypto.randomUUID() + validated.extension;
-    const options = {
-      folder: 'mentorship/important-updates',
-      public_id: publicId,
-      overwrite: false,
-      unique_filename: false,
-      resource_type: 'raw'
-    };
-    let result;
-    try {
-      result = await cloudinary.uploader.upload(file.path, options);
-    } catch (error) {
-      error.importantVideoUploadProvider = 'cloudinary';
-      throw error;
-    }
-    if (!result || !result.secure_url || !result.public_id) {
-      const error = new Error('Cloudinary upload completed without a secure URL and public asset ID.');
-      error.importantVideoUploadProvider = 'cloudinary';
-      throw error;
-    }
-    return {
-      url: result.secure_url,
-      publicId: result.public_id,
-      kind: 'file',
-      originalFilename: validated.originalFilename,
-      mimeType: validated.mimeType,
-      size: file.size
-    };
+    const error = new Error('Update documents must use Supabase Storage resumable uploads.');
+    error.statusCode = 400;
+    throw error;
   }
 
   const publicId = crypto.randomUUID();
@@ -1504,6 +1574,15 @@ async function uploadImportantVideoMedia(file, kind) {
 }
 
 async function destroyImportantVideoMedia(media) {
+  if (media.kind === 'file' && media.storageProvider === 'supabase') {
+    const client = supabase.supabaseAdmin;
+    if (!client) throw new Error('Supabase Storage cleanup is unavailable.');
+    const { error } = await client.storage
+      .from(IMPORTANT_UPDATE_STORAGE_BUCKET)
+      .remove([media.publicId]);
+    if (error) throw error;
+    return;
+  }
   const result = await cloudinary.uploader.destroy(media.publicId, {
     resource_type: media.kind === 'thumbnail' ? 'image' : media.kind === 'file' ? 'raw' : 'video',
     invalidate: true
@@ -1573,10 +1652,24 @@ async function persistImportantVideo(req, res, existing) {
       ? await uploadImportantVideoMedia(files.video[0], 'video')
       : null;
     if (video) uploadedMedia.push(video);
-    const file = isFileUpdate && files.file && files.file[0]
-      ? await uploadImportantVideoMedia(files.file[0], 'file')
-      : null;
-    if (file) uploadedMedia.push(file);
+    if (files.file && files.file.length) {
+      throw updateFileValidationError('Upload update files through the resumable Supabase Storage upload flow.');
+    }
+    let file = null;
+    if (isFileUpdate && req.body.file_storage_path) {
+      const requestedPath = String(req.body.file_storage_path);
+      const originalName = sanitizeOriginalFilename(req.body.file_original_filename);
+      const fileExtension = path.extname(originalName).toLowerCase();
+      if (!isValidImportantUpdateStoragePath(requestedPath, fileExtension)) {
+        throw updateFileValidationError('The uploaded file reference is invalid. Upload the file again.');
+      }
+      uploadedMedia.push({
+        kind: 'file',
+        storageProvider: 'supabase',
+        publicId: requestedPath
+      });
+      file = await verifySupabaseUpdateFile(client, requestedPath, req.body);
+    }
 
     const thumbnailUrl = thumbnail ? thumbnail.url
       : current.content_type === input.content_type ? current.thumbnail_url || null : null;
@@ -1586,7 +1679,9 @@ async function persistImportantVideo(req, res, existing) {
       : current.content_type === 'video' ? current.video_url || null : null : null;
     const videoPublicId = !isFileUpdate ? video ? video.publicId
       : current.content_type === 'video' ? current.video_public_id || null : null : null;
-    const fileUrl = isFileUpdate ? file ? file.url
+    const recordId = existing ? existing.id : isFileUpdate ? crypto.randomUUID() : null;
+    const fileUrl = isFileUpdate ? file
+      ? `/api/important-updates/${encodeURIComponent(recordId)}/open`
       : current.content_type === 'file' ? current.file_url || null : null : null;
     const filePublicId = isFileUpdate ? file ? file.publicId
       : current.content_type === 'file' ? current.file_public_id || null : null : null;
@@ -1607,6 +1702,9 @@ async function persistImportantVideo(req, res, existing) {
       video_public_id: videoPublicId,
       file_url: fileUrl,
       file_public_id: filePublicId,
+      file_storage_provider: isFileUpdate
+        ? file ? file.storageProvider : current.file_storage_provider || (current.file_public_id ? 'cloudinary' : null)
+        : null,
       original_filename: isFileUpdate
         ? file ? file.originalFilename : current.original_filename || null
         : null,
@@ -1625,6 +1723,7 @@ async function persistImportantVideo(req, res, existing) {
         ? current.status === 'published' && current.published_at ? current.published_at : now
         : null
     };
+    if (recordId && !existing) record.id = recordId;
     if (!existing) record.created_by = req.session.user.id;
 
     const query = existing
@@ -1648,10 +1747,17 @@ async function persistImportantVideo(req, res, existing) {
       replacedMedia.push({ kind: 'video', publicId: current.video_public_id });
     }
     if (file && current.file_public_id) {
-      replacedMedia.push({ kind: 'file', publicId: current.file_public_id });
+      replacedMedia.push({
+        kind: 'file',
+        publicId: current.file_public_id,
+        storageProvider: current.file_storage_provider || 'cloudinary'
+      });
     }
+
     const cleanupWarnings = await cleanImportantVideoMedia(replacedMedia, `replacing record ${data.id}`);
-    return res.json({ update: data, video: data, cleanupWarnings });
+    const safeUpdate = { ...data };
+    delete safeUpdate.file_public_id;
+    return res.json({ update: safeUpdate, video: safeUpdate, cleanupWarnings });
   } catch (error) {
     const cleanupWarnings = await cleanImportantVideoMedia(uploadedMedia, 'failed save');
     if (error.statusCode === 400 || error.statusCode === 409) {
@@ -1665,14 +1771,18 @@ async function persistImportantVideo(req, res, existing) {
       message: error.message || 'Unknown save error'
     });
     if (error.importantVideoUploadProvider === 'cloudinary') {
+      const providerMessage = String(error.message || 'Cloudinary rejected the upload.')
+        .replace(/\b(api[_-]?key|api[_-]?secret|signature|token|authorization)\b([=:]\s*|%3D)[^\s&]+/gi, '$1=[redacted]')
+        .replace(/https?:\/\/\S+/gi, '[Cloudinary URL redacted]')
+        .slice(0, 500);
       return res.status(502).json({
-        error: 'Cloudinary could not confirm the media upload. Check the Cloudinary account configuration, file type, and size, then retry.',
+        error: `Cloudinary upload failed: ${providerMessage}`,
         cleanupWarnings
       });
     }
     if (error.code === 'PGRST205' || error.code === 'PGRST204') {
       return res.status(503).json({
-        error: 'The Important Updates database schema is unavailable. Apply migrations/004_important_videos.sql and migrations/005_important_updates_files.sql to the configured Supabase project, then reload its schema cache.',
+        error: 'The Important Updates database schema is unavailable. Apply migrations/004_important_videos.sql, migrations/005_important_updates_files.sql, and migrations/006_important_updates_storage_provider.sql to the configured Supabase project, then reload its schema cache.',
         cleanupWarnings
       });
     }
@@ -1700,12 +1810,87 @@ app.get('/api/admin/important-videos', requireAdmin, async (req, res) => {
       .order('display_order', { ascending: true })
       .order('updated_at', { ascending: false });
     if (error) throw error;
-    return res.json({ updates: data || [], videos: data || [] });
+    const updates = (data || []).map(({ file_public_id, ...update }) => update);
+    return res.json({ updates, videos: updates });
   } catch (error) {
     console.error('Admin Important Updates could not be loaded:', error);
-    return res.status(503).json({ error: 'Updates could not be loaded. Confirm migrations/004_important_videos.sql and migrations/005_important_updates_files.sql have been applied.' });
+    return res.status(503).json({ error: 'Updates could not be loaded. Confirm migrations/004_important_videos.sql, migrations/005_important_updates_files.sql, and migrations/006_important_updates_storage_provider.sql have been applied.' });
   }
 });
+
+function updateFileValidationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
+}
+
+async function verifySupabaseUpdateFile(client, objectPath, rawMetadata) {
+  let metadata;
+  try {
+    metadata = validateUpdateFileMetadata({
+      originalname: rawMetadata && (rawMetadata.file_original_filename || rawMetadata.original_filename),
+      mimetype: rawMetadata && rawMetadata.file_mime_type,
+      size: rawMetadata && Number(rawMetadata.file_size)
+    });
+  } catch (error) {
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!isValidImportantUpdateStoragePath(objectPath, metadata.extension)) {
+    throw updateFileValidationError('The uploaded file reference is invalid. Upload the file again.');
+  }
+
+  const storage = client.storage.from(IMPORTANT_UPDATE_STORAGE_BUCKET);
+  const { data: fileInfo, error: infoError } = await storage.info(objectPath);
+  if (infoError) throw infoError;
+  if (!fileInfo || !Number.isSafeInteger(fileInfo.size) ||
+      fileInfo.size !== Number(rawMetadata.file_size) ||
+      String(fileInfo.contentType || '').toLowerCase() !== metadata.mimeType) {
+    throw updateFileValidationError('The uploaded file size or MIME type did not match the selected original file.');
+  }
+
+  const { data: signedFile, error: signedError } = await storage.createSignedUrl(objectPath, 60);
+  if (signedError) throw signedError;
+  if (!signedFile || !signedFile.signedUrl) {
+    throw new Error('Supabase did not return a signed URL to verify the uploaded file.');
+  }
+  const response = await fetch(signedFile.signedUrl, {
+    headers: { Range: 'bytes=0-8191' },
+    signal: AbortSignal.timeout(20000)
+  });
+  if (response.status !== 206 || !response.body) {
+    if (response.body) await response.body.cancel();
+    throw updateFileValidationError('Supabase could not verify the uploaded file contents. Upload the file again.');
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let bytesRead = 0;
+  try {
+    while (bytesRead < 8192) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = Buffer.from(value).subarray(0, 8192 - bytesRead);
+      chunks.push(chunk);
+      bytesRead += chunk.length;
+    }
+  } finally {
+    await reader.cancel();
+  }
+  const header = Buffer.concat(chunks, bytesRead);
+  if (!hasExpectedUpdateFileSignature(header, metadata.extension)) {
+    throw updateFileValidationError('The uploaded file contents do not match the selected file type.');
+  }
+
+  return {
+    url: null,
+    publicId: objectPath,
+    storageProvider: 'supabase',
+    kind: 'file',
+    originalFilename: metadata.originalFilename,
+    mimeType: metadata.mimeType,
+    size: fileInfo.size
+  };
+}
 
 function validImportantVideoId(id) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
@@ -1778,7 +1963,9 @@ app.patch('/api/admin/important-videos/:id/status', requireAdmin, requireSameOri
       .select('*')
       .single();
     if (error) throw error;
-    return res.json({ update: data, video: data });
+    const safeUpdate = { ...data };
+    delete safeUpdate.file_public_id;
+    return res.json({ update: safeUpdate, video: safeUpdate });
   } catch (error) {
     console.error('Important Update publication status could not be updated:', error);
     return res.status(500).json({ error: 'Publication status could not be updated.' });
@@ -1792,7 +1979,7 @@ app.delete('/api/admin/important-videos/:id', requireAdmin, requireSameOriginAdM
   try {
     const { data: existing, error: readError } = await client
       .from('important_videos')
-      .select('id, thumbnail_public_id, video_public_id, file_public_id')
+      .select('id, thumbnail_public_id, video_public_id, file_public_id, file_storage_provider')
       .eq('id', req.params.id)
       .maybeSingle();
     if (readError) throw readError;
@@ -1802,7 +1989,11 @@ app.delete('/api/admin/important-videos/:id', requireAdmin, requireSameOriginAdM
     const cleanupWarnings = await cleanImportantVideoMedia([
       existing.thumbnail_public_id && { kind: 'thumbnail', publicId: existing.thumbnail_public_id },
       existing.video_public_id && { kind: 'video', publicId: existing.video_public_id },
-      existing.file_public_id && { kind: 'file', publicId: existing.file_public_id }
+      existing.file_public_id && {
+        kind: 'file',
+        publicId: existing.file_public_id,
+        storageProvider: existing.file_storage_provider || 'cloudinary'
+      }
     ], `deleting record ${existing.id}`);
     return res.json({ message: 'Update deleted.', cleanupWarnings });
   } catch (error) {
